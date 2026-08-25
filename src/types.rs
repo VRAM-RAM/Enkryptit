@@ -1,0 +1,46 @@
+use serde::{Deserialize, Serialize};
+
+/// Version type
+pub type Version = u8;
+
+/// Chunk size of a bloc to compress & encrypt
+pub const CHUNK_SIZE: usize = 8 * 1024 * 1024;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// KeyType enum. Contains :
+/// - Password(String)
+/// - Pwd256(salt)
+/// - FromFile
+/// - FromOS
+/// - None
+pub enum KeyType {
+    Password(String),
+    Pwd256([u8; 16]),
+    FromFile,
+    FromOS,
+    None,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// KeyParams enum. Contains :
+/// - PassWord
+/// - File
+/// - Os
+pub enum KeyParams {
+    PassWord,
+    File,
+    Os,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// CompressionType enum. Contains :
+/// - Lz4
+/// - Zstd
+/// - Xz
+/// - NoComp
+pub enum CompressionType {
+    Lz4,
+    Zstd,
+    Xz,
+    NoComp,
+}

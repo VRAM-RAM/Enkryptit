@@ -1,0 +1,13 @@
+pub mod cli;
+pub mod compression;
+pub mod conversions;
+pub mod encryption;
+pub mod errors;
+pub mod keygen;
+pub mod metadatas;
+pub mod parameters;
+pub mod treatment;
+pub mod tui;
+pub mod types;
+use crate::types::Version;
+pub const VERSION: Version = 2;
