@@ -1,15 +1,15 @@
 use std::fs::File;
 use std::path::Path;
-
-use crate::cli::Output;
+use crate::context::EnkryptitContext;
+use crate::frontend::cli::Output;
 use crate::errors::EnkryptitError;
 use crate::metadatas::{ArchiveHeader, MAGIC};
 use crate::parameters::params::EnkryptitParams;
 use crate::treatment::file_case::{decrypt_file_case, encrypt_file_case};
 use crate::treatment::folder_case::{decrypt_folder_case, encrypt_folder_case};
-use crate::types::KeyType::{self};
 use postcard::from_bytes;
 use std::io::{BufReader, Read, Seek, SeekFrom};
+
 
 #[allow(dead_code)]
 /// ParsedFile enum. The result of a file parsing. If the file is encrypted with **Enkryptit!**, we return :
@@ -33,12 +33,13 @@ pub enum ParsedFile {
 /// Else, we parse the file, and `match` the `ParsedFile` result.
 pub fn treat_object(
     parameters: &EnkryptitParams,
-    path: String,
-    key: [u8; 32],
-    key_type: KeyType,
+    path: &str,
+    context: &mut EnkryptitContext,
 ) -> Result<Output, EnkryptitError> {
+    let keytype = parameters.key_params.to_type();
+
     if Path::new(&path).is_dir() {
-        return encrypt_folder_case(&path, parameters, key, key_type);
+        return encrypt_folder_case(path, parameters, context, &keytype);
     }
 
     match read_file(&path) {
@@ -50,13 +51,13 @@ pub fn treat_object(
             ..
         }) => {
             if is_folder_archive {
-                decrypt_folder_case(&path, key, meta, payload_offset, key_type, version)
+                decrypt_folder_case(path, context, meta, payload_offset, version)
             } else {
-                decrypt_file_case(&path, meta, key, key_type, payload_offset)
+                decrypt_file_case(path, meta, context, payload_offset)
             }
         }
 
-        Ok(ParsedFile::Plain) => encrypt_file_case(parameters, &path, key, key_type),
+        Ok(ParsedFile::Plain) => encrypt_file_case(parameters, path, context, &keytype),
 
         Err(_) => Ok(Output::CorruptedFile),
     }

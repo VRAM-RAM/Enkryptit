@@ -14,7 +14,7 @@ pub const CHUNK_SIZE: usize = 8 * 1024 * 1024;
 /// - FromOS
 /// - None
 pub enum KeyType {
-    Password(String),
+    Password,
     Pwd256([u8; 16]),
     FromFile,
     FromOS,
@@ -32,6 +32,16 @@ pub enum KeyParams {
     Os,
 }
 
+impl KeyParams {
+    pub fn to_type(&self) -> KeyType {
+        match self {
+            &Self::File => KeyType::FromFile,
+            &Self::Os => KeyType::FromOS,
+            &Self::PassWord => KeyType::Password
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 /// CompressionType enum. Contains :
 /// - Lz4
@@ -43,4 +53,18 @@ pub enum CompressionType {
     Zstd,
     Xz,
     NoComp,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Encryption mode
+pub enum Mode {
+    Encrypting,
+    Decrypting,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// To provide something clean when `matching` the interface in `EnkryptitContext`
+pub enum Interface {
+    Cli,
+    Tui
 }

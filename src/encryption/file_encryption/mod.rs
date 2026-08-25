@@ -1,31 +1,28 @@
+use crate::context::EnkryptitContext;
 use crate::encryption::encryption_flow::{decrypt_stream, encrypt_stream};
 use crate::encryption::encryption_primitives::generate_nonce;
 use crate::errors::EnkryptitError;
-use crate::keygen::{derive_key, key_from_password};
+use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, MetaDatas};
 use crate::parameters::params::EnkryptitParams;
-use crate::types::KeyType::{self, Pwd256};
+use crate::types::KeyType::{self};
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
 use zeroize::Zeroize;
+use crate::types::Mode;
+
 
 /// Public function that encrypts a file (it also resolves the key and keytype)
 pub fn encrypt_file(
     path: &str,
-    key: [u8; 32],
     parameters: &EnkryptitParams,
-    key_type: KeyType,
+    keytype: &KeyType,
+    context: &mut EnkryptitContext
 ) -> Result<String, EnkryptitError> {
-    // Resolves both key and keytype
-    let (mut key, new_key_type) = match key_type {
-        KeyType::Password(pwd) => {
-            let (key, salt) = key_from_password(&pwd)?;
-            (key, Pwd256(salt))
-        }
-        _ => (key, key_type.clone()),
-    };
+    // Creates the enkryptit key (and resolves keytype & key)
+    let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, path)?;
 
     // Opens the file
     let file = File::open(path)?;
@@ -37,7 +34,7 @@ pub fn encrypt_file(
     let mut master_nonce = generate_nonce();
 
     // Builds the metadata, and serialize it
-    let metadata = MetaDatas::new(new_key_type, parameters.compression, master_nonce).pack()?;
+    let metadata = MetaDatas::new(enkryptit_key.key_type_as_ref().clone(), parameters.compression, master_nonce).pack()?;
 
     let encrypted_path = format!("{}.encky", path);
 
@@ -65,14 +62,13 @@ pub fn encrypt_file(
         &mut writer,
         reader,
         master_nonce,
-        key,
+        enkryptit_key.key_as_ref(),
         parameters.compression,
         total_size,
     )?;
 
-    // And finally, we `zeroize` both the master nonce and the key.
+    // And finally, we `zeroize` the master nonce (key is automatically dropped and Zeroized).
     master_nonce.zeroize();
-    key.zeroize();
 
     writer.flush()?;
 
@@ -83,9 +79,8 @@ pub fn encrypt_file(
 pub fn decrypt_file(
     path: &str,
     meta_bytes: &[u8],
-    key: [u8; 32],
     payload_offset: u64,
-    key_type: KeyType,
+    context: &mut EnkryptitContext
 ) -> Result<String, EnkryptitError> {
     // First, we deserialize the metadata
     let metadatas: MetaDatas = postcard::from_bytes(meta_bytes)?;
@@ -95,16 +90,7 @@ pub fn decrypt_file(
     let master_nonce = metadatas.nonce;
 
     // We resolve the key
-    let mut key = if let KeyType::Password(pwd) = &key_type {
-        let salt = match &metadatas.key_type {
-            KeyType::Pwd256(s) => *s,
-            _ => return Err(EnkryptitError::CorruptedFile),
-        };
-
-        derive_key(&pwd, salt)?
-    } else {
-        key
-    };
+    let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
 
     // We open the file
     let file = File::open(path)?;
@@ -123,12 +109,11 @@ pub fn decrypt_file(
         &mut writer,
         reader,
         total_size,
-        key,
+        enkryptit_key.key_as_ref(),
         compression_type,
         master_nonce,
     )?;
 
-    key.zeroize();
     writer.flush()?;
 
     Ok(plain_path.to_string())

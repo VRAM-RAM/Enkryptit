@@ -105,6 +105,12 @@ This will encrypt your folder and the files it contains inside a file named `sec
 eck /home/user/secrets.encky
 ```
 
+You can also encrypt / decrypt many files & folders with one command :
+
+```bash
+eck /home/user/secrets/* /home/user/secret.txt /lib/secret.bin
+```
+
 ## Cryptographic Stack
 
 Enkryptit! relies on those primitives for its architecture:
@@ -113,6 +119,13 @@ Enkryptit! relies on those primitives for its architecture:
 * **Key Derivation:** `Argon2id` — The industry-standard password hashing algorithm, built to resist GPU/ASIC brute-force attacks.
 * **Key Storage:** `Keyring` — Securely delegates key management to your operating system's native credential store (Keychain, Secret Service, etc.).
 * **Data Serialization:** `Postcard` — A lightweight, efficient binary serialization format optimized for Rust.
+
+But also : 
+
+- `libc` for *mlock* and *munlock*
+- `zeroize` for *Zeroize* and *Zeroizing<>*
+- `lz4_flex` , `zstd` and `xz2` (compression)
+- `rand` for *OsRng*
 
 ## Change parameters
 

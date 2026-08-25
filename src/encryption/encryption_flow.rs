@@ -7,6 +7,7 @@ use chacha20poly1305::KeyInit;
 use chacha20poly1305::XChaCha20Poly1305;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{Read, Write};
+use std::ops::Deref;
 use zeroize::Zeroize;
 
 /// The heart of **Enkryptit** : it compresses and encrypts a stream of data.
@@ -14,7 +15,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
     writer: &mut W,
     mut reader: R,
     master_nonce: [u8; 24],
-    mut key: [u8; 32],
+    key: &[u8; 32],
     compression: CompressionType,
     total_size: u64,
 ) -> Result<u64, EnkryptitError> {
@@ -38,7 +39,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
     let mut total_processed: u64 = 0;
 
     // Cipher algorithm.
-    let cipher = XChaCha20Poly1305::new(&key.into());
+    let cipher = XChaCha20Poly1305::new(key.deref().into());
 
     // Output (for in-place compression)
     let mut output = vec![0u8; CHUNK_SIZE];
@@ -79,7 +80,6 @@ pub fn encrypt_stream<R: Read, W: Write>(
 
     pb.finish();
     println!();
-    key.zeroize();
     Ok(bytes_written)
 }
 
@@ -88,7 +88,7 @@ pub fn decrypt_stream<R: Read, W: Write>(
     writer: &mut W,
     mut reader: R,
     total_size: u64,
-    mut key: [u8; 32],
+    key: &[u8; 32],
     compression: CompressionType,
     master_nonce: [u8; 24],
 ) -> Result<u64, EnkryptitError> {
@@ -104,7 +104,7 @@ pub fn decrypt_stream<R: Read, W: Write>(
 
     let mut total_processed: u64 = 0;
 
-    let cipher = XChaCha20Poly1305::new(&key.into());
+    let cipher = XChaCha20Poly1305::new(key.deref().into());
 
     let mut output = vec![0u8; CHUNK_SIZE];
 
@@ -147,7 +147,6 @@ pub fn decrypt_stream<R: Read, W: Write>(
             pb.set_position(total_processed);
             pb.finish();
             println!();
-            key.zeroize();
             return Ok(bytes_consumed);
         }
 
@@ -161,6 +160,5 @@ pub fn decrypt_stream<R: Read, W: Write>(
     // We should add a new kind of error, something like `EndMagicNumberNotFound`, with a warning : file may have been alterated.
     pb.finish();
     println!();
-    key.zeroize();
     Ok(bytes_consumed)
 }

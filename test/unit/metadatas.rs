@@ -16,11 +16,11 @@ fn generate_nonce() -> [u8; 24] {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+use super::*;
 
     #[test]
     fn serialize_deserialize_zstd_header() {
-        let key_type = KeyType::Password("test_password".to_string());
+        let key_type = KeyType::Password;
         let compression = CompressionType::Zstd;
         let nonce = generate_nonce();
 
@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn serialize_deserialize_lz4_header() {
-        let key_type = KeyType::Password("lz4_test".to_string());
+        let key_type = KeyType::Password;
         let compression = CompressionType::Lz4;
         let nonce = generate_nonce();
 
@@ -60,7 +60,7 @@ mod tests {
         ]
         .iter()
         {
-            let key_type = KeyType::Password("comp_test".to_string());
+            let key_type = KeyType::Password;
             let nonce = generate_nonce();
 
             let meta = MetaDatas::new(key_type.clone(), *comp, nonce);
@@ -74,7 +74,7 @@ mod tests {
     #[test]
     fn serialize_deserialize_all_key_types() {
         for key_type in [
-            KeyType::Password("pwd".to_string()),
+            KeyType::Password,
             KeyType::Pwd256([0x1Fu8; 16]),
             KeyType::FromFile,
             KeyType::FromOS,
@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn metadata_contains_compression_type_zstd() {
         let compression = CompressionType::Zstd;
-        let key_type = KeyType::Password("zstd".to_string());
+        let key_type = KeyType::Password;
         let nonce = generate_nonce();
 
         let meta = MetaDatas::new(key_type, compression, nonce);
@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn metadata_contains_compression_type_lz4() {
         let compression = CompressionType::Lz4;
-        let key_type = KeyType::Password("lz4".to_string());
+        let key_type = KeyType::Password;
         let nonce = generate_nonce();
 
         let meta = MetaDatas::new(key_type, compression, nonce);
@@ -123,7 +123,7 @@ mod tests {
     #[test]
     fn metadata_contains_compression_type_xz() {
         let compression = CompressionType::Xz;
-        let key_type = KeyType::Password("xz".to_string());
+        let key_type = KeyType::Password;
         let nonce = generate_nonce();
 
         let meta = MetaDatas::new(key_type, compression, nonce);
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn metadata_contains_compression_type_no_comp() {
         let compression = CompressionType::NoComp;
-        let key_type = KeyType::Password("no_comp".to_string());
+        let key_type = KeyType::Password;
         let nonce = generate_nonce();
 
         let meta = MetaDatas::new(key_type, compression, nonce);
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn serialize_deserialize_empty_password_keytype() {
-        let key_type = KeyType::Password("".to_string());
+        let key_type = KeyType::Password;
         let compression = CompressionType::Zstd;
         let nonce = generate_nonce();
 
@@ -174,7 +174,7 @@ mod tests {
 
         assert!(packed_header.len() < 50);
 
-        let key_type = KeyType::Password("test".to_string());
+        let key_type = KeyType::Password;
         let meta = MetaDatas::new(key_type, CompressionType::Zstd, [0u8; 24]);
         let packed_meta = meta.pack().unwrap();
 
@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn header_meta_len_preserved() {
         for meta_len in [0u32, 1, 100, 1000, u32::MAX].iter() {
-            let mut header = ArchiveHeader::new(false, *meta_len);
+            let header = ArchiveHeader::new(false, *meta_len);
             let packed = header.pack().unwrap();
             let unpacked: ArchiveHeader = postcard::from_bytes(&packed).unwrap();
 
@@ -222,7 +222,7 @@ mod tests {
             let mut nonce = [0u8; 24];
             nonce.copy_from_slice(&nonce_pattern);
 
-            let key_type = KeyType::Password("test".to_string());
+            let key_type = KeyType::Password;
             let meta = MetaDatas::new(key_type, CompressionType::Zstd, nonce);
 
             let packed = meta.pack().unwrap();
@@ -234,8 +234,7 @@ mod tests {
 
     #[test]
     fn metadata_serialization_with_special_chars_password() {
-        let special_pwd = "p@$$w0rd!#%^&*()_+-=[]{}|;':,./<>?";
-        let key_type = KeyType::Password(special_pwd.to_string());
+        let key_type = KeyType::Password;
         let compression = CompressionType::Zstd;
         let nonce = generate_nonce();
 
@@ -249,30 +248,12 @@ mod tests {
 
     #[test]
     fn metadata_serialization_with_unicode_password() {
-        let unicode_pwd = "パスワード🔐émoji";
-        let key_type = KeyType::Password(unicode_pwd.to_string());
+        let key_type = KeyType::Password;
         let compression = CompressionType::Zstd;
         let nonce = generate_nonce();
 
         let meta = MetaDatas::new(key_type, compression, nonce);
         let packed = meta.pack().unwrap();
-
-        let unpacked: MetaDatas = postcard::from_bytes(&packed).unwrap();
-
-        assert_eq!(meta.key_type, unpacked.key_type);
-    }
-
-    #[test]
-    fn metadata_serialization_with_very_long_password() {
-        let long_pwd = "a".repeat(1024 * 1024);
-        let key_type = KeyType::Password(long_pwd);
-        let compression = CompressionType::Zstd;
-        let nonce = generate_nonce();
-
-        let meta = MetaDatas::new(key_type, compression, nonce);
-        let packed = meta.pack().unwrap();
-
-        assert!(packed.len() > 1_000_000);
 
         let unpacked: MetaDatas = postcard::from_bytes(&packed).unwrap();
 

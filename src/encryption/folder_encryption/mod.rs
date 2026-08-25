@@ -1,14 +1,14 @@
 pub mod entries;
 pub mod intern_archive_encryption;
 
+use crate::context::EnkryptitContext;
 use crate::encryption::folder_encryption::KeyType::Pwd256;
 use crate::encryption::folder_encryption::entries::collect_folder_entries;
 use crate::encryption::folder_encryption::intern_archive_encryption::{
     decrypt_single_file_from_archive, encrypt_single_file_into_archive,
 };
 use crate::errors::EnkryptitError;
-use crate::keygen::derive_key;
-use crate::keygen::key_from_password;
+use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, FolderMetadata};
 use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType;
@@ -17,22 +17,17 @@ use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::path::Path;
 use zeroize::Zeroize;
+use crate::types::Mode;
 
 /// Encrypt a folder into a single .encky archive file (v2 format: metadata at the end)
 pub fn encrypt_folder(
     folder_path: &str,
     parameters: &EnkryptitParams,
-    key: [u8; 32],
-    key_type: crate::types::KeyType,
+    context: &mut EnkryptitContext,
+    keytype: &KeyType
 ) -> Result<String, EnkryptitError> {
-    // Resolves the key and the keytype
-    let (mut key, new_key_type) = match key_type {
-        KeyType::Password(pwd) => {
-            let (key, salt) = key_from_password(&pwd)?;
-            (key, Pwd256(salt))
-        }
-        _ => (key, key_type.clone()),
-    };
+    // Creates the Enkryptit key (resolves both key and keytype)
+    let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, folder_path)?;
 
     // Step 1: Collect all file entries from directory tree (follow symlinks)
     let mut entries = collect_folder_entries(folder_path)?;
@@ -42,7 +37,7 @@ pub fn encrypt_folder(
     }
 
     // Step 2: Build FolderMetadata (offsets will be filled after encryption)
-    let mut folder_meta = FolderMetadata::new(parameters.compression, new_key_type);
+    let mut folder_meta = FolderMetadata::new(parameters.compression, enkryptit_key.key_type_as_ref().clone());
 
     for entry in &entries {
         folder_meta.entries.push(entry.clone());
@@ -87,7 +82,7 @@ pub fn encrypt_folder(
             &entry.relative_path,
             entry.file_nonce,
             parameters.compression,
-            key,
+            enkryptit_key.key_as_ref(),
             &archive_path,
         )?;
 
@@ -122,8 +117,6 @@ pub fn encrypt_folder(
         archive_file.write_all(&final_header_bytes)?;
     }
 
-    key.zeroize();
-
     Ok(archive_path)
 }
 
@@ -131,26 +124,17 @@ pub fn encrypt_folder(
 pub fn decrypt_folder(
     archive_path: &str,
     meta_bytes: &[u8],
-    key: [u8; 32],
     payload_offset: u64,
-    key_type: KeyType,
     version: u8,
+    context: &mut EnkryptitContext,
 ) -> Result<String, EnkryptitError> {
+    // First, we deserialize the metadata
     let metadatas: FolderMetadata = from_bytes(meta_bytes)?;
     let compression_type = metadatas.compression;
     let entries = metadatas.entries;
 
-    // Step 2: Derive base key from stored KeyType (same as encryption)
-    let key = if let KeyType::Password(pwd) = &key_type {
-        let salt = match &metadatas.key_type {
-            KeyType::Pwd256(s) => *s,
-            _ => return Err(EnkryptitError::CorruptedFile),
-        };
-
-        derive_key(pwd, salt)?
-    } else {
-        key
-    };
+    // Then, we resolve the key & keytype and create a new EnkryptitKey 
+    let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, archive_path)?;
 
     // Step 3: Create destination directory structure
     let dest_folder = archive_path.strip_suffix(".encky").unwrap_or(archive_path);
@@ -172,7 +156,7 @@ pub fn decrypt_folder(
             entry.file_nonce,
             entry.offset, // used for progress bar display
             compression_type,
-            key,
+            enkryptit_key.key_as_ref(),
             offset,
         );
 

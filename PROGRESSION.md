@@ -76,3 +76,79 @@ test result: ok. 89 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fin
 I also modified README.
 
 ---
+
+## DAY-4 Fixed an issue with folder encryption
+
+I fixed an issue with the folder encryption, in `/treatment/folder_case.rs`. 
+\
+The fact was that if you wanted to encrypt `path/to/my/folder/`, it created `path/to/my/folder/.encky`. 
+\
+It is not a huge issue, but I added a `strip_suffix()`, so that now it creates `path/to/my/folder.encky` correctly.
+
+Test results :
+
+```bash
+test result: ok. 89 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.71s
+```
+
+---
+
+## DAY-5 Refactorization & addon
+
+I did a huge refactorization in the code. Now, the frontend doesn't resolves the `key`. 
+\
+It passes an `EnkryptitContext` (*mutable*) to the backend, so that the backend resolves both `Key` and `KeyType` easily :
+
+```rust
+let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
+// Or 
+let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, &metadatas.key_type, context, path)?;
+```
+
+The `Key` and `KeyType` are now, in the backend, wrapped in `EnkryptitKey`, a more secure structure (`Zeroize` on drop, and calls `EnkryptitContext::resolve` wich contains the password as `Zeroizing<>`. Also, the key is *Locked* (`mlock`)).
+\
+Because of these refactorizations, the code is now easier to read (and to maintain), but also allows the user to do :
+```bash
+eck myfile.txt myfile2.txt
+eck myfolder/*
+```
+
+> Many files can be encrypted with one command now.
+
+This is possible because of `pub fn treat_objects_with_multiple_paths()` and the modification of the Cli's arguments (`Vec<String>` for paths instead of `Option<String>`.)
+\
+Files added :
+- frontend/params_helper.rs
+\
+frontend/mod.rs
+\
+frontend/treat_output.rs
+\
+frontend/treatment.rs
+\
+frontend/tui.rs (moved)
+\
+frontend/cli.rs (moved)
+
+- context.rs
+- key/derivation.rs
+\
+key/generation.rs
+\
+key/mod.rs
+\
+key/resolve.rs
+\
+key/storage.rs
+
+- Files modified : Almost all, except `compression`, `metadatas`, `parameters` and `encryption_primitives`.
+
+Test results :
+
+```bash
+test result: ok. 88 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 7.63s
+```
+
+(But many tests are deprecated)
+
+---

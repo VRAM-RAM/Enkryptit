@@ -1,14 +1,12 @@
 use crate::VERSION;
-use crate::cli::Output;
+use crate::context::EnkryptitContext;
+use crate::frontend::cli::Output;
 use crate::errors::EnkryptitError;
-use crate::keygen::{
-    generate_key_and_store_in_os, generate_key_and_write_file, load_key_from_file, load_key_from_os,
-};
 use crate::parameters::params::{EnkryptitParams, load_params, save_params};
 use crate::treatment::object_treatment::treat_object;
 use crate::types::CompressionType::{self, Lz4, NoComp, Xz};
 use crate::types::KeyParams::{File, Os, PassWord};
-use crate::types::KeyType;
+use crate::types::{Interface};
 use colored::*;
 use inquire::{Select, Text};
 
@@ -94,22 +92,9 @@ fn handle_encrypt_object() -> Result<(), EnkryptitError> {
 
     let parameters = load_params()?;
 
-    let (key, keytype) = match parameters.key_params {
-        PassWord => {
-            let password = rpassword::prompt_password("Enter password: ").unwrap();
-            ([0u8; 32], KeyType::Password(password))
-        }
-        File => match load_key_from_file(&path) {
-            Ok(k) => (k, KeyType::FromFile),
-            Err(_) => (generate_key_and_write_file(&path)?, KeyType::FromFile),
-        },
-        Os => match load_key_from_os(&path) {
-            Ok(k) => (k, KeyType::FromOS),
-            Err(_) => (generate_key_and_store_in_os(&path)?, KeyType::FromOS),
-        },
-    };
+    let mut context = EnkryptitContext::new(Interface::Tui, None);
 
-    match treat_object(&parameters, path, key, keytype)? {
+    match treat_object(&parameters, &path, &mut context)? {
         Output::Success { message } => {
             success!(message);
             Ok(())
@@ -221,3 +206,4 @@ fn show_current_params() -> Result<(), EnkryptitError> {
     show_params!(params.key_params, params.compression);
     Ok(())
 }
+

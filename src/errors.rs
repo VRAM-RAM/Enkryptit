@@ -22,8 +22,14 @@ pub enum EnkryptitError {
     #[error("unable to determine key type")]
     KeyTypeGetError,
 
+    #[error("Invalid key type. Found {0}, expected {1}")]
+    InvalidKeyType(String, String),
+    
     #[error("keyring error: {0}")]
     KeyringError(#[from] keyring::Error),
+
+    #[error("Key not found !")]
+    KeyNotFound,
 
     #[error("hex decoding error: {0}")]
     HexError(#[from] hex::FromHexError),
@@ -40,8 +46,11 @@ pub enum EnkryptitError {
     #[error("Command not found")]
     CommandNotFound,
 
-    #[error("error while searching for the filel")]
+    #[error("error while searching for the file")]
     FileError,
+
+    #[error("error while searching for this specific file")]
+    SpecificFileError(String),
 
     #[error("unable to lock memory")]
     MemoryLockError,
@@ -51,6 +60,9 @@ pub enum EnkryptitError {
 
     #[error("configuration error")]
     ConfigError,
+
+    #[error("Error with the Tui : {0}")]
+    TuiError(std::io::Error),
 
     #[error("json error: {0}")]
     SerdeJsonError(#[from] serde_json::Error),

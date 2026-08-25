@@ -1,4 +1,5 @@
-use crate::cli::Output;
+use crate::context::EnkryptitContext;
+use crate::frontend::cli::Output;
 use crate::encryption::folder_encryption::{decrypt_folder, encrypt_folder};
 use crate::errors::EnkryptitError;
 use crate::parameters::params::EnkryptitParams;
@@ -8,10 +9,17 @@ use crate::types::KeyType::{self};
 pub fn encrypt_folder_case(
     path: &str,
     parameters: &EnkryptitParams,
-    key: [u8; 32],
-    key_type: KeyType,
+    context: &mut EnkryptitContext,
+    key_type: &KeyType,
 ) -> Result<Output, EnkryptitError> {
-    match encrypt_folder(path, parameters, key, key_type) {
+    // We resolve the path by suppressing the suffix '/', because if we don't do that, the ` encrypt_folder()`
+    // function would write 'path/to/my/folder/.encky' instead of 'path/to/my/folder.encky'
+    let path = match path.strip_suffix("/") {
+        Some(p) => p,
+        None => path,
+    };
+
+    match encrypt_folder(path, parameters, context, key_type) {
         Ok(path) => Ok(Output::Success {
             message: format!("folder was encrypted at {} !", path),
         }),
@@ -22,19 +30,17 @@ pub fn encrypt_folder_case(
 /// Public helper for decrypting a folder. (Converts Ok<>/EnkryptitError to Output)
 pub fn decrypt_folder_case(
     path: &str,
-    key: [u8; 32],
+    context: &mut EnkryptitContext,
     metadatas_bytes: Vec<u8>,
     payload_offset: u64,
-    key_type: KeyType,
     version: u8,
 ) -> Result<Output, EnkryptitError> {
     match decrypt_folder(
         path,
         &metadatas_bytes,
-        key,
         payload_offset,
-        key_type,
         version,
+        context
     ) {
         Ok(path) => Ok(Output::Success {
             message: format!("folder was decrypted at {} !", path),

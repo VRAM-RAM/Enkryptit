@@ -12,7 +12,7 @@ pub fn encrypt_single_file_into_archive(
     relative_path: &str,
     file_nonce: [u8; 24],
     compression: CompressionType,
-    cipher_key: [u8; 32],
+    cipher_key: &[u8; 32],
     archive_path: &str,
 ) -> Result<u64, EnkryptitError> {
     let full_file_path = Path::new(folder_path).join(relative_path);
@@ -50,7 +50,7 @@ pub fn decrypt_single_file_from_archive(
     file_nonce: [u8; 24],
     compressed_size: u64,
     compression: CompressionType,
-    cipher_key: [u8; 32],
+    cipher_key: &[u8; 32],
     offset: u64,
 ) -> Result<u64, EnkryptitError> {
     let archive = File::open(Path::new(archive_path))?;

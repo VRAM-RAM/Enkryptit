@@ -29,10 +29,10 @@ mod tests {
         let nonce_0a = eck::encryption::encryption_primitives::derive_nonce(&master, 0);
         let nonce_0b = eck::encryption::encryption_primitives::derive_nonce(&master, 0);
 
-        assert_eq!(nonce_0a, nonce_0b); // Same step → same nonce
+        assert_eq!(nonce_0a, nonce_0b); // Same step -> same nonce
 
         let nonce_1 = eck::encryption::encryption_primitives::derive_nonce(&master, 1);
-        assert_ne!(nonce_0a, nonce_1); // Different step → different nonce
+        assert_ne!(nonce_0a, nonce_1); // Different step -> different nonce
     }
 
     #[test]
@@ -168,10 +168,10 @@ mod tests {
     fn key_derivation_deterministic() {
         let salt = [16u8; 16];
 
-        let derived_key_1 = eck::keygen::derive_key("test_pwd", salt).unwrap();
-        let derived_key_2 = eck::keygen::derive_key("test_pwd", salt).unwrap();
+        let derived_key_1 = eck::key::derivation::derive_key("test_pwd", salt).unwrap();
+        let derived_key_2 =eck::key::derivation::derive_key("test_pwd", salt).unwrap();
 
-        assert_eq!(derived_key_1, derived_key_2); // Same pwd + same salt → same key
+        assert_eq!(derived_key_1, derived_key_2); // Same pwd + same salt -> same key
     }
 
     #[test]
@@ -179,10 +179,10 @@ mod tests {
         let salt1 = [0x55u8; 16];
         let salt2 = [0x66u8; 16]; // Different!
 
-        let key1 = eck::keygen::derive_key("password", salt1).unwrap();
-        let key2 = eck::keygen::derive_key("password", salt2).unwrap();
+        let key1 = eck::key::derivation::derive_key("password", salt1).unwrap();
+        let key2 = eck::key::derivation::derive_key("password", salt2).unwrap();
 
-        assert_ne!(key1, key2); // Same pwd, different salts → different keys
+        assert_ne!(key1, key2); // Same pwd, different salts -> different keys
     }
 
     #[test]
@@ -268,7 +268,7 @@ mod tests {
         let mut bad_master = master_nonce;
         bad_master[23] ^= 0xFF;
 
-        // Decrypt with corrupted nonce should fail authentication (AEAD behavior: wrong nonce → invalid tag)
+        // Decrypt with corrupted nonce should fail authentication (AEAD behavior: wrong nonce -> invalid tag)
         assert!(
             eck::encryption::encryption_primitives::decrypt_chunk(
                 &mut data,
@@ -413,7 +413,7 @@ mod tests {
         let nonce_1_step0 = eck::encryption::encryption_primitives::derive_nonce(&master1, 0);
         let nonce_2_step0 = eck::encryption::encryption_primitives::derive_nonce(&master2, 0);
 
-        assert_ne!(nonce_1_step0, nonce_2_step0); // Different masters → different nonces
+        assert_ne!(nonce_1_step0, nonce_2_step0); // Different masters -> different nonces
     }
 
     #[test]
