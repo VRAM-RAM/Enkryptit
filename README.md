@@ -50,6 +50,7 @@ First, Enkryptit! can be run as a CLI tool. This are available commands :
 | **Help** | `eck help` | Displays the available commands menu. |
 | **Encrypt / Decrypt** | `eck /path/to/file` | Toggles encryption or decryption for the specified file. |
 | **Encrypt / Decrypt with a password** | `eck /path/to/file -p mypassword` | Toggles encryption or decryption for the specified file, with a password. |
+| **Encrypt / Decrypt multiple files and folders** | `eck /path/to/file /path/to/folder /path/to/folder/*` | Toggles encryption or decryption for the specified files and folders (compatible with -p) |
 | **Open TUI** | `eck ui` or `eck` | Opens the TUI |
 | **Show current params** | `eck parameters` or `eck params` | Shows current params |
 | **Change compression** | `eck params (or parameters) -c (or --compression) compressiontype` | Changes compression algorithm. Available : zstd, lz4 and xz  |
@@ -72,11 +73,12 @@ You will see a menu, in which one you will be able to navigate :
 
 ```bash
 Enkryptit
-   Fast & Secure File Encryption Manager v1
+   Fast & Secure File Encryption Manager v2
 ? What do you want to do?  
-> Encrypt/Decrypt file
+> Encrypt/Decrypt file/folder
   Parameters
   Help
+  Browse
   Exit
 [↑↓ to move, enter to select, type to filter]
 ```
@@ -129,7 +131,7 @@ But also :
 
 ## Change parameters
 
-You have the ability to choose your compression, key type, encryption algorithm, Argon2id parameters with **Enkryptit!**. By default, the choosen parameters are :
+You have the ability to choose your compression and key type with **Enkryptit!**. By default, the choosen parameters are :
 
 - Keytype : Password
 - Compression : Zstd
@@ -141,7 +143,7 @@ Next steps would be :
 - parallelization
 - benchmarks
 - Doc + Dev Doc
-- Make the interface more ergonomic (add a `Browse Files & Folders`, modify how metadata works...)
+- Make the interface more ergonomic (modify how metadata works...)
 
 ## License
 

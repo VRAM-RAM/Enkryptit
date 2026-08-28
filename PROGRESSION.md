@@ -152,3 +152,28 @@ test result: ok. 88 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fin
 (But many tests are deprecated)
 
 ---
+
+## DAY-6 Ergonomic addon 
+
+Added a `Browse` section in the TUI that uses `rfd` (Rusty Files Dialogs), and allows the users to now browse their **files** and **folders**.
+
+- Files modified : frontend/tui.rs
+- Functions added :
+    - pub fn launch_browser() -> Result<(), EnkryptitError> {} (launches the browser menu)
+    - fn browse_files() -> Result<(), EnkryptitError> {} (opens the `Browse Files` pop-up, and treats the selected objects)
+    - fn browse_folders() -> Result<(), EnkryptitError> {} (opens the `Browse Folders` pop-up, and treats the selected objects)
+    - fn browse_files_then_folders() -> Result<(), EnkryptitError> {} (opens the `Browse Files` pop-up, then the `Browse Files` pop-up, combines the two results, and treats the selected objects)
+
+Test results :
+
+```bash
+test result: ok. 88 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 5.21s
+```
+
+But **too many** tests are deprecated, and I need to add test for :
+- testing `eck /myfile.rs /myfolder/ /myfolder2/*`
+- tests for the `EnkryptitContext` (password resolution, essentially)
+- tests for `EnkryptitKey`
+- tests for the `Browse` section
+
+---
