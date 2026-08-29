@@ -36,12 +36,61 @@ macro_rules! show_params {
     };
 }
 
-// Basic UI
+// TUI
+
+/// Abstraction for Tui's actions 
+/// \
+/// Used by `launch_ui()` and integration tests.
+/// \
+/// Contains 4 actions :
+/// - EncryptObject
+/// - LaunchParams
+/// - ShowHelp
+/// - Browse
+/// \
+/// Only implements the `execute(&self)` method, that `matches` the *action* and calls the corresponding function, and the `from_str(&str)` method, that maps an &str to an EnkryptitTuiAction (and returns `None` if the &str does not correspond to any action.)
+/// \
+/// The `Exit` action is directly handled by the `launch_ui()` function itself.
+/// \
+/// In fact, the content of the enum isn't used here. It is only used in `/tests/`. That's why we need to keep it.
+#[allow(dead_code)]
+pub enum EnkryptitTuiAction {
+    EncryptObject,
+    LaunchParams,
+    ShowHelp,
+    Browse,
+}
+
+impl EnkryptitTuiAction {
+
+    #[allow(dead_code)]
+    pub fn execute(&self) -> Result<(), EnkryptitError> {
+        match self {
+            Self::EncryptObject => handle_encrypt_object(),
+            Self::LaunchParams => launch_params(),
+            Self::ShowHelp => {
+                show_help();
+                Ok(())
+            }
+            Self::Browse => launch_browser(),
+        }
+    }
+
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "Encrypt/Decrypt file/folder" => Some(Self::EncryptObject),
+            "Parameters" => Some(Self::LaunchParams),
+            "Help" => Some(Self::ShowHelp),
+            "Browse" => Some(Self::Browse),
+            _ => None,
+        }
+    }
+}
 
 /// Public function that launches the TUI
 pub fn launch_ui() {
     println!("\n{}", "Enkryptit".cyan().bold());
-    println!("   Fast & Secure File Encryption Manager v{}", VERSION);
+    println!("   Fast & Secure File Encryption Manager v0.{}", VERSION);
 
     loop {
         let choices = vec!["Encrypt/Decrypt file/folder", "Parameters", "Help", "Browse", "Exit"];
@@ -51,32 +100,27 @@ pub fn launch_ui() {
             .prompt();
 
         match choice {
-            Ok("Encrypt/Decrypt file/folder") => {
-                if let Err(e) = handle_encrypt_object() {
-                    log_error!(e);
-                }
-            }
-            Ok("Parameters") => {
-                if let Err(e) = launch_params() {
-                    log_error!(e);
-                }
-            }
-            Ok("Help") => show_help(),
             Ok("Exit") => {
                 println!("\n{}", "Goodbye!".green());
                 break;
             }
-            Ok("Browse") => if let Err(e) = launch_browser() {
-                log_error!(e);
+
+            Ok(value) => {
+                if let Some(action) = EnkryptitTuiAction::from_str(value) {
+                    if let Err(e) = action.execute() {
+                        log_error!(e);
+                    }
+                }
             }
+
             Err(_) => {
                 log_error!("Selection cancelled");
                 continue;
             }
-            _ => continue,
         }
     }
 }
+
 
 /// Private helper for printing the help in TUI mode
 fn show_help() {
@@ -90,10 +134,16 @@ fn show_help() {
 
 /// Private helper for encrypting an object.
 fn handle_encrypt_object() -> Result<(), EnkryptitError> {
-    let path = Text::new("Enter file path:")
+    let path = match Text::new("Enter file path:")
         .with_help_message("Path to the file/folder to encrypt/decrypt")
-        .prompt()
-        .map_err(|_| EnkryptitError::CommandNotFound)?;
+        .prompt() {
+        Ok(path) => path,
+        Err(_) => {
+            log_error!("Selection cancelled");
+            return Ok(());
+        } 
+    };
+        
 
     let parameters = load_params()?;
 
@@ -109,11 +159,6 @@ fn handle_encrypt_object() -> Result<(), EnkryptitError> {
             log_error!("File is corrupted or doesn't exist");
             Ok(())
         }
-        Output::SomethingWentWrong => {
-            log_error!("Something went wrong");
-            Ok(())
-        }
-        _ => Ok(()),
     }
 }
 
@@ -186,10 +231,6 @@ fn browse_files() -> Result<(), EnkryptitError> {
             Output::CorruptedFile => {
                 log_error!("File is corrupted or doesn't exist");
             }
-            Output::SomethingWentWrong => {
-                log_error!("Something went wrong");
-            }
-            _ => continue,
         }
     }
     Ok(())
@@ -232,10 +273,6 @@ fn browse_folders() -> Result<(), EnkryptitError> {
             Output::CorruptedFile => {
                 log_error!("File is corrupted or doesn't exist");
             }
-            Output::SomethingWentWrong => {
-                log_error!("Something went wrong");
-            }
-            _ => continue,
         }
         
     }
@@ -307,10 +344,6 @@ fn browse_files_then_folders() -> Result<(), EnkryptitError> {
             Output::CorruptedFile => {
                 log_error!("File is corrupted or doesn't exist");
             }
-            Output::SomethingWentWrong => {
-                log_error!("Something went wrong");
-            }
-            _ => continue,
         }
         
     }

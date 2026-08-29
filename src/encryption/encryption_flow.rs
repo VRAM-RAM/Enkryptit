@@ -8,7 +8,6 @@ use chacha20poly1305::XChaCha20Poly1305;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{Read, Write};
 use std::ops::Deref;
-use zeroize::Zeroize;
 
 /// The heart of **Enkryptit** : it compresses and encrypts a stream of data.
 pub fn encrypt_stream<R: Read, W: Write>(
@@ -39,7 +38,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
     let mut total_processed: u64 = 0;
 
     // Cipher algorithm.
-    let cipher = XChaCha20Poly1305::new(key.deref().into());
+    let cipher = XChaCha20Poly1305::new(key.into());
 
     // Output (for in-place compression)
     let mut output = vec![0u8; CHUNK_SIZE];
@@ -104,7 +103,7 @@ pub fn decrypt_stream<R: Read, W: Write>(
 
     let mut total_processed: u64 = 0;
 
-    let cipher = XChaCha20Poly1305::new(key.deref().into());
+    let cipher = XChaCha20Poly1305::new(key.into());
 
     let mut output = vec![0u8; CHUNK_SIZE];
 

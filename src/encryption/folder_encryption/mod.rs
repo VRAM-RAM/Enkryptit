@@ -1,8 +1,8 @@
 pub mod entries;
 pub mod intern_archive_encryption;
 
+
 use crate::context::EnkryptitContext;
-use crate::encryption::folder_encryption::KeyType::Pwd256;
 use crate::encryption::folder_encryption::entries::collect_folder_entries;
 use crate::encryption::folder_encryption::intern_archive_encryption::{
     decrypt_single_file_from_archive, encrypt_single_file_into_archive,
@@ -16,7 +16,6 @@ use postcard::from_bytes;
 use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::path::Path;
-use zeroize::Zeroize;
 use crate::types::Mode;
 
 /// Encrypt a folder into a single .encky archive file (v2 format: metadata at the end)

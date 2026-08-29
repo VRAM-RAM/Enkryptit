@@ -2,12 +2,9 @@ use crate::{errors::EnkryptitError};
 
 /// Enum for Outputs, also used in Modern Ui
 pub enum Output {
-    Help,
     Error { error: EnkryptitError },
     Success { message: String },
     CorruptedFile,
-    SomethingWentWrong,
-    ParamsChanged,
 }
 
 #[macro_export]

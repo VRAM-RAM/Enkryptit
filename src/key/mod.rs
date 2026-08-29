@@ -10,6 +10,7 @@ use libc::{mlock, munlock};
 use zeroize::Zeroize;
 use crate::types::Mode;
 
+#[derive(Debug)]
 pub struct EnkryptitKey {
     key: LockedKey,
     key_type: KeyType,
@@ -73,6 +74,7 @@ impl EnkryptitKey {
     }
 }
 
+#[derive(Debug)]
 struct LockedKey([u8; 32]);
 
 impl LockedKey {

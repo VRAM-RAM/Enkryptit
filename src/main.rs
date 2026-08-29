@@ -22,7 +22,7 @@ pub const VERSION: Version = 2;
 #[derive(Parser)]
 #[command(name = "eck")]
 #[command(author = "Olruix")]
-#[command(version = "1.0")]
+#[command(version = "0.2")]
 #[command(about = "Fast & Secure File Encryption Manager")]
 /// The `Cli` structure for **Enkryptit!** cli-tool
 /// \

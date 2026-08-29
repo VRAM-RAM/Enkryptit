@@ -40,6 +40,9 @@ pub enum EnkryptitError {
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),
 
+    #[error("Unknown Action : {0}")]
+    UnknownAction(String),
+
     #[error("invalid key length")]
     InvalidKeyLength,
 

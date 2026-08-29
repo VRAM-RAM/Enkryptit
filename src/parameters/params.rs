@@ -42,14 +42,13 @@ fn config_path() -> Result<PathBuf, EnkryptitError> {
     }
 
     // Default: use system config directory
-    let dirs =
-        ProjectDirs::from("com", "olruix", "Enkryptit").ok_or(EnkryptitError::ConfigError)?;
+    let dirs = ProjectDirs::from("com", "olruix", "Enkryptit").ok_or(EnkryptitError::ConfigError)?;
 
     let mut path = dirs.config_dir().to_path_buf();
 
     std::fs::create_dir_all(&path)?;
 
-    path.push("Enkryptit_configs.json");
+    path.push("config.json");
 
     Ok(path)
 }
