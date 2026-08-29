@@ -1,5 +1,6 @@
 use crate::{errors::EnkryptitError};
-
+pub mod params_helpers;
+pub mod treatment;
 /// Enum for Outputs, also used in Modern Ui
 pub enum Output {
     Error { error: EnkryptitError },

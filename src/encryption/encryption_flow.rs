@@ -7,7 +7,6 @@ use chacha20poly1305::KeyInit;
 use chacha20poly1305::XChaCha20Poly1305;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{Read, Write};
-use std::ops::Deref;
 
 /// The heart of **Enkryptit** : it compresses and encrypts a stream of data.
 pub fn encrypt_stream<R: Read, W: Write>(

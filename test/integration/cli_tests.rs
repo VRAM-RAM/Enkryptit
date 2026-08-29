@@ -343,6 +343,7 @@ mod tests {
         );
     }
 
+
     #[test]
     /// Tests encrypting & decrypting a folder and a file with the same command
     fn cli_folders_and_files_encrypt_decrypt_roundtrip() {
@@ -433,4 +434,16 @@ mod tests {
         assert_eq!(parsed["compression"], "Zstd");
         assert_eq!(parsed["key_params"], "PassWord");
     }
+
+    // --- Cli (more tests)
+
+    #[test]
+    fn cli_unknown_argument_fails() {
+        let output = eck_cmd(&["--this-does-not-exist"])
+            .output()
+            .unwrap();
+
+        assert!(!output.status.success());
+    }
+    
 }

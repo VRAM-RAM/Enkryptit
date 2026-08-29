@@ -1,5 +1,5 @@
 use crate::{
-    frontend::{params_helpers::{show_params, update_params}, treat_output::treat_output, treatment::treat_objects_with_multiple_paths, tui::launch_ui}, types::Version
+    frontend::{cli::params_helpers::{show_params, update_params}, treat_output::treat_output, cli::treatment::treat_objects_with_multiple_paths, tui::launch_ui}, types::Version
 };
 use clap::{Parser, Subcommand};
 mod frontend;
@@ -13,7 +13,7 @@ mod treatment;
 mod types;
 pub mod context;
 pub mod key;
-use crate::frontend::treatment::treat_object_with_path;
+use crate::frontend::cli::treatment::treat_object_with_path;
 
 
 /// The version of `Enkryptit!`

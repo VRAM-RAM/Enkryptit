@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use eck::context::EnkryptitContext;
-use eck::encryption::folder_encryption::entries::collect_folder_entries;
+    use eck::encryption::folder_encryption::entries::collect_folder_entries;
     use eck::encryption::folder_encryption::{decrypt_folder, encrypt_folder};
     use eck::metadatas::{ArchiveHeader, FolderMetadata};
     use eck::parameters::params::EnkryptitParams;

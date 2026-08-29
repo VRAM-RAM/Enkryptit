@@ -102,7 +102,7 @@ It passes an `EnkryptitContext` (*mutable*) to the backend, so that the backend 
 ```rust
 let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
 // Or 
-let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, &metadatas.key_type, context, path)?;
+let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, &key_type, context, path)?;
 ```
 
 The `Key` and `KeyType` are now, in the backend, wrapped in `EnkryptitKey`, a more secure structure (`Zeroize` on drop, and calls `EnkryptitContext::resolve` wich contains the password as `Zeroizing<>`. Also, the key is *Locked* (`mlock`)).
@@ -177,3 +177,19 @@ But **too many** tests are deprecated, and I need to add test for :
 - tests for the `Browse` section
 
 ---
+
+## DAY-7 Frontend refactorization + Added tests
+
+Modified `/frontend/`. It is now compound of `/cli`, `/tui` and `treat_output.rs`.
+\
+All the **Cli** code has been grouped in `/cli`, and all the **Tui** code has been grouped in `/tui`.
+\
+Added `EnkryptitTuiAction` enum, used by `launch_ui()`. It makes the code cleaner and will help for future tests.
+\
+Added `9` tests that cover the *tui actions*, and cover more the tests related to *cli* (`cli_tests.rs`).
+
+Test results :
+
+```bash
+test result: ok. 97 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.94s
+```

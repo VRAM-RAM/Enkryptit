@@ -144,6 +144,7 @@ Next steps would be :
 - benchmarks
 - Doc + Dev Doc
 - Make the interface more ergonomic (modify how metadata works...)
+- Add a `Recovery` mode
 
 ## License
 

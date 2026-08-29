@@ -29,14 +29,7 @@ fn run_cli_decrypt(
     path: &std::path::Path,
     password: Option<&str>,
 ) -> Result<Assert, Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("eck")?;
-
-    if let Some(pwd) = password {
-        cmd.arg("-p").arg(pwd);
-    }
-    cmd.arg(path);
-
-    Ok(cmd.assert())
+    run_cli_encrypt(path, password)
 }
 
 fn stderr_of(assertion: &Assert) -> String {

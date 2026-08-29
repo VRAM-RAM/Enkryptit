@@ -5,3 +5,4 @@
 pub mod cli_tests;
 pub mod encryption_flow;
 pub mod folder_encryption;
+pub mod tui_tests;
