@@ -28,7 +28,7 @@ impl EnkryptitExecutable for EncryptChunkJob {
 
         let mut output = vec![0u8; CHUNK_SIZE];
 
-        self.data.compress(&mut output, *self.compression);
+        self.data.compress(&mut output, *self.compression)?;
 
         encrypt_chunk(&mut output, &nonce, &self.cipher, self.index)?;
         
@@ -56,7 +56,7 @@ impl EnkryptitExecutable for DecryptChunkJob {
 
         decrypt_chunk(&mut ndata, &self.cipher, &nonce, self.index)?;
 
-        ndata.decompress(&mut output, *self.compression);
+        ndata.decompress(&mut output, *self.compression)?;
 
         Ok(ChunkResult { index: self.index, data: output })
     }

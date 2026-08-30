@@ -5,3 +5,4 @@
 pub mod compression;
 pub mod encryption_primitives;
 pub mod metadatas;
+pub mod parallelism;

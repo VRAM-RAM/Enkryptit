@@ -10,7 +10,7 @@ use crate::parallelism::worker::EnkryptitWorker;
 use crate::parallelism::EnkryptitJob;
 
 pub struct EnkryptitPool<T: EnkryptitExecutable> {
-    workers: Vec<EnkryptitWorker<T>>,
+    _workers: Vec<EnkryptitWorker<T>>,
     sender: mpsc::SyncSender<EnkryptitJob<T>>,
     receiver: mpsc::Receiver<Result<T::Output, EnkryptitError>>,
 }
@@ -45,7 +45,7 @@ impl<T: EnkryptitExecutable + Send + 'static> EnkryptitPool<T> {
         drop(sender_result);
 
         Ok(Self {
-            workers,
+            _workers: workers,
             sender: sender_job,
             receiver: receiver_result,
         })

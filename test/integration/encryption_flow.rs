@@ -230,8 +230,9 @@ mod tests {
         let encrypted_path = encrypted_path_for(original.path());
         let mut archive = fs::read(&encrypted_path).unwrap();
 
-        // Flip a byte near the end of the payload (inside the final AEAD chunk)
-        let last = archive.len() - 2;
+        // Flip a byte just before the trailing ENK1END magic so the tamper hits a real
+        // AEAD ciphertext/tag byte instead of the unprotected magic.
+        let last = archive.len() - 8;
         archive[last] ^= 0xFF;
         let tampered_archive = archive.clone();
         fs::write(&encrypted_path, &tampered_archive).unwrap();

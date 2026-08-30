@@ -4,6 +4,7 @@ use crate::encryption::file_encryption::{decrypt_file, encrypt_file};
 use crate::errors::EnkryptitError;
 use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType::{self};
+use crate::types::ParallelismType;
 
 /// Public helper for encrypting a file (Converts Ok<>/EnkryptitError to Output)
 pub fn encrypt_file_case(
@@ -26,8 +27,9 @@ pub fn decrypt_file_case(
     meta: Vec<u8>,
     context: &mut EnkryptitContext,
     payload_offset: u64,
+    parallelism: ParallelismType,
 ) -> Result<Output, EnkryptitError> {
-    match decrypt_file(path, &meta, payload_offset, context) {
+    match decrypt_file(path, &meta, payload_offset, context, parallelism) {
         Ok(path) => Ok(Output::Success {
             message: format!("file was decrypted at {} !", &path).to_string(),
         }),

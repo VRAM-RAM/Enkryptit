@@ -445,5 +445,144 @@ mod tests {
 
         assert!(!output.status.success());
     }
+
+    // --- Parallelism settings tests
+
+    #[test]
+    fn cli_params_set_parallelism_single() {
+        use serde_json::json;
+        let guard = TestConfigGuard::with_parallelism("PassWord", "NoComp", json!("Single"));
+
+        let output = eck_cmd(&["params", "--parallelism", "single"])
+            .output()
+            .expect("Failed to execute eck params");
+
+        assert!(
+            output.status.success(),
+            "stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let saved = fs::read_to_string(guard.path()).unwrap();
+        assert!(saved.contains("\"Single\""), "config: {saved}");
+
+        let output = eck_cmd(&["params"]).output().unwrap();
+        assert!(output.status.success());
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Parallelism : Single"), "stdout: {stdout}");
+    }
+
+    #[test]
+    fn cli_params_set_parallelism_multi() {
+        use serde_json::json;
+        let guard = TestConfigGuard::with_parallelism("PassWord", "NoComp", json!("Single"));
+
+        let output = eck_cmd(&["params", "--parallelism", "multi:6"])
+            .output()
+            .expect("Failed to execute eck params");
+
+        assert!(
+            output.status.success(),
+            "stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let saved = fs::read_to_string(guard.path()).unwrap();
+        assert!(saved.contains("\"MultiThread\": 6"), "config: {saved}");
+
+        let output = eck_cmd(&["params"]).output().unwrap();
+        assert!(output.status.success());
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("MultiThread(6)"), "stdout: {stdout}");
+    }
+
+    #[test]
+    fn cli_params_set_parallelism_zero_threads_fails() {
+        use serde_json::json;
+        let guard = TestConfigGuard::with_parallelism("PassWord", "NoComp", json!("Single"));
+
+        let output = eck_cmd(&["params", "--parallelism", "multi:0"])
+            .output()
+            .unwrap();
+
+        assert!(!output.status.success());
+        // Config must remain untouched on failure
+        let saved = fs::read_to_string(guard.path()).unwrap();
+        assert!(saved.contains("\"Single\""), "config: {saved}");
+    }
+
+    #[test]
+    fn cli_multithread_encrypt_decrypt_roundtrip() {
+        use serde_json::json;
+
+        let _guard = TestConfigGuard::with_parallelism(
+            "PassWord",
+            "NoComp",
+            json!({ "MultiThread": 4 }),
+        );
+        let temp_file = NamedTempFile::new().unwrap();
+
+        fs::write(temp_file.path(), b"multithread cli roundtrip content").unwrap();
+
+        let encrypted_path = encrypted_path_for(temp_file.path());
+
+        Command::cargo_bin("eck")
+            .unwrap()
+            .arg("-p")
+            .arg("test123")
+            .arg(temp_file.path())
+            .assert()
+            .success();
+        assert!(encrypted_path.exists(), "archive should exist after encrypt");
+
+        Command::cargo_bin("eck")
+            .unwrap()
+            .arg("-p")
+            .arg("test123")
+            .arg(&encrypted_path)
+            .assert()
+            .success();
+
+        let restored = fs::read_to_string(temp_file.path()).unwrap();
+        assert_eq!(restored, "multithread cli roundtrip content");
+    }
+
+    #[test]
+    fn cli_multithread_encrypt_decrypt_large_file_roundtrip() {
+        use serde_json::json;
+
+        let _guard = TestConfigGuard::with_parallelism(
+            "PassWord",
+            "Zstd",
+            json!({ "MultiThread": 8 }),
+        );
+        let temp_file = NamedTempFile::new().unwrap();
+
+        // Large enough to span several chunks across the worker pool.
+        let content = vec![b'q'; 3 * 1024 * 1024];
+        fs::write(temp_file.path(), &content).unwrap();
+
+        let encrypted_path = encrypted_path_for(temp_file.path());
+
+        Command::cargo_bin("eck")
+            .unwrap()
+            .arg("-p")
+            .arg("test123")
+            .arg(temp_file.path())
+            .assert()
+            .success();
+        assert!(encrypted_path.exists());
+
+        Command::cargo_bin("eck")
+            .unwrap()
+            .arg("-p")
+            .arg("test123")
+            .arg(&encrypted_path)
+            .assert()
+            .success();
+
+        let restored = fs::read(temp_file.path()).unwrap();
+        assert_eq!(restored, content);
+    }
     
 }

@@ -12,10 +12,19 @@ mod tests {
     use tempfile::TempDir;
 
 
-    fn test_params(compression: CompressionType) -> EnkryptitParams {
+    fn test_params_single(compression: CompressionType) -> EnkryptitParams {
         EnkryptitParams {
             compression,
             key_params: KeyParams::File,
+            parallelism: eck::types::ParallelismType::Single
+        }
+    }
+
+    fn test_params_multi(compression: CompressionType) -> EnkryptitParams {
+        EnkryptitParams {
+            compression,
+            key_params: KeyParams::File,
+            parallelism: eck::types::ParallelismType::MultiThread(8)
         }
     }
 
@@ -39,14 +48,22 @@ mod tests {
     }
 
     #[test]
-    fn encrypt_decrypt_single_file_folder_nocomp() {
+    fn encrypt_decrypt_single_file_folder_nocomp_singlethread() {
+        encrypt_decrypt_single_file_folder_nocomp(test_params_single(CompressionType::NoComp));
+    }
+
+    #[test]
+    fn encrypt_decrypt_single_file_folder_nocomp_multithread() {
+        encrypt_decrypt_single_file_folder_nocomp(test_params_multi(CompressionType::NoComp));
+    }
+
+    fn encrypt_decrypt_single_file_folder_nocomp(params: EnkryptitParams) {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("testfolder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("hello.txt"), b"Hello from single file!").unwrap();
 
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
-        let params = test_params(CompressionType::NoComp);
         let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
         assert!(std::path::Path::new(&archive_path).exists());
 
@@ -72,7 +89,16 @@ mod tests {
     }
 
     #[test]
-    fn encrypt_decrypt_multi_file_folder_nocomp() {
+    fn encrypt_decrypt_multiple_file_folder_nocomp_singlethread() {
+        encrypt_decrypt_multi_file_folder_nocomp(test_params_single(CompressionType::NoComp));
+    }
+
+    #[test]
+    fn encrypt_decrypt_multiple_file_folder_nocomp_multithread() {
+        encrypt_decrypt_multi_file_folder_nocomp(test_params_multi(CompressionType::NoComp));
+    }
+
+    fn encrypt_decrypt_multi_file_folder_nocomp(params: EnkryptitParams) {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("multifolder");
         fs::create_dir_all(folder.join("subdir")).unwrap();
@@ -81,7 +107,6 @@ mod tests {
         fs::write(folder.join("subdir/file3.txt"), b"Third file content here").unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
 
-        let params = test_params(CompressionType::NoComp);
         let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
@@ -119,14 +144,22 @@ mod tests {
     }
 
     #[test]
-    fn encrypt_decrypt_zstd_roundtrip() {
+    fn encrypt_decrypt_zstd_roundtrip_singlethread() {
+        encrypt_decrypt_zstd_roundtrip(test_params_single(CompressionType::Zstd));
+    }
+
+    #[test]
+    fn encrypt_decrypt_zstd_roundtrip_multithread() {
+        encrypt_decrypt_zstd_roundtrip(test_params_multi(CompressionType::Zstd));
+    }
+
+    fn encrypt_decrypt_zstd_roundtrip(params: EnkryptitParams) {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("zstdfolder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("a.txt"), b"Zstd compressed content").unwrap();
         fs::write(folder.join("b.bin"), vec![0xAB; 1024 * 100]).unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
-        let params = test_params(CompressionType::Zstd);
         let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
@@ -153,16 +186,22 @@ mod tests {
     }
 
     #[test]
-    fn encrypt_decrypt_lz4_roundtrip() {
+    fn encrypt_decrypt_lz4_roundtrip_singlethread() {
+        encrypt_decrypt_lz4_roundtrip(test_params_single(CompressionType::Lz4));
+    }
+
+    #[test]
+    fn encrypt_decrypt_lz4_roundtrip_multithread() {
+        encrypt_decrypt_lz4_roundtrip(test_params_multi(CompressionType::Lz4));
+    }
+
+    fn encrypt_decrypt_lz4_roundtrip(params: EnkryptitParams) {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("lz4folder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("data.bin"), vec![0x42; 50_000]).unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
-
-        let params = test_params(CompressionType::Lz4);
-        let archive_path =
-            encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
+        let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
 
@@ -183,14 +222,22 @@ mod tests {
     }
 
     #[test]
-    fn encrypt_decrypt_xz_roundtrip() {
+    fn encrypt_decrypt_xz_roundtrip_singlethread() {
+        encrypt_decrypt_xz_roundtrip(test_params_single(CompressionType::Xz));
+    }
+
+    #[test]
+    fn encrypt_decrypt_xz_roundtrip_multithread() {
+        encrypt_decrypt_xz_roundtrip(test_params_multi(CompressionType::Xz));
+    }
+
+    fn encrypt_decrypt_xz_roundtrip(params: EnkryptitParams) {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("xzfolder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("readme.txt"), b"XZ compression test content").unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
 
-        let params = test_params(CompressionType::Xz);
         let archive_path =
             encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
 
@@ -219,7 +266,7 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
 
-        let params = test_params(CompressionType::NoComp);
+        let params = test_params_single(CompressionType::NoComp);
         let result = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile);
         assert!(result.is_err());
     }

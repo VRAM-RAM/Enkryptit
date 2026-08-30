@@ -53,7 +53,7 @@ pub fn treat_object(
             if is_folder_archive {
                 decrypt_folder_case(path, context, meta, payload_offset, version)
             } else {
-                decrypt_file_case(path, meta, context, payload_offset)
+                decrypt_file_case(path, meta, context, payload_offset, parameters.parallelism)
             }
         }
 

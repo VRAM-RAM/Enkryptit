@@ -193,3 +193,68 @@ Test results :
 ```bash
 test result: ok. 97 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.94s
 ```
+
+---
+
+## DAY-8 Added Multithreading when encrypting a file, updated the format and added tests
+
+Added `ParallelismType` in `types.rs`, and a `parallelism` field in *parameters*.
+\
+Also added a new argument in Cli and a new `Select` in Tui for choosing Parallelism type (and possibly threads number).
+\
+Added `/parallelism/`, that defines the *workers*, *jobs*, *workers pool*... for treating task with multithreading.
+\
+Added `encrypt_chunk_job`, a new abstraction (same level as `encryption_flow`) used by multithreading.
+\
+Added `/encryption/file_encryption/multithread.rs` that allows us to encrypt / decrypt file using this *pool*.
+The architecture is :
+
+```mermaid
+flowchart TD;
+    id1{{"Principal Thread"}}
+    id2("Reads the file, and split it in chunks.")
+    id3("Worker 1 [Treats the chunk's data]")
+    id4("Worker 2 [Treats the chunk's data]")
+    id5("Worker N [Treats the chunk's data]")
+    id6[["Result Vector"]]
+    id7(["Sorts the results"])
+    id8(["Write the results in the output file, in the correct order"])
+
+    id1 --> id2
+    id2 --> id3
+    id2 --> id4
+    id2 --> id5
+    id3 --> id6
+    id4 --> id6
+    id5 --> id6
+    id6 --> id7
+    id7 --> id8
+```
+\
+Also, updated the format : `ENK1END` is now outside a chunk.
+\
+Added `integration` tests (`encrypt_chunk_job`) and `unit` tests (`parallelism`).
+\
+Test results :
+```bash
+test result: ok. 130 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 8.58s
+```
+
+I also did a little benchmark :
+\
+**Setup**: Same 2 GB incompressible random file (/dev/urandom), NoComp compression, password key, isolated configs. 3 runs each, means reported.
+\
+Modes : `Single` and `Multi` (8 threads)
+\
+Measures :
+- Encryption: 8.43s --> 2.67s (3.16x faster)
+- Decryption: 8.08s --> 2.52s (3.21x faster)
+- Overall: 16.5s --> 5.18s on the 2 GB file
+
+> [!NOTE]
+> Multithreading gives ~3.2x on 8 threads rather than 8x. This is expected : the per-chunk XChaCha20 encryption work is small relative to the total 2 GB of disk I/O (read + write), which is the bottleneck and stays single-stream. The thread pool also serializes merging. Still, a solid ~3x win for both directions.
+
+We need, now, to :
+- update READMEs (tests + repo's README)
+- benchmark
+- extend parallelism (for folder archives)

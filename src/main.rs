@@ -55,22 +55,28 @@ struct Cli {
 enum Commands {
     Ui,
     Params {
-        /// Change le type de compression
+        /// Change compression algorithm
         #[arg(short = 'c', long = "compression", value_name = "ALGO")]
         compression: Option<String>,
 
-        /// Change le type de clé
+        /// Change key type
         #[arg(short = 'k', long = "keytype", value_name = "TYPE")]
         key_type: Option<String>,
+
+        /// Change parallelism type
+        #[arg(short = 'p', long = "parallelism", value_name = "PARA")]
+        parallelism: Option<String>,
     },
     Parameters {
-        /// Change le type de compression
         #[arg(short = 'c', long = "compression", value_name = "ALGO")]
         compression: Option<String>,
 
-        /// Change le type de clé
         #[arg(long = "keytype", visible_alias = "kt", value_name = "TYPE")]
         key_type: Option<String>,
+        
+        /// Change parallelism type
+        #[arg(short = 'p', long = "parallelism", value_name = "PARA")]
+        parallelism: Option<String>,
     },
 }
 
@@ -85,24 +91,26 @@ fn main() {
         Some(Commands::Params {
             compression,
             key_type,
+            parallelism
         }) => {
-            if compression.is_none() && key_type.is_none() {
+            if compression.is_none() && key_type.is_none() && parallelism.is_none() {
                 // If we don't have any arg, we show the current parameters
                 show_params()
             } else {
                 // Else, we update the parameters
-                update_params(compression, key_type);
+                update_params(compression, key_type, parallelism);
             }
         }
         Some(Commands::Parameters {
             compression,
             key_type,
+            parallelism
         }) => {
             // Same we `Parameters`
-            if compression.is_none() && key_type.is_none() {
+            if compression.is_none() && key_type.is_none() && parallelism.is_none() {
                 show_params()
             } else {
-                update_params(compression, key_type);
+                update_params(compression, key_type, parallelism);
             }
         }
         None => {

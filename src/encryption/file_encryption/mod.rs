@@ -2,6 +2,7 @@ pub mod single;
 pub mod multithread;
 
 use crate::context::EnkryptitContext;
+use crate::encryption::file_encryption::multithread::{decrypt_multithread_file, encrypt_multithread_file};
 use crate::encryption::file_encryption::single::{decrypt_file_single, encrypt_file_single};
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
@@ -21,9 +22,10 @@ pub fn encrypt_file(
     // Creates the enkryptit key (and resolves keytype & key)
     let enkryptit_key: EnkryptitKey = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, path)?;
 
+    // We match the parallelism type
     match parameters.parallelism {
         ParallelismType::Single =>  encrypt_file_single(path, parameters.compression, enkryptit_key),
-        ParallelismType::MultiThread(threads) => todo!("Implement multithreading !")
+        ParallelismType::MultiThread(threads) => encrypt_multithread_file(path, parameters.compression, enkryptit_key, threads),
     }
 }
 
@@ -47,6 +49,6 @@ pub fn decrypt_file(
 
     match parallelism {
         ParallelismType::Single => decrypt_file_single(path, payload_offset, enkryptit_key, master_nonce, compression_type),
-        ParallelismType::MultiThread(threads) => todo!("Implement multithreading !")
+        ParallelismType::MultiThread(threads) => decrypt_multithread_file(path, payload_offset, enkryptit_key, master_nonce, compression_type, threads),
     }
 }

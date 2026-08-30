@@ -46,11 +46,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
         let mut next_buffer = vec![0u8; CHUNK_SIZE];
         let next_n = reader.read(&mut next_buffer)?;
 
-        let mut data = buffer[..n].to_vec();
-        if next_n == 0 {
-            // If this is the end of the file, we add an 'end magic number'
-            data.append(&mut b"ENK1END".to_vec());
-        }
+        let data = buffer[..n].to_vec();
 
         // We compress, in-place, the data
         data.compress(&mut output, compression)?;
@@ -75,6 +71,9 @@ pub fn encrypt_stream<R: Read, W: Write>(
         n = next_n;
         step += 1;
     }
+
+    writer.write_all(b"ENK1END")?;
+    bytes_written += 7;
 
     pb.finish();
     println!();
@@ -122,6 +121,25 @@ pub fn decrypt_stream<R: Read, W: Write>(
 
         bytes_consumed += 4;
 
+        // We try to detect a possible ENK1END. 
+        // If we have one, we break.
+        // Why putting this here ? Because our format is :
+        //
+        // [LEN][CHUNK][ENK1END]
+        // So, it'll read the [LEN], then the [CHUNK], but, when trying to read the next len, it will read `ENK1`... that isn't a length.
+        // In consequence, we need to catch this case, and treat it as an exception.
+        if &len_buf == b"ENK1" {
+            let mut end = [0u8; 3];
+            reader.read_exact(&mut end)?;
+
+            if &end != b"END" {
+                // invalid magic
+                // EndMagicNumberNotFound / other error
+            }
+
+            break;
+        }
+
         let len = u32::from_le_bytes(len_buf) as usize;
 
         let mut payload = vec![0u8; len];
@@ -135,18 +153,6 @@ pub fn decrypt_stream<R: Read, W: Write>(
 
         // Then we decompress it in-place
         payload.decompress(&mut output, compression)?;
-
-        // If the outputs ends with `ENK1END`, the process is finished
-        if output.ends_with(b"ENK1END") {
-            let new_len = output.len() - 7;
-            output.truncate(new_len);
-            writer.write_all(&output)?;
-            total_processed += len as u64;
-            pb.set_position(total_processed);
-            pb.finish();
-            println!();
-            return Ok(bytes_consumed);
-        }
 
         total_processed += len as u64;
         pb.set_position(total_processed);

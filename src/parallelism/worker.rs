@@ -11,8 +11,8 @@ use crate::{errors::EnkryptitError, parallelism::{
 }};
 
 pub struct EnkryptitWorker<T: EnkryptitExecutable> {
-    id: usize,
-    thread: JoinHandle<()>,
+    _id: usize,
+    _thread: JoinHandle<()>,
     _phantom: PhantomData<T>
 }
 
@@ -40,8 +40,8 @@ impl<T: EnkryptitExecutable + Send + 'static> EnkryptitWorker<T> {
         });
 
         Self {
-            id,
-            thread,
+            _id: id,
+            _thread: thread,
             _phantom: PhantomData,
         }
     }
