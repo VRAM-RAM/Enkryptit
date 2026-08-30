@@ -68,3 +68,9 @@ pub enum Interface {
     Cli,
     Tui
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ParallelismType {
+    MultiThread(u8),
+    Single
+}

@@ -1,4 +1,7 @@
+use std::sync::mpsc::{RecvError};
+
 use thiserror::Error;
+
 
 #[allow(dead_code)]
 #[derive(Debug, Error)]
@@ -9,6 +12,15 @@ pub enum EnkryptitError {
 
     #[error("postcard error: {0}")]
     PostcardError(#[from] postcard::Error),
+
+    #[error("Send error to mspc channel")]
+    SendError,
+
+    #[error("Receive error from mspc channel : {0}")]
+    ReceiveError(#[from] RecvError),
+
+    #[error("Invalid worker count")]
+    InvalidWorkerCount,
 
     #[error("encryption/decryption failed")]
     Encryption,

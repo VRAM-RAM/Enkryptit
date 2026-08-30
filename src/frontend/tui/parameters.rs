@@ -2,8 +2,10 @@ use crate::errors::EnkryptitError;
 use crate::parameters::params::{EnkryptitParams, load_params, save_params};
 use crate::types::CompressionType::{self, Lz4, NoComp, Xz};
 use crate::types::KeyParams::{File, Os, PassWord};
+use crate::types::ParallelismType;
 use colored::*;
-use inquire::{Select};
+use inquire::ui::RenderConfig;
+use inquire::{CustomType, Select};
 use crate::log_error;
 use crate::success;
 use crate::show_params;
@@ -18,7 +20,7 @@ pub fn launch_params() -> Result<(), EnkryptitError> {
         let choices = vec![
             "Change compression type",
             "Change key type",
-            "Switch Ui",
+            "Change parallelism type",
             "Show current parameters",
             "Back to main menu",
         ];
@@ -28,6 +30,7 @@ pub fn launch_params() -> Result<(), EnkryptitError> {
         match choice {
             Ok("Change compression type") => change_compression()?,
             Ok("Change key type") => change_key_type()?,
+            Ok("Change parallelism type") => change_parallelism()?,
             Ok("Show current parameters") => show_current_params()?,
             Ok("Back to main menu") => break,
             Err(_) => {
@@ -65,7 +68,7 @@ fn change_compression() -> Result<(), EnkryptitError> {
         _ => CompressionType::Zstd,
     };
 
-    let params = EnkryptitParams::new(old_params.key_params, compression);
+    let params = EnkryptitParams::new(old_params.key_params, compression, old_params.parallelism);
     save_params(&params)?;
 
     success!(format!("Compression changed to {:?}", compression));
@@ -89,11 +92,51 @@ fn change_key_type() -> Result<(), EnkryptitError> {
         _ => PassWord,
     };
 
-    let params = EnkryptitParams::new(kt.clone(), old_params.compression);
+    let params = EnkryptitParams::new(kt.clone(), old_params.compression, old_params.parallelism);
     save_params(&params)?;
 
     success!(format!("Key type changed to {:?}", kt));
     Ok(())
+}
+
+/// Private helper for changing parallelism type
+fn change_parallelism() -> Result<(), EnkryptitError> {
+    let old_params = load_params()?;
+
+    let choices = vec!["Single", "MultiThread"];
+
+    let choice = Select::new("Select parallelism type:", choices)
+        .prompt()
+        .map_err(|_| EnkryptitError::CommandNotFound)?;
+
+    let pt = match choice {
+        "Single" => ParallelismType::Single,
+        "MultiThread" => ParallelismType::MultiThread(choose_threads()?),
+        _ => ParallelismType::Single,
+    };
+
+    let params = EnkryptitParams::new(old_params.key_params, old_params.compression, pt.clone());
+    save_params(&params)?;
+
+    success!(format!("Key type changed to {:?}", pt));
+    Ok(())
+}
+
+/// Private helper for choosing number of threads
+fn choose_threads() -> Result<u8, EnkryptitError> {
+    let threads: CustomType<u8> = CustomType::new("Enter the number of threads you want (recommend : 4-8) :")
+        .with_default(4)
+        .with_error_message("Please type a valid number, greater than 0.")
+        .with_help_message("The number of threads you want to use. Recommanded : 4-8 (must be greater than 0).")
+        .with_parser(&|u| match u.parse::<u8>() {
+            Ok(val) => Ok(val),
+            Err(_) => Err(())
+        })
+        .with_render_config(RenderConfig::default());
+
+    let choosed = threads.prompt().map_err(|_| EnkryptitError::CommandNotFound)?;
+
+    Ok(choosed)
 }
 
 /// Private helper for printing current parameters

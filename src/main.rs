@@ -13,6 +13,7 @@ mod treatment;
 mod types;
 pub mod context;
 pub mod key;
+pub mod parallelism;
 use crate::frontend::cli::treatment::treat_object_with_path;
 
 

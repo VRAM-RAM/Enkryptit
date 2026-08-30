@@ -8,6 +8,7 @@ pub mod parameters;
 pub mod treatment;
 pub mod types;
 pub mod context;
+pub mod parallelism;
 pub mod key;
 use crate::types::Version;
 pub const VERSION: Version = 2;

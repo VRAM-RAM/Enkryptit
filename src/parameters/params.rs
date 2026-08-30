@@ -2,6 +2,7 @@ use crate::errors::EnkryptitError;
 use crate::types::{
     CompressionType::{self, Zstd},
     KeyParams,
+    ParallelismType
 };
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
@@ -14,13 +15,15 @@ use std::path::PathBuf;
 pub struct EnkryptitParams {
     pub key_params: KeyParams,
     pub compression: CompressionType,
+    pub parallelism: ParallelismType,
 }
 
 impl EnkryptitParams {
-    pub fn new(key_params: KeyParams, compression: CompressionType) -> Self {
+    pub fn new(key_params: KeyParams, compression: CompressionType, parallelism: ParallelismType) -> Self {
         Self {
             key_params,
             compression,
+            parallelism
         }
     }
 }
@@ -30,6 +33,7 @@ impl Default for EnkryptitParams {
         Self {
             key_params: KeyParams::PassWord,
             compression: Zstd,
+            parallelism: ParallelismType::Single,
         }
     }
 }
