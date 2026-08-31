@@ -1,6 +1,6 @@
-use rand::{RngCore, rngs::OsRng};
 use crate::errors::EnkryptitError;
 use crate::key::storage::{save_key_in_file, save_key_in_os};
+use rand::{RngCore, rngs::OsRng};
 
 /// Public helper for generating a key and writing the key_file, given the name of the file to encrypt.
 /// \

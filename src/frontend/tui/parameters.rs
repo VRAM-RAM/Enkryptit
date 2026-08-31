@@ -1,19 +1,18 @@
 use crate::errors::EnkryptitError;
+use crate::frontend::cli::show_params;
+use crate::frontend::tui::input::TuiInput;
+use crate::log_error;
 use crate::parameters::params::{EnkryptitParams, load_params, save_params};
+use crate::success;
 use crate::types::CompressionType::{self, Lz4, NoComp, Xz};
 use crate::types::KeyParams::{File, Os, PassWord};
 use crate::types::ParallelismType;
 use colored::*;
-use inquire::ui::RenderConfig;
-use inquire::{CustomType, Select};
-use crate::log_error;
-use crate::success;
-use crate::show_params;
 
 /// Parameters UI
 
 /// Launch the params UI
-pub fn launch_params() -> Result<(), EnkryptitError> {
+pub fn launch_params(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     println!("\n{}", "Parameters Panel".cyan().bold());
 
     loop {
@@ -25,14 +24,12 @@ pub fn launch_params() -> Result<(), EnkryptitError> {
             "Back to main menu",
         ];
 
-        let choice = Select::new("What do you want to configure?", choices).prompt();
-
-        match choice {
-            Ok("Change compression type") => change_compression()?,
-            Ok("Change key type") => change_key_type()?,
-            Ok("Change parallelism type") => change_parallelism()?,
-            Ok("Show current parameters") => show_current_params()?,
-            Ok("Back to main menu") => break,
+        match input.select("What do you want to configure?", &choices) {
+            Ok(choice) if choice == "Change compression type" => change_compression(input)?,
+            Ok(choice) if choice == "Change key type" => change_key_type(input)?,
+            Ok(choice) if choice == "Change parallelism type" => change_parallelism(input)?,
+            Ok(choice) if choice == "Show current parameters" => show_current_params()?,
+            Ok(choice) if choice == "Back to main menu" => break,
             Err(_) => {
                 log_error!("Selection cancelled");
                 continue;
@@ -46,7 +43,7 @@ pub fn launch_params() -> Result<(), EnkryptitError> {
 }
 
 /// Private helper for changing compression
-fn change_compression() -> Result<(), EnkryptitError> {
+fn change_compression(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let old_params = load_params()?;
 
     let choices = vec![
@@ -56,11 +53,9 @@ fn change_compression() -> Result<(), EnkryptitError> {
         "No compression",
     ];
 
-    let choice = Select::new("Select compression type:", choices)
-        .prompt()
-        .map_err(|_| EnkryptitError::CommandNotFound)?;
+    let choice = input.select("Select compression type:", &choices)?;
 
-    let compression = match choice {
+    let compression = match choice.as_str() {
         "Zstd (balanced)" => CompressionType::Zstd,
         "Lz4 (fastest)" => Lz4,
         "Xz (best compression)" => Xz,
@@ -76,16 +71,14 @@ fn change_compression() -> Result<(), EnkryptitError> {
 }
 
 /// Private helper for changing key type
-fn change_key_type() -> Result<(), EnkryptitError> {
+fn change_key_type(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let old_params = load_params()?;
 
     let choices = vec!["Password (Argon2id)", "OS Keyring", "Key File"];
 
-    let choice = Select::new("Select key type:", choices)
-        .prompt()
-        .map_err(|_| EnkryptitError::CommandNotFound)?;
+    let choice = input.select("Select key type:", &choices)?;
 
-    let kt = match choice {
+    let kt = match choice.as_str() {
         "Password (Argon2id)" => PassWord,
         "OS Keyring" => Os,
         "Key File" => File,
@@ -100,18 +93,16 @@ fn change_key_type() -> Result<(), EnkryptitError> {
 }
 
 /// Private helper for changing parallelism type
-fn change_parallelism() -> Result<(), EnkryptitError> {
+fn change_parallelism(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let old_params = load_params()?;
 
     let choices = vec!["Single", "MultiThread"];
 
-    let choice = Select::new("Select parallelism type:", choices)
-        .prompt()
-        .map_err(|_| EnkryptitError::CommandNotFound)?;
+    let choice = input.select("Select parallelism type:", &choices)?;
 
-    let pt = match choice {
+    let pt = match choice.as_str() {
         "Single" => ParallelismType::Single,
-        "MultiThread" => ParallelismType::MultiThread(choose_threads()?),
+        "MultiThread" => ParallelismType::MultiThread(choose_threads(input)?),
         _ => ParallelismType::Single,
     };
 
@@ -123,18 +114,9 @@ fn change_parallelism() -> Result<(), EnkryptitError> {
 }
 
 /// Private helper for choosing number of threads
-fn choose_threads() -> Result<u8, EnkryptitError> {
-    let threads: CustomType<u8> = CustomType::new("Enter the number of threads you want (recommend : 4-8) :")
-        .with_default(4)
-        .with_error_message("Please type a valid number, greater than 0.")
-        .with_help_message("The number of threads you want to use. Recommanded : 4-8 (must be greater than 0).")
-        .with_parser(&|u| match u.parse::<u8>() {
-            Ok(val) => Ok(val),
-            Err(_) => Err(())
-        })
-        .with_render_config(RenderConfig::default());
-
-    let choosed = threads.prompt().map_err(|_| EnkryptitError::CommandNotFound)?;
+fn choose_threads(input: &impl TuiInput) -> Result<u8, EnkryptitError> {
+    let choosed =
+        input.custom_counter("Enter the number of threads you want (recommend : 4-8) :")?;
 
     Ok(choosed)
 }
@@ -142,7 +124,6 @@ fn choose_threads() -> Result<u8, EnkryptitError> {
 /// Private helper for printing current parameters
 fn show_current_params() -> Result<(), EnkryptitError> {
     let params = load_params()?;
-    show_params!(params.key_params, params.compression);
+    show_params(&params.key_params, &params.compression, &params.parallelism);
     Ok(())
 }
-

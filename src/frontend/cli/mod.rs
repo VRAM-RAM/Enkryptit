@@ -1,4 +1,7 @@
-use crate::{errors::EnkryptitError};
+use crate::{
+    errors::EnkryptitError,
+    types::{CompressionType, KeyParams, ParallelismType},
+};
 pub mod params_helpers;
 pub mod treatment;
 /// Enum for Outputs, also used in Modern Ui
@@ -60,13 +63,11 @@ macro_rules! params_changed {
     };
 }
 
-#[macro_export]
-macro_rules! show_params {
-    ($kt: expr, $c: expr) => {
-        println!(
-            "\n Actual parameters : \n Key Type : {:?} \n Compression : {:?} \n",
-            $kt, $c
-        )
-    };
+pub fn show_params(kt: &KeyParams, c: &CompressionType, p: &ParallelismType) {
+    println!();
+    println!(
+        "Actual parameters : \n KeyType : {:?} \n Compression : {:?} \n Parallelism Option : {:?}",
+        kt, c, p
+    );
+    println!();
 }
-

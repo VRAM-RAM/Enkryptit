@@ -1,15 +1,14 @@
-use std::sync::Arc;
+use crate::compression::{EnkryptitCompress, EnkryptitDecompress};
 use crate::encryption::encryption_primitives::{decrypt_chunk, derive_nonce, encrypt_chunk};
 use crate::parallelism::executable::EnkryptitExecutable;
 use crate::types::CHUNK_SIZE;
-use crate::{types::CompressionType};
-use crate::compression::{EnkryptitCompress, EnkryptitDecompress};
+use crate::types::CompressionType;
 use chacha20poly1305::XChaCha20Poly1305;
-
+use std::sync::Arc;
 
 pub struct ChunkResult {
     pub index: u64,
-    pub data: Vec<u8>
+    pub data: Vec<u8>,
 }
 
 pub struct EncryptChunkJob {
@@ -17,7 +16,7 @@ pub struct EncryptChunkJob {
     pub data: Vec<u8>,
     pub master_nonce: Arc<[u8; 24]>,
     pub compression: Arc<CompressionType>,
-    pub cipher: Arc<XChaCha20Poly1305>
+    pub cipher: Arc<XChaCha20Poly1305>,
 }
 
 impl EnkryptitExecutable for EncryptChunkJob {
@@ -31,18 +30,20 @@ impl EnkryptitExecutable for EncryptChunkJob {
         self.data.compress(&mut output, *self.compression)?;
 
         encrypt_chunk(&mut output, &nonce, &self.cipher, self.index)?;
-        
-        Ok(ChunkResult { index: self.index, data: output })
+
+        Ok(ChunkResult {
+            index: self.index,
+            data: output,
+        })
     }
 }
-
 
 pub struct DecryptChunkJob {
     pub index: u64,
     pub data: Vec<u8>,
     pub master_nonce: Arc<[u8; 24]>,
     pub compression: Arc<CompressionType>,
-    pub cipher: Arc<XChaCha20Poly1305>
+    pub cipher: Arc<XChaCha20Poly1305>,
 }
 
 impl EnkryptitExecutable for DecryptChunkJob {
@@ -58,7 +59,9 @@ impl EnkryptitExecutable for DecryptChunkJob {
 
         ndata.decompress(&mut output, *self.compression)?;
 
-        Ok(ChunkResult { index: self.index, data: output })
+        Ok(ChunkResult {
+            index: self.index,
+            data: output,
+        })
     }
 }
-

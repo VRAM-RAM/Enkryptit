@@ -258,3 +258,37 @@ We need, now, to :
 - update READMEs (tests + repo's README)
 - benchmark
 - extend parallelism (for folder archives)
+
+--- 
+
+## DAY-9
+
+Modified frontend to enable the creation of tests (mock tests) :
+
+- `src/frontend/tui/input.rs` (new): public `TuiInput` trait + `RealTuiInput` (real inquire/rfd). All interactive reads route through it.
+- `tui/mod.rs`: launch_ui(input) — main loop now drives input.select(); dispatch Encrypt/Params/Help/Browse/Exit.
+- `tui/action.rs`: execute(input) threads input through; from_str unchanged.
+- `tui/treatment.rs`: handle_object_treatment(input) + handle_object_treatment_with_password(input, pwd) seam (password bypasses the prompt for headless roundtrips).
+- `tui/parameters.rs`: launch_params(input) using input.select/input.custom_counter for compression/key/parallelism/threads.
+- `tui/browse.rs`: launch_browser(input) + public browse_files/browse_folders/browse_files_then_folders(input, password) using input.pick_files/pick_folders; shared treat_objects helper.
+- `main.rs`: passes &RealTuiInput to launch_ui.
+
+Of course, addded new tests (*16*) :
+
+- `/mocks/tui_input.rs`
+- `integration/tui_test.rs`
+- `integration/tui_flow.rs`
+
+Also modified the `show_parameters` macro (now a function that also prints the *Parallelism Type*).
+\
+\
+Created `/doc` (empty for now).
+
+> [!NOTE]
+> I created a new / stylish progress bar for Enkryptit... but I found it so useful that I decided to make it an entire crate.
+> The crate is [`gradient-bar`](github.com/VRAM-RAM/gradient-bar)
+
+Tests result :
+```bash
+test result: ok. 146 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.05s
+```

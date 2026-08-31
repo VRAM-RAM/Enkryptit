@@ -1,19 +1,21 @@
 use std::{
-    marker::PhantomData, sync::{
-        Arc,
-        Mutex,
+    marker::PhantomData,
+    sync::{
+        Arc, Mutex,
         mpsc::{Receiver, Sender},
-    }, thread::{self, JoinHandle},
+    },
+    thread::{self, JoinHandle},
 };
 
-use crate::{errors::EnkryptitError, parallelism::{
-    EnkryptitJob, executable::EnkryptitExecutable,
-}};
+use crate::{
+    errors::EnkryptitError,
+    parallelism::{EnkryptitJob, executable::EnkryptitExecutable},
+};
 
 pub struct EnkryptitWorker<T: EnkryptitExecutable> {
     _id: usize,
     _thread: JoinHandle<()>,
-    _phantom: PhantomData<T>
+    _phantom: PhantomData<T>,
 }
 
 impl<T: EnkryptitExecutable + Send + 'static> EnkryptitWorker<T> {
@@ -28,8 +30,6 @@ impl<T: EnkryptitExecutable + Send + 'static> EnkryptitWorker<T> {
                     Ok(job) => job,
                     Err(_) => break,
                 };
-
-                println!("Worker {} got job {}", id, job.index);
 
                 let result = job.execute();
 

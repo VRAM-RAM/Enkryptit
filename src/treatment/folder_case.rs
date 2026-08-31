@@ -1,7 +1,7 @@
 use crate::context::EnkryptitContext;
-use crate::frontend::cli::Output;
 use crate::encryption::folder_encryption::{decrypt_folder, encrypt_folder};
 use crate::errors::EnkryptitError;
+use crate::frontend::cli::Output;
 use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType::{self};
 
@@ -35,13 +35,7 @@ pub fn decrypt_folder_case(
     payload_offset: u64,
     version: u8,
 ) -> Result<Output, EnkryptitError> {
-    match decrypt_folder(
-        path,
-        &metadatas_bytes,
-        payload_offset,
-        version,
-        context
-    ) {
+    match decrypt_folder(path, &metadatas_bytes, payload_offset, version, context) {
         Ok(path) => Ok(Output::Success {
             message: format!("folder was decrypted at {} !", path),
         }),

@@ -3,13 +3,12 @@ use crate::encryption::encryption_primitives::generate_nonce;
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, MetaDatas};
+use crate::types::CompressionType;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
 use zeroize::Zeroize;
-use crate::types::{CompressionType};
-
 
 /// Public function that encrypts a file (it also resolves the key and keytype) - single thread
 pub fn encrypt_file_single(
@@ -27,7 +26,12 @@ pub fn encrypt_file_single(
     let mut master_nonce = generate_nonce();
 
     // Builds the metadata, and serialize it
-    let metadata = MetaDatas::new(enkryptit_key.key_type_as_ref().clone(), compression, master_nonce).pack()?;
+    let metadata = MetaDatas::new(
+        enkryptit_key.key_type_as_ref().clone(),
+        compression,
+        master_nonce,
+    )
+    .pack()?;
 
     let encrypted_path = format!("{}.encky", path);
 

@@ -11,12 +11,11 @@ mod tests {
     use std::io::{BufReader, Read, Seek, SeekFrom};
     use tempfile::TempDir;
 
-
     fn test_params_single(compression: CompressionType) -> EnkryptitParams {
         EnkryptitParams {
             compression,
             key_params: KeyParams::File,
-            parallelism: eck::types::ParallelismType::Single
+            parallelism: eck::types::ParallelismType::Single,
         }
     }
 
@@ -24,7 +23,7 @@ mod tests {
         EnkryptitParams {
             compression,
             key_params: KeyParams::File,
-            parallelism: eck::types::ParallelismType::MultiThread(8)
+            parallelism: eck::types::ParallelismType::MultiThread(8),
         }
     }
 
@@ -64,7 +63,13 @@ mod tests {
         fs::write(folder.join("hello.txt"), b"Hello from single file!").unwrap();
 
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
-        let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
+        let archive_path = encrypt_folder(
+            folder.to_str().unwrap(),
+            &params,
+            &mut context,
+            &KeyType::FromFile,
+        )
+        .unwrap();
         assert!(std::path::Path::new(&archive_path).exists());
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
@@ -75,14 +80,7 @@ mod tests {
         assert!(folder_meta.entries[0].offset > 0);
 
         fs::remove_dir_all(&folder).unwrap();
-        let dest = decrypt_folder(
-            &archive_path,
-            &meta_bytes,
-            0,
-            version,
-            &mut context,
-        )
-        .unwrap();
+        let dest = decrypt_folder(&archive_path, &meta_bytes, 0, version, &mut context).unwrap();
 
         let decrypted = fs::read_to_string(std::path::Path::new(&dest).join("hello.txt")).unwrap();
         assert_eq!(decrypted, "Hello from single file!");
@@ -107,7 +105,13 @@ mod tests {
         fs::write(folder.join("subdir/file3.txt"), b"Third file content here").unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
 
-        let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
+        let archive_path = encrypt_folder(
+            folder.to_str().unwrap(),
+            &params,
+            &mut context,
+            &KeyType::FromFile,
+        )
+        .unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
         let folder_meta: FolderMetadata = from_bytes(&meta_bytes).unwrap();
@@ -119,14 +123,7 @@ mod tests {
         assert_eq!(offsets, sorted_offsets);
 
         fs::remove_dir_all(&folder).unwrap();
-        let dest = decrypt_folder(
-            &archive_path,
-            &meta_bytes,
-            0,
-            version,
-            &mut context,
-        )
-        .unwrap();
+        let dest = decrypt_folder(&archive_path, &meta_bytes, 0, version, &mut context).unwrap();
 
         let base = std::path::Path::new(&dest);
         assert_eq!(
@@ -160,19 +157,18 @@ mod tests {
         fs::write(folder.join("a.txt"), b"Zstd compressed content").unwrap();
         fs::write(folder.join("b.bin"), vec![0xAB; 1024 * 100]).unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
-        let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
+        let archive_path = encrypt_folder(
+            folder.to_str().unwrap(),
+            &params,
+            &mut context,
+            &KeyType::FromFile,
+        )
+        .unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
 
         fs::remove_dir_all(&folder).unwrap();
-        let dest = decrypt_folder(
-            &archive_path,
-            &meta_bytes,
-            0,
-            version,
-            &mut context
-        )
-        .unwrap();
+        let dest = decrypt_folder(&archive_path, &meta_bytes, 0, version, &mut context).unwrap();
 
         let base = std::path::Path::new(&dest);
         assert_eq!(
@@ -201,19 +197,18 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("data.bin"), vec![0x42; 50_000]).unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
-        let archive_path = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
+        let archive_path = encrypt_folder(
+            folder.to_str().unwrap(),
+            &params,
+            &mut context,
+            &KeyType::FromFile,
+        )
+        .unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
 
         fs::remove_dir_all(&folder).unwrap();
-        let dest = decrypt_folder(
-            &archive_path,
-            &meta_bytes,
-            0,
-            version,
-            &mut context
-        )
-        .unwrap();
+        let dest = decrypt_folder(&archive_path, &meta_bytes, 0, version, &mut context).unwrap();
 
         assert_eq!(
             fs::read(std::path::Path::new(&dest).join("data.bin")).unwrap(),
@@ -238,20 +233,18 @@ mod tests {
         fs::write(folder.join("readme.txt"), b"XZ compression test content").unwrap();
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
 
-        let archive_path =
-            encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile).unwrap();
+        let archive_path = encrypt_folder(
+            folder.to_str().unwrap(),
+            &params,
+            &mut context,
+            &KeyType::FromFile,
+        )
+        .unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
 
         fs::remove_dir_all(&folder).unwrap();
-        let dest = decrypt_folder(
-            &archive_path,
-            &meta_bytes,
-            0,
-            version,
-            &mut context,
-        )
-        .unwrap();
+        let dest = decrypt_folder(&archive_path, &meta_bytes, 0, version, &mut context).unwrap();
 
         assert_eq!(
             fs::read_to_string(std::path::Path::new(&dest).join("readme.txt")).unwrap(),
@@ -267,7 +260,12 @@ mod tests {
         let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
 
         let params = test_params_single(CompressionType::NoComp);
-        let result = encrypt_folder(folder.to_str().unwrap(), &params, &mut context, &KeyType::FromFile);
+        let result = encrypt_folder(
+            folder.to_str().unwrap(),
+            &params,
+            &mut context,
+            &KeyType::FromFile,
+        );
         assert!(result.is_err());
     }
 

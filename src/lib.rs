@@ -1,14 +1,14 @@
-pub mod frontend;
 pub mod compression;
+pub mod context;
 pub mod conversions;
 pub mod encryption;
 pub mod errors;
+pub mod frontend;
+pub mod key;
 pub mod metadatas;
+pub mod parallelism;
 pub mod parameters;
 pub mod treatment;
 pub mod types;
-pub mod context;
-pub mod parallelism;
-pub mod key;
 use crate::types::Version;
 pub const VERSION: Version = 2;

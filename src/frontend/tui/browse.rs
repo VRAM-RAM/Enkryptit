@@ -1,19 +1,18 @@
 use crate::context::EnkryptitContext;
-use crate::frontend::cli::Output;
 use crate::errors::EnkryptitError;
-use crate::treatment::object_treatment::treat_object;
-use crate::types::{Interface};
-use colored::*;
-use inquire::{Select};
-use rfd::FileDialog;
+use crate::frontend::cli::Output;
+use crate::frontend::tui::input::TuiInput;
 use crate::log_error;
-use crate::success;
 use crate::parameters::params::load_params;
+use crate::success;
+use crate::treatment::object_treatment::treat_object;
+use crate::types::Interface;
+use colored::*;
 
 /// Browse UI
 
 /// Launch the browsing UI
-pub fn launch_browser() -> Result<(), EnkryptitError> {
+pub fn launch_browser(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     println!("\n{}", "Browser Panel".cyan().bold());
 
     loop {
@@ -24,13 +23,13 @@ pub fn launch_browser() -> Result<(), EnkryptitError> {
             "Back to main menu",
         ];
 
-        let choice = Select::new("What do you want to Browse?", choices).prompt();
-
-        match choice {
-            Ok("Browse Files") => browse_files()?,
-            Ok("Browse Folders") => browse_folders()?,
-            Ok("Browse both Files & Folders") => browse_files_then_folders()?,
-            Ok("Back to main menu") => break,
+        match input.select("What do you want to Browse?", &choices) {
+            Ok(choice) if choice == "Browse Files" => browse_files(input, None)?,
+            Ok(choice) if choice == "Browse Folders" => browse_folders(input, None)?,
+            Ok(choice) if choice == "Browse both Files & Folders" => {
+                browse_files_then_folders(input, None)?
+            }
+            Ok(choice) if choice == "Back to main menu" => break,
             Err(_) => {
                 log_error!("Selection cancelled");
                 continue;
@@ -42,159 +41,73 @@ pub fn launch_browser() -> Result<(), EnkryptitError> {
     Ok(())
 }
 
-/// Private helper for browsing file, and calling the object treatment
-fn browse_files() -> Result<(), EnkryptitError> {
-    let files = FileDialog::new()
-        .set_title("Choose file(s) to encrypt / decrypt")
-        .pick_files();
+/// Helper for browsing file, and calling the object treatment
+pub fn browse_files(input: &impl TuiInput, password: Option<String>) -> Result<(), EnkryptitError> {
+    let objects = input.pick_files("Choose file(s) to encrypt / decrypt");
 
-    let objects = match files {
-        Some(vector_of_pathbuf) => vector_of_pathbuf,
-        None => {
-            log_error!("You didn't choose any file !");
-            return Ok(());
-        }
-    };
-
-    let parameters = load_params()?;
-
-    let mut context = EnkryptitContext::new(Interface::Tui, None);
-
-    for path in objects {
-        let path_str = match path.to_str() {
-            Some(str) => str,
-            None => {
-                log_error!("Error while converting path to string !");
-                continue;
-            }
-        };
-
-        match treat_object(&parameters, path_str, &mut context)? {
-            Output::Success { message } => {
-                success!(message);
-            }
-            Output::Error { error } => {
-                log_error!(error)
-            },
-            Output::CorruptedFile => {
-                log_error!("File is corrupted or doesn't exist");
-            }
-        }
+    if objects.is_empty() {
+        log_error!("You didn't choose any file !");
+        return Ok(());
     }
-    Ok(())
+
+    treat_objects(objects, password)
 }
 
 // Private helper for browsing folders and encrypting those folders
-fn browse_folders() -> Result<(), EnkryptitError> {
-    let folders = FileDialog::new()
-        .set_title("Choose folder(s) to encrypt.")
-        .pick_folders();
+pub fn browse_folders(
+    input: &impl TuiInput,
+    password: Option<String>,
+) -> Result<(), EnkryptitError> {
+    let folders = input.pick_folders("Choose folder(s) to encrypt.");
 
-    let objects = match folders {
-        Some(vector_of_pathbuf) => vector_of_pathbuf,
-        None => {
-            log_error!("You didn't choose any file !");
-            return Ok(());
-        }
-    };
-
-    let parameters = load_params()?;
-
-    let mut context = EnkryptitContext::new(Interface::Tui, None);
-
-    for path in objects {
-        let path_str = match path.to_str() {
-            Some(str) => str,
-            None => {
-                log_error!("Error while converting path to string !");
-                continue;
-            }
-        };
-
-        match treat_object(&parameters, path_str, &mut context)? {
-            Output::Success { message } => {
-                success!(message);
-            }
-            Output::Error { error } => {
-                log_error!(error)
-            },
-            Output::CorruptedFile => {
-                log_error!("File is corrupted or doesn't exist");
-            }
-        }
-        
+    if folders.is_empty() {
+        log_error!("You didn't choose any folder !");
+        return Ok(());
     }
 
-    Ok(())
+    treat_objects(folders, password)
 }
 
-/// Private helper that... 
-fn browse_files_then_folders() -> Result<(), EnkryptitError> {
+/// Private helper that merges the chosen files and folders, then treats them.
+pub fn browse_files_then_folders(
+    input: &impl TuiInput,
+    password: Option<String>,
+) -> Result<(), EnkryptitError> {
     // First, the user picks the files he wants to encrypt / decrypt
-    let files = FileDialog::new()
-        .set_title("Choose file(s) to encrypt / decrypt")
-        .pick_files();
+    let files = input.pick_files("Choose file(s) to encrypt / decrypt");
 
     // Then, he picks the folders he wants to encrypt
-    let folders = FileDialog::new()
-        .set_title("Choose folder(s) to encrypt.")
-        .pick_folders();
+    let folders = input.pick_folders("Choose folder(s) to encrypt.");
 
-    // This is ugly, but makes sense
-    let objects = match folders {
-        // First case, if the user choosed folders, we have two possibilities
-        Some(mut vector_of_pathbuf) => {
-            match files {
-                // First possibility : the user also choosed files, so we append the vector of choosen folders with the vector of choosen files
-                Some(mut vector_of_pathbuf2) => {
-                    vector_of_pathbuf.append(&mut vector_of_pathbuf2);
-                    vector_of_pathbuf
-                }
-                // Second possibility : the user didn't choosed files, so we only return the vector of choosen folders.
-                None => vector_of_pathbuf
-            }
-        },
-        // Second case, if the user didn't choose folders, we have two possibilities
-        None => {
-            match files {
-                // First possibility : the user choosed files, so ze return the vector of choosen files
-                Some(vector_of_pathbuf) => vector_of_pathbuf,
-                // Second possibility : the user didn't choose anything, so we log an error, and return.
-                None => {
-                    log_error!("You didn't choose any file or folder !");
-                    return Ok(());
-                }
-            }
-        }
-    };
+    let mut objects = folders;
+    objects.extend(files);
 
+    if objects.is_empty() {
+        log_error!("You didn't choose any file or folder !");
+        return Ok(());
+    }
+
+    treat_objects(objects, password)
+}
+
+/// Shared treatment loop over a list of chosen object paths.
+fn treat_objects(objects: Vec<String>, password: Option<String>) -> Result<(), EnkryptitError> {
     let parameters = load_params()?;
 
-    let mut context = EnkryptitContext::new(Interface::Tui, None);
+    let mut context = EnkryptitContext::new(Interface::Tui, password);
 
-    // Then, we iterate over objects, like in `browse_files` and `browse_folders`.
-    for path in objects {
-        let path_str = match path.to_str() {
-            Some(str) => str,
-            None => {
-                log_error!("Error while converting path to string !");
-                continue;
-            }
-        };
-
-        match treat_object(&parameters, path_str, &mut context)? {
+    for path_str in objects {
+        match treat_object(&parameters, &path_str, &mut context)? {
             Output::Success { message } => {
                 success!(message);
             }
             Output::Error { error } => {
                 log_error!(error)
-            },
+            }
             Output::CorruptedFile => {
                 log_error!("File is corrupted or doesn't exist");
             }
         }
-        
     }
-
     Ok(())
 }

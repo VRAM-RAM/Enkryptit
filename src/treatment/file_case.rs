@@ -1,7 +1,7 @@
 use crate::context::EnkryptitContext;
-use crate::frontend::cli::Output;
 use crate::encryption::file_encryption::{decrypt_file, encrypt_file};
 use crate::errors::EnkryptitError;
+use crate::frontend::cli::Output;
 use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType::{self};
 use crate::types::ParallelismType;

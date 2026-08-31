@@ -55,6 +55,7 @@ First, Enkryptit! can be run as a CLI tool. This are available commands :
 | **Show current params** | `eck parameters` or `eck params` | Shows current params |
 | **Change compression** | `eck params (or parameters) -c (or --compression) compressiontype` | Changes compression algorithm. Available : zstd, lz4 and xz  |
 | **Change key type** | `eck params (or parameters) -k (or --keytype) keytype` | Changes key type. Available : os, file and pwd (or password) |
+| **Change parallelism type** | `eck params (or parameters) -p [parallelism-type] | Changes parallelism type. Available : `single`, `multi`, or `multi:threads_number` |
 
 ### TUI
 
@@ -131,10 +132,11 @@ But also :
 
 ## Change parameters
 
-You have the ability to choose your compression and key type with **Enkryptit!**. By default, the choosen parameters are :
+You have the ability to choose your compression, key type and parallelism type with **Enkryptit!**. By default, the choosen parameters are :
 
 - Keytype : Password
 - Compression : Zstd
+- Parallelism : Single (Thread)
 
 ## RoadMap
 

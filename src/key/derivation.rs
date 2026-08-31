@@ -1,8 +1,5 @@
+use crate::{errors::EnkryptitError, parameters::argon2id_parameters::argon2id_parameters};
 use rand::{RngCore, rngs::OsRng};
-use crate::{
-    errors::EnkryptitError,
-    parameters::argon2id_parameters::argon2id_parameters,
-};
 
 use argon2::{Algorithm, Argon2, Version};
 

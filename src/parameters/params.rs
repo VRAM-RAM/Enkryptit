@@ -1,8 +1,7 @@
 use crate::errors::EnkryptitError;
 use crate::types::{
     CompressionType::{self, Zstd},
-    KeyParams,
-    ParallelismType
+    KeyParams, ParallelismType,
 };
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
@@ -19,11 +18,15 @@ pub struct EnkryptitParams {
 }
 
 impl EnkryptitParams {
-    pub fn new(key_params: KeyParams, compression: CompressionType, parallelism: ParallelismType) -> Self {
+    pub fn new(
+        key_params: KeyParams,
+        compression: CompressionType,
+        parallelism: ParallelismType,
+    ) -> Self {
         Self {
             key_params,
             compression,
-            parallelism
+            parallelism,
         }
     }
 }
@@ -46,7 +49,8 @@ fn config_path() -> Result<PathBuf, EnkryptitError> {
     }
 
     // Default: use system config directory
-    let dirs = ProjectDirs::from("com", "olruix", "Enkryptit").ok_or(EnkryptitError::ConfigError)?;
+    let dirs =
+        ProjectDirs::from("com", "olruix", "Enkryptit").ok_or(EnkryptitError::ConfigError)?;
 
     let mut path = dirs.config_dir().to_path_buf();
 

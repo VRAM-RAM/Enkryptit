@@ -1,11 +1,11 @@
 use crate::compression::{EnkryptitCompress, EnkryptitDecompress};
 use crate::encryption::encryption_primitives::{decrypt_chunk, encrypt_chunk};
 use crate::errors::EnkryptitError;
+use gradient_bar::progress_bar::{GradientProgressBar};
 use crate::types::CHUNK_SIZE;
 use crate::types::CompressionType;
 use chacha20poly1305::KeyInit;
 use chacha20poly1305::XChaCha20Poly1305;
-use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{Read, Write};
 
 /// The heart of **Enkryptit** : it compresses and encrypts a stream of data.
@@ -26,12 +26,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
 
     let mut n = reader.read(&mut buffer)?;
 
-    println!();
-    // ProgressBar creation.
-    let pb = ProgressBar::new(total_size);
-    pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-        .unwrap()
-        .progress_chars("#>-"));
+    let pb = GradientProgressBar::with_total_bytes(total_size, "Encrypting...");
 
     // Processed counter
     let mut total_processed: u64 = 0;
@@ -65,7 +60,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
 
         // We update the processed total
         total_processed += n as u64;
-        pb.set_position(total_processed);
+        pb.update(total_processed);
 
         buffer = next_buffer;
         n = next_n;
@@ -93,11 +88,8 @@ pub fn decrypt_stream<R: Read, W: Write>(
     let mut bytes_consumed: u64 = 0;
 
     // ProgressBar creation.
-    println!();
-    let pb = ProgressBar::new(total_size);
-    pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-        .unwrap()
-        .progress_chars("#>-"));
+    let pb = GradientProgressBar::with_total_bytes(total_size, "Decrypting...");
+
 
     let mut total_processed: u64 = 0;
 
@@ -121,7 +113,7 @@ pub fn decrypt_stream<R: Read, W: Write>(
 
         bytes_consumed += 4;
 
-        // We try to detect a possible ENK1END. 
+        // We try to detect a possible ENK1END.
         // If we have one, we break.
         // Why putting this here ? Because our format is :
         //
@@ -155,7 +147,7 @@ pub fn decrypt_stream<R: Read, W: Write>(
         payload.decompress(&mut output, compression)?;
 
         total_processed += len as u64;
-        pb.set_position(total_processed);
+        pb.update(total_processed);
 
         writer.write_all(&output)?;
         step += 1;

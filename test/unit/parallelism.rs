@@ -5,13 +5,13 @@
 
 use std::sync::Arc;
 
+use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 use eck::encryption::encrypt_chunk_job::{ChunkResult, DecryptChunkJob, EncryptChunkJob};
 use eck::errors::EnkryptitError;
+use eck::parallelism::EnkryptitJob;
 use eck::parallelism::executable::EnkryptitExecutable;
 use eck::parallelism::pool::EnkryptitPool;
-use eck::parallelism::EnkryptitJob;
 use eck::types::{CHUNK_SIZE, CompressionType};
-use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 
 /// A trivial executable that returns its index, so we can check that results
 /// are correctly routed back from the workers.
@@ -62,7 +62,8 @@ mod tests {
     fn pool_returns_all_outputs_with_four_workers() {
         let pool = EnkryptitPool::<EchoJob>::new(4).unwrap();
         for i in 0..20u64 {
-            pool.submit(EnkryptitJob::new(i, EchoJob { value: i })).unwrap();
+            pool.submit(EnkryptitJob::new(i, EchoJob { value: i }))
+                .unwrap();
         }
 
         let mut received = Vec::new();
@@ -77,7 +78,8 @@ mod tests {
     fn pool_returns_all_outputs_with_single_worker() {
         let pool = EnkryptitPool::<EchoJob>::new(1).unwrap();
         for i in 0..5u64 {
-            pool.submit(EnkryptitJob::new(i, EchoJob { value: i })).unwrap();
+            pool.submit(EnkryptitJob::new(i, EchoJob { value: i }))
+                .unwrap();
         }
 
         let mut received = Vec::new();
@@ -94,7 +96,8 @@ mod tests {
         // and every result must still be received.
         let pool = EnkryptitPool::<EchoJob>::new(2).unwrap();
         for i in 0..50u64 {
-            pool.submit(EnkryptitJob::new(i, EchoJob { value: i })).unwrap();
+            pool.submit(EnkryptitJob::new(i, EchoJob { value: i }))
+                .unwrap();
         }
 
         let mut received = Vec::new();
@@ -134,7 +137,10 @@ mod tests {
             compression: compression.clone(),
             cipher: cipher.clone(),
         };
-        let ChunkResult { index, data: encrypted } = encrypt_job.execute().unwrap();
+        let ChunkResult {
+            index,
+            data: encrypted,
+        } = encrypt_job.execute().unwrap();
         assert_eq!(index, 0);
 
         let decrypt_job = DecryptChunkJob {

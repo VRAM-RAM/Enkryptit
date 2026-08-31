@@ -1,7 +1,11 @@
 use crate::errors::EnkryptitError;
-use crate::frontend::tui::{browse::launch_browser, treatment::handle_object_treatment, parameters::launch_params, help::show_help};
+use crate::frontend::tui::input::TuiInput;
+use crate::frontend::tui::{
+    browse::launch_browser, help::show_help, parameters::launch_params,
+    treatment::handle_object_treatment,
+};
 
-/// Abstraction for Tui's actions 
+/// Abstraction for Tui's actions
 /// \
 /// Used by `launch_ui()` and integration tests.
 /// \
@@ -25,17 +29,16 @@ pub enum EnkryptitTuiAction {
 }
 
 impl EnkryptitTuiAction {
-
     #[allow(dead_code)]
-    pub fn execute(&self) -> Result<(), EnkryptitError> {
+    pub fn execute(&self, input: &impl TuiInput) -> Result<(), EnkryptitError> {
         match self {
-            Self::EncryptObject => handle_object_treatment(),
-            Self::LaunchParams => launch_params(),
+            Self::EncryptObject => handle_object_treatment(input),
+            Self::LaunchParams => launch_params(input),
             Self::ShowHelp => {
                 show_help();
                 Ok(())
             }
-            Self::Browse => launch_browser(),
+            Self::Browse => launch_browser(input),
         }
     }
 

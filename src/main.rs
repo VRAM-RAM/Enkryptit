@@ -1,21 +1,26 @@
 use crate::{
-    frontend::{cli::params_helpers::{show_params, update_params}, treat_output::treat_output, cli::treatment::treat_objects_with_multiple_paths, tui::launch_ui}, types::Version
+    frontend::{
+        cli::params_helpers::{show_params, update_params},
+        cli::treatment::treat_objects_with_multiple_paths,
+        treat_output::treat_output,
+        tui::{input::RealTuiInput, launch_ui},
+    },
+    types::Version,
 };
 use clap::{Parser, Subcommand};
-mod frontend;
 mod compression;
+pub mod context;
 mod conversions;
 mod encryption;
 mod errors;
+mod frontend;
+pub mod key;
 mod metadatas;
+pub mod parallelism;
 mod parameters;
 mod treatment;
 mod types;
-pub mod context;
-pub mod key;
-pub mod parallelism;
 use crate::frontend::cli::treatment::treat_object_with_path;
-
 
 /// The version of `Enkryptit!`
 pub const VERSION: Version = 2;
@@ -73,7 +78,7 @@ enum Commands {
 
         #[arg(long = "keytype", visible_alias = "kt", value_name = "TYPE")]
         key_type: Option<String>,
-        
+
         /// Change parallelism type
         #[arg(short = 'p', long = "parallelism", value_name = "PARA")]
         parallelism: Option<String>,
@@ -86,12 +91,12 @@ fn main() {
     match cli.command {
         Some(Commands::Ui) => {
             // If the command is `Ui`, we launch the ui.
-            launch_ui();
+            launch_ui(&RealTuiInput);
         }
         Some(Commands::Params {
             compression,
             key_type,
-            parallelism
+            parallelism,
         }) => {
             if compression.is_none() && key_type.is_none() && parallelism.is_none() {
                 // If we don't have any arg, we show the current parameters
@@ -104,7 +109,7 @@ fn main() {
         Some(Commands::Parameters {
             compression,
             key_type,
-            parallelism
+            parallelism,
         }) => {
             // Same we `Parameters`
             if compression.is_none() && key_type.is_none() && parallelism.is_none() {
@@ -117,24 +122,16 @@ fn main() {
             let path: Vec<String> = cli.path;
             // If we have a path, we treat it using `treat_object_with_path()`
             match path.len() {
-                0 => launch_ui(),
-                1 => {
-                    match treat_object_with_path(&path[0], cli.password) {
-                        Ok(output) => treat_output(output),
-                        Err(e) => eprintln!("[ERROR] {}", e),
-                    }
-                }
-                _ => {
-                    match treat_objects_with_multiple_paths(&path, cli.password) {
-                        Ok(()) => (),
-                        Err(e) =>  eprintln!("[ERROR] {}", e),
-                    }
-                }
+                0 => launch_ui(&RealTuiInput),
+                1 => match treat_object_with_path(&path[0], cli.password) {
+                    Ok(output) => treat_output(output),
+                    Err(e) => eprintln!("[ERROR] {}", e),
+                },
+                _ => match treat_objects_with_multiple_paths(&path, cli.password) {
+                    Ok(()) => (),
+                    Err(e) => eprintln!("[ERROR] {}", e),
+                },
             }
         }
     }
 }
-
-
-
-

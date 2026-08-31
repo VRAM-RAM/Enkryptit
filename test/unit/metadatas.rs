@@ -16,7 +16,7 @@ fn generate_nonce() -> [u8; 24] {
 
 #[cfg(test)]
 mod tests {
-use super::*;
+    use super::*;
 
     #[test]
     fn serialize_deserialize_zstd_header() {

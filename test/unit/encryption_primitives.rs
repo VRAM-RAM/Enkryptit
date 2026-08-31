@@ -169,7 +169,7 @@ mod tests {
         let salt = [16u8; 16];
 
         let derived_key_1 = eck::key::derivation::derive_key("test_pwd", salt).unwrap();
-        let derived_key_2 =eck::key::derivation::derive_key("test_pwd", salt).unwrap();
+        let derived_key_2 = eck::key::derivation::derive_key("test_pwd", salt).unwrap();
 
         assert_eq!(derived_key_1, derived_key_2); // Same pwd + same salt -> same key
     }

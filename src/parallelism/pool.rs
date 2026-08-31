@@ -1,13 +1,9 @@
-use std::sync::{
-    Arc,
-    Mutex,
-    mpsc,
-};
+use std::sync::{Arc, Mutex, mpsc};
 
 use crate::errors::EnkryptitError;
 use crate::parallelism::EnkryptitExecutable;
-use crate::parallelism::worker::EnkryptitWorker;
 use crate::parallelism::EnkryptitJob;
+use crate::parallelism::worker::EnkryptitWorker;
 
 pub struct EnkryptitPool<T: EnkryptitExecutable> {
     _workers: Vec<EnkryptitWorker<T>>,
@@ -18,7 +14,7 @@ pub struct EnkryptitPool<T: EnkryptitExecutable> {
 impl<T: EnkryptitExecutable + Send + 'static> EnkryptitPool<T> {
     pub fn new(size: usize) -> Result<Self, EnkryptitError> {
         if size == 0 {
-            return Err(EnkryptitError::InvalidWorkerCount)
+            return Err(EnkryptitError::InvalidWorkerCount);
         }
         // Jobs : bounded for limiting RAM
         let (sender_job, receiver_job) = mpsc::sync_channel(size * 2);
@@ -33,13 +29,7 @@ impl<T: EnkryptitExecutable + Send + 'static> EnkryptitPool<T> {
             let receiver = Arc::clone(&receiver_job);
             let sender = sender_result.clone();
 
-            workers.push(
-                EnkryptitWorker::new(
-                    id,
-                    receiver,
-                    sender,
-                )
-            );
+            workers.push(EnkryptitWorker::new(id, receiver, sender));
         }
 
         drop(sender_result);
@@ -56,6 +46,8 @@ impl<T: EnkryptitExecutable + Send + 'static> EnkryptitPool<T> {
     }
 
     pub fn recv(&self) -> Result<Result<T::Output, EnkryptitError>, EnkryptitError> {
-        self.receiver.recv().map_err(|e| EnkryptitError::ReceiveError(e))
+        self.receiver
+            .recv()
+            .map_err(|e| EnkryptitError::ReceiveError(e))
     }
 }

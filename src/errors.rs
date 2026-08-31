@@ -1,7 +1,6 @@
-use std::sync::mpsc::{RecvError};
+use std::sync::mpsc::RecvError;
 
 use thiserror::Error;
-
 
 #[allow(dead_code)]
 #[derive(Debug, Error)]
@@ -36,7 +35,7 @@ pub enum EnkryptitError {
 
     #[error("Invalid key type. Found {0}, expected {1}")]
     InvalidKeyType(String, String),
-    
+
     #[error("keyring error: {0}")]
     KeyringError(#[from] keyring::Error),
 

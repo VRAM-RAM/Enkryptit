@@ -30,7 +30,11 @@ impl TestConfigGuard {
     /// Creates a config guard explicitly setting the parallelism, using the
     /// same externally-tagged representation as `serde` derives for the
     /// `ParallelismType` enum (e.g. `"MultiThread": 4` or `"Single"`).
-    pub fn with_parallelism(key_params: &str, compression: &str, parallelism: serde_json::Value) -> Self {
+    pub fn with_parallelism(
+        key_params: &str,
+        compression: &str,
+        parallelism: serde_json::Value,
+    ) -> Self {
         let json = serde_json::json!({
             "key_params": key_params,
             "compression": compression,

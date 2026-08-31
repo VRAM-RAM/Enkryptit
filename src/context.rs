@@ -1,7 +1,7 @@
-use crate::errors::EnkryptitError;
-use zeroize::Zeroizing;
 use crate::enter_password;
+use crate::errors::EnkryptitError;
 use crate::types::Interface;
+use zeroize::Zeroizing;
 
 /// The Context, passed trough the program.
 /// \
@@ -17,7 +17,10 @@ pub struct EnkryptitContext {
 
 impl EnkryptitContext {
     pub fn new(interface: Interface, password: Option<String>) -> Self {
-        Self { interface: interface, password:  password.map(Zeroizing::new) }
+        Self {
+            interface: interface,
+            password: password.map(Zeroizing::new),
+        }
     }
 
     pub fn resolve_password(&mut self) -> Result<&Zeroizing<String>, EnkryptitError> {
@@ -30,9 +33,8 @@ impl EnkryptitContext {
                     pwd.trim().to_string()
                 }
 
-                Interface::Tui => {
-                    rpassword::prompt_password("Enter password: ").map_err(|e| EnkryptitError::TuiError(e))?
-                }
+                Interface::Tui => rpassword::prompt_password("Enter password: ")
+                    .map_err(|e| EnkryptitError::TuiError(e))?,
             };
 
             self.password = Some(Zeroizing::new(pwd));
@@ -41,4 +43,3 @@ impl EnkryptitContext {
         Ok(self.password.as_ref().unwrap())
     }
 }
-

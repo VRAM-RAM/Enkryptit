@@ -1,10 +1,10 @@
+use crate::context::EnkryptitContext;
 use crate::errors::EnkryptitError;
 use crate::frontend::cli::Output;
 use crate::frontend::treat_output::treat_output;
 use crate::log_error;
 use crate::parameters::params::load_params;
 use crate::treatment::object_treatment::treat_object;
-use crate::context::{EnkryptitContext};
 use crate::types::Interface;
 
 /// Helper for treating a path.
@@ -41,4 +41,3 @@ pub fn treat_objects_with_multiple_paths(
     }
     Ok(())
 }
-

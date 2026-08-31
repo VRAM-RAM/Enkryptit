@@ -1,15 +1,14 @@
-use std::fs::File;
-use std::path::Path;
 use crate::context::EnkryptitContext;
-use crate::frontend::cli::Output;
 use crate::errors::EnkryptitError;
+use crate::frontend::cli::Output;
 use crate::metadatas::{ArchiveHeader, MAGIC};
 use crate::parameters::params::EnkryptitParams;
 use crate::treatment::file_case::{decrypt_file_case, encrypt_file_case};
 use crate::treatment::folder_case::{decrypt_folder_case, encrypt_folder_case};
 use postcard::from_bytes;
+use std::fs::File;
 use std::io::{BufReader, Read, Seek, SeekFrom};
-
+use std::path::Path;
 
 #[allow(dead_code)]
 /// ParsedFile enum. The result of a file parsing. If the file is encrypted with **Enkryptit!**, we return :

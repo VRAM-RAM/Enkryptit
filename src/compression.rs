@@ -30,17 +30,29 @@ pub trait EnkryptitCompress {
 /// fn decompress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError>;
 /// ```
 pub trait EnkryptitDecompress {
-    fn decompress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError>;
+    fn decompress(
+        &self,
+        output: &mut Vec<u8>,
+        compression: CompressionType,
+    ) -> Result<(), EnkryptitError>;
 }
 
 impl EnkryptitCompress for Vec<u8> {
-    fn compress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError> {
+    fn compress(
+        &self,
+        output: &mut Vec<u8>,
+        compression: CompressionType,
+    ) -> Result<(), EnkryptitError> {
         self.as_slice().compress(output, compression)
     }
 }
 
 impl<'a> EnkryptitCompress for &'a [u8] {
-    fn compress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError> {
+    fn compress(
+        &self,
+        output: &mut Vec<u8>,
+        compression: CompressionType,
+    ) -> Result<(), EnkryptitError> {
         match compression {
             Zstd => compress_with_zstd(self, output),
             Lz4 => compress_with_lz4(self, output),
@@ -55,13 +67,21 @@ impl<'a> EnkryptitCompress for &'a [u8] {
 }
 
 impl EnkryptitDecompress for Vec<u8> {
-    fn decompress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError> {
+    fn decompress(
+        &self,
+        output: &mut Vec<u8>,
+        compression: CompressionType,
+    ) -> Result<(), EnkryptitError> {
         self.as_slice().decompress(output, compression)
     }
 }
 
 impl<'a> EnkryptitDecompress for &'a [u8] {
-    fn decompress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError> {
+    fn decompress(
+        &self,
+        output: &mut Vec<u8>,
+        compression: CompressionType,
+    ) -> Result<(), EnkryptitError> {
         match compression {
             Zstd => decompress_with_zstd(self, output),
             Lz4 => decompress_with_lz4(self, output),

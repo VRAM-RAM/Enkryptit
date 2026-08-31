@@ -1,7 +1,6 @@
 pub mod entries;
 pub mod intern_archive_encryption;
 
-
 use crate::context::EnkryptitContext;
 use crate::encryption::folder_encryption::entries::collect_folder_entries;
 use crate::encryption::folder_encryption::intern_archive_encryption::{
@@ -12,18 +11,18 @@ use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, FolderMetadata};
 use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType;
+use crate::types::Mode;
 use postcard::from_bytes;
 use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::path::Path;
-use crate::types::Mode;
 
 /// Encrypt a folder into a single .encky archive file (v2 format: metadata at the end)
 pub fn encrypt_folder(
     folder_path: &str,
     parameters: &EnkryptitParams,
     context: &mut EnkryptitContext,
-    keytype: &KeyType
+    keytype: &KeyType,
 ) -> Result<String, EnkryptitError> {
     // Creates the Enkryptit key (resolves both key and keytype)
     let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, folder_path)?;
@@ -36,7 +35,10 @@ pub fn encrypt_folder(
     }
 
     // Step 2: Build FolderMetadata (offsets will be filled after encryption)
-    let mut folder_meta = FolderMetadata::new(parameters.compression, enkryptit_key.key_type_as_ref().clone());
+    let mut folder_meta = FolderMetadata::new(
+        parameters.compression,
+        enkryptit_key.key_type_as_ref().clone(),
+    );
 
     for entry in &entries {
         folder_meta.entries.push(entry.clone());
@@ -132,8 +134,9 @@ pub fn decrypt_folder(
     let compression_type = metadatas.compression;
     let entries = metadatas.entries;
 
-    // Then, we resolve the key & keytype and create a new EnkryptitKey 
-    let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, archive_path)?;
+    // Then, we resolve the key & keytype and create a new EnkryptitKey
+    let enkryptit_key =
+        EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, archive_path)?;
 
     // Step 3: Create destination directory structure
     let dest_folder = archive_path.strip_suffix(".encky").unwrap_or(archive_path);

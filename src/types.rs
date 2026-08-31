@@ -37,7 +37,7 @@ impl KeyParams {
         match self {
             &Self::File => KeyType::FromFile,
             &Self::Os => KeyType::FromOS,
-            &Self::PassWord => KeyType::Password
+            &Self::PassWord => KeyType::Password,
         }
     }
 }
@@ -66,11 +66,11 @@ pub enum Mode {
 /// To provide something clean when `matching` the interface in `EnkryptitContext`
 pub enum Interface {
     Cli,
-    Tui
+    Tui,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ParallelismType {
     MultiThread(u8),
-    Single
+    Single,
 }

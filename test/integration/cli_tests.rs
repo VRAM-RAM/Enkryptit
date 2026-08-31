@@ -75,7 +75,7 @@ mod tests {
         assert!(stdout.contains("Compression : Zstd"), "stdout: {stdout}");
     }
 
-    // -- Compression type settings tests 
+    // -- Compression type settings tests
 
     #[test]
     /// Tests changing the compression type to `zstd`
@@ -343,7 +343,6 @@ mod tests {
         );
     }
 
-
     #[test]
     /// Tests encrypting & decrypting a folder and a file with the same command
     fn cli_folders_and_files_encrypt_decrypt_roundtrip() {
@@ -365,7 +364,7 @@ mod tests {
             .arg(&folder)
             .assert()
             .success();
-        
+
         let archive_path = encrypted_path_for(&folder);
         let file_path = encrypted_path_for(temp_file.path());
 
@@ -439,9 +438,7 @@ mod tests {
 
     #[test]
     fn cli_unknown_argument_fails() {
-        let output = eck_cmd(&["--this-does-not-exist"])
-            .output()
-            .unwrap();
+        let output = eck_cmd(&["--this-does-not-exist"]).output().unwrap();
 
         assert!(!output.status.success());
     }
@@ -515,11 +512,8 @@ mod tests {
     fn cli_multithread_encrypt_decrypt_roundtrip() {
         use serde_json::json;
 
-        let _guard = TestConfigGuard::with_parallelism(
-            "PassWord",
-            "NoComp",
-            json!({ "MultiThread": 4 }),
-        );
+        let _guard =
+            TestConfigGuard::with_parallelism("PassWord", "NoComp", json!({ "MultiThread": 4 }));
         let temp_file = NamedTempFile::new().unwrap();
 
         fs::write(temp_file.path(), b"multithread cli roundtrip content").unwrap();
@@ -533,7 +527,10 @@ mod tests {
             .arg(temp_file.path())
             .assert()
             .success();
-        assert!(encrypted_path.exists(), "archive should exist after encrypt");
+        assert!(
+            encrypted_path.exists(),
+            "archive should exist after encrypt"
+        );
 
         Command::cargo_bin("eck")
             .unwrap()
@@ -551,11 +548,8 @@ mod tests {
     fn cli_multithread_encrypt_decrypt_large_file_roundtrip() {
         use serde_json::json;
 
-        let _guard = TestConfigGuard::with_parallelism(
-            "PassWord",
-            "Zstd",
-            json!({ "MultiThread": 8 }),
-        );
+        let _guard =
+            TestConfigGuard::with_parallelism("PassWord", "Zstd", json!({ "MultiThread": 8 }));
         let temp_file = NamedTempFile::new().unwrap();
 
         // Large enough to span several chunks across the worker pool.
@@ -584,5 +578,4 @@ mod tests {
         let restored = fs::read(temp_file.path()).unwrap();
         assert_eq!(restored, content);
     }
-    
 }

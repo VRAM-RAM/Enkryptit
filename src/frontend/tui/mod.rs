@@ -1,13 +1,14 @@
 pub mod action;
 pub mod browse;
 pub mod help;
-pub mod treatment;
+pub mod input;
 pub mod parameters;
+pub mod treatment;
 
+use self::action::EnkryptitTuiAction;
+use self::input::TuiInput;
 use crate::VERSION;
 use colored::*;
-use inquire::{Select};
-use self::action::EnkryptitTuiAction;
 
 // Macros with colors
 
@@ -36,28 +37,29 @@ macro_rules! show_params {
     };
 }
 
-
 /// Public function that launches the TUI
-pub fn launch_ui() {
+pub fn launch_ui(input: &impl TuiInput) {
     println!("\n{}", "Enkryptit".cyan().bold());
     println!("   Fast & Secure File Encryption Manager v0.{}", VERSION);
 
     loop {
-        let choices = vec!["Encrypt/Decrypt file/folder", "Parameters", "Help", "Browse", "Exit"];
+        let choices = vec![
+            "Encrypt/Decrypt file/folder",
+            "Parameters",
+            "Help",
+            "Browse",
+            "Exit",
+        ];
 
-        let choice = Select::new("What do you want to do?", choices)
-            .with_starting_cursor(0)
-            .prompt();
-
-        match choice {
-            Ok("Exit") => {
+        match input.select("What do you want to do?", &choices) {
+            Ok(choice) if choice == "Exit" => {
                 println!("\n{}", "Goodbye!".green());
                 break;
             }
 
             Ok(value) => {
-                if let Some(action) = EnkryptitTuiAction::from_str(value) {
-                    if let Err(e) = action.execute() {
+                if let Some(action) = EnkryptitTuiAction::from_str(&value) {
+                    if let Err(e) = action.execute(input) {
                         log_error!(e);
                     }
                 }

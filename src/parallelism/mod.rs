@@ -2,13 +2,13 @@ use crate::errors::EnkryptitError;
 
 use crate::parallelism::executable::EnkryptitExecutable;
 
-pub mod worker;
-pub mod pool;
 pub mod executable;
+pub mod pool;
+pub mod worker;
 
 pub struct EnkryptitJob<T: EnkryptitExecutable> {
     pub index: u64,
-    pub task: T
+    pub task: T,
 }
 
 impl<T: EnkryptitExecutable> EnkryptitJob<T> {
@@ -20,4 +20,3 @@ impl<T: EnkryptitExecutable> EnkryptitJob<T> {
         self.task.execute()
     }
 }
-
