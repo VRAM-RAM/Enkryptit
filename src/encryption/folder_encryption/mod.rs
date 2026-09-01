@@ -77,12 +77,15 @@ pub fn encrypt_folder(
     for entry in &mut entries {
         entry.offset = current_offset;
 
+        // We resolve the compression for the given entry
+        let compression = context.resolve_compression(&entry.relative_path)?;
+
         // For more informations, please refeer to `encrypt_single_file_into_archive()`
         let bytes_written = encrypt_single_file_into_archive(
             folder_path,
             &entry.relative_path,
             entry.file_nonce,
-            parameters.compression,
+            compression,
             enkryptit_key.key_as_ref(),
             &archive_path,
         )?;

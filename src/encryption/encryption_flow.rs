@@ -1,12 +1,12 @@
 use crate::compression::{EnkryptitCompress, EnkryptitDecompress};
 use crate::encryption::encryption_primitives::{decrypt_chunk, encrypt_chunk};
 use crate::errors::EnkryptitError;
-use gradient_bar::progress_bar::{GradientProgressBar};
 use crate::types::CHUNK_SIZE;
 use crate::types::CompressionType;
 use chacha20poly1305::KeyInit;
 use chacha20poly1305::XChaCha20Poly1305;
 use std::io::{Read, Write};
+use gradient_bar::GradientProgressBar;
 
 /// The heart of **Enkryptit** : it compresses and encrypts a stream of data.
 pub fn encrypt_stream<R: Read, W: Write>(

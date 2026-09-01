@@ -48,11 +48,13 @@ impl KeyParams {
 /// - Zstd
 /// - Xz
 /// - NoComp
+/// - Auto (infered by Enkryptit itself !)
 pub enum CompressionType {
     Lz4,
     Zstd,
     Xz,
     NoComp,
+    Auto,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

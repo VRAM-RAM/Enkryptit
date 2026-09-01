@@ -47,6 +47,7 @@ fn change_compression(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let old_params = load_params()?;
 
     let choices = vec![
+        "Auto (automatically choosed by Enkryptit!)",
         "Zstd (balanced)",
         "Lz4 (fastest)",
         "Xz (best compression)",
@@ -56,6 +57,7 @@ fn change_compression(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let choice = input.select("Select compression type:", &choices)?;
 
     let compression = match choice.as_str() {
+        "Auto (automatically choosed by Enkryptit!)" => CompressionType::Auto,
         "Zstd (balanced)" => CompressionType::Zstd,
         "Lz4 (fastest)" => Lz4,
         "Xz (best compression)" => Xz,

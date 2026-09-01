@@ -13,7 +13,7 @@ use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType::{self};
 use crate::types::{Mode, ParallelismType};
 
-/// Public function that encrypts a file (it also resolves the key and keytype)
+/// Public function that encrypts a file (it also resolves the key and keytype & compression)
 pub fn encrypt_file(
     path: &str,
     parameters: &EnkryptitParams,
@@ -21,14 +21,17 @@ pub fn encrypt_file(
     context: &mut EnkryptitContext,
 ) -> Result<String, EnkryptitError> {
     // Creates the enkryptit key (and resolves keytype & key)
-    let enkryptit_key: EnkryptitKey =
-        EnkryptitKey::resolve(Mode::Encrypting, keytype, context, path)?;
+    let enkryptit_key: EnkryptitKey = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, path)?;
+
+    // We resolve the compression type
+    let compression = context.resolve_compression(path)?;
+    println!("Compression choosed: {:?}", compression);
 
     // We match the parallelism type
     match parameters.parallelism {
         ParallelismType::Single => encrypt_file_single(path, parameters.compression, enkryptit_key),
         ParallelismType::MultiThread(threads) => {
-            encrypt_multithread_file(path, parameters.compression, enkryptit_key, threads)
+            encrypt_multithread_file(path, compression, enkryptit_key, threads)
         }
     }
 }
@@ -49,8 +52,7 @@ pub fn decrypt_file(
     let master_nonce = metadatas.nonce;
 
     // We resolve the key
-    let enkryptit_key =
-        EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
+    let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
 
     match parallelism {
         ParallelismType::Single => decrypt_file_single(

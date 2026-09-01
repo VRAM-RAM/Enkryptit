@@ -61,7 +61,7 @@ fn assert_roundtrip(
     let tmp_file = NamedTempFile::new().unwrap();
     fs::write(tmp_file.path(), content).unwrap();
 
-    let enc_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None);
+    let enc_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression);
     let enc_params = EnkryptitParams {
         compression,
         key_params: KeyParams::File,
@@ -78,7 +78,7 @@ fn assert_roundtrip(
 
     let (meta, payload_offset) = read_file_archive_meta(&archive_path);
 
-    let dec_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None);
+    let dec_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression);
     decrypt_file(
         &archive_path,
         &meta,
@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn encrypt_multithread_nonexistent_file_errors() {
-        let ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None);
+        let ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp);
         let params = params_multi(CompressionType::NoComp, 4);
         let result = encrypt_file(
             "/this/path/does/not/exist.txt",

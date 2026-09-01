@@ -62,7 +62,7 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("hello.txt"), b"Hello from single file!").unwrap();
 
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
             &params,
@@ -103,7 +103,7 @@ mod tests {
         fs::write(folder.join("file1.txt"), b"Content of file 1").unwrap();
         fs::write(folder.join("subdir/file2.txt"), b"Content of file 2").unwrap();
         fs::write(folder.join("subdir/file3.txt"), b"Third file content here").unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
 
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
@@ -156,7 +156,7 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("a.txt"), b"Zstd compressed content").unwrap();
         fs::write(folder.join("b.bin"), vec![0xAB; 1024 * 100]).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
             &params,
@@ -196,7 +196,7 @@ mod tests {
         let folder = tmp.path().join("lz4folder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("data.bin"), vec![0x42; 50_000]).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
             &params,
@@ -231,7 +231,7 @@ mod tests {
         let folder = tmp.path().join("xzfolder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("readme.txt"), b"XZ compression test content").unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
 
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
@@ -257,7 +257,7 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("empty");
         fs::create_dir(&folder).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp);
 
         let params = test_params_single(CompressionType::NoComp);
         let result = encrypt_folder(

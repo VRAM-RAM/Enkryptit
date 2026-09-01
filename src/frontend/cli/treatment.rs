@@ -17,7 +17,7 @@ pub fn treat_object_with_path(
     cli_password: Option<String>,
 ) -> Result<Output, EnkryptitError> {
     let parameters = load_params()?;
-    let mut context = EnkryptitContext::new(Interface::Cli, cli_password);
+    let mut context = EnkryptitContext::new(Interface::Cli, cli_password, parameters.compression);
     treat_object(&parameters, path_str, &mut context)
 }
 
@@ -29,7 +29,7 @@ pub fn treat_objects_with_multiple_paths(
     // We load the parameters
     let parameters = load_params()?;
     // Create the global context
-    let mut context = EnkryptitContext::new(Interface::Cli, cli_password);
+    let mut context = EnkryptitContext::new(Interface::Cli, cli_password, parameters.compression);
     // And iterate to treat every path
     for path in paths {
         match treat_object(&parameters, path, &mut context) {

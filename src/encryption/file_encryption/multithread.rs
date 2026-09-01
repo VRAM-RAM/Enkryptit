@@ -14,7 +14,7 @@ use std::io::{BufReader, Read};
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
 use std::sync::Arc;
-use gradient_bar::progress_bar::GradientProgressBar;
+use gradient_bar::GradientProgressBar;
 
 /// Public function that `encrypts` a file, using a pool of workers. `num_threads` determines the number of workers.
 /// The function first initialize the pool of workers. Then, when processing, it submits a jobs to the pool of workers.
@@ -75,7 +75,6 @@ pub fn encrypt_multithread_file(
     let mut submitted = 0u8;
 
     let pb = GradientProgressBar::with_total_steps(estimated_max_steps, "Encrypting...");
-
 
     loop {
         let bytes_read = reader.read(&mut buffer)?;
@@ -168,7 +167,7 @@ pub fn decrypt_multithread_file(
     let mut results = Vec::with_capacity(num_threads as usize);
     let mut submitted = 0u8;
 
-    let pb = GradientProgressBar::with_total_steps(estimated_max_steps, "Decrypting...");
+    let pb = GradientProgressBar::with_total_bytes(estimated_max_steps, "Decrypting...");
 
     loop {
         let mut len_buf = [0u8; 4];

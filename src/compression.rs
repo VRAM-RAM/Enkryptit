@@ -1,6 +1,6 @@
 use crate::errors::EnkryptitError;
 use crate::types::CHUNK_SIZE;
-use crate::types::CompressionType::{self, Lz4, NoComp, Xz, Zstd};
+use crate::types::CompressionType::{self, Lz4, NoComp, Xz, Zstd, Auto};
 use lz4_flex::block::{compress_into as lz4compress, decompress_into as lz4decompress};
 use std::io::Read;
 use xz2::read::{XzDecoder, XzEncoder};
@@ -54,6 +54,7 @@ impl<'a> EnkryptitCompress for &'a [u8] {
         compression: CompressionType,
     ) -> Result<(), EnkryptitError> {
         match compression {
+            Auto => unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."),
             Zstd => compress_with_zstd(self, output),
             Lz4 => compress_with_lz4(self, output),
             Xz => compress_with_xz(self, output),
@@ -83,6 +84,7 @@ impl<'a> EnkryptitDecompress for &'a [u8] {
         compression: CompressionType,
     ) -> Result<(), EnkryptitError> {
         match compression {
+            Auto =>  unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."),
             Zstd => decompress_with_zstd(self, output),
             Lz4 => decompress_with_lz4(self, output),
             Xz => decompress_with_xz(self, output),

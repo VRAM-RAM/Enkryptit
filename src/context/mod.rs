@@ -1,7 +1,11 @@
+mod compression;
+
+use crate::context::compression::{infer_compression};
 use crate::enter_password;
 use crate::errors::EnkryptitError;
-use crate::types::Interface;
+use crate::types::{CompressionType, Interface};
 use zeroize::Zeroizing;
+
 
 /// The Context, passed trough the program.
 /// \
@@ -13,13 +17,17 @@ pub struct EnkryptitContext {
     pub interface: Interface,
     /// The context *can* contain a password (if the user provided one with `-p`)
     pub password: Option<Zeroizing<String>>,
+
+    /// The CompressionType used by the operation, and resolved by the context.
+    pub compression_type: CompressionType,
 }
 
 impl EnkryptitContext {
-    pub fn new(interface: Interface, password: Option<String>) -> Self {
+    pub fn new(interface: Interface, password: Option<String>, compression_type: CompressionType) -> Self {
         Self {
-            interface: interface,
+            interface,
             password: password.map(Zeroizing::new),
+            compression_type
         }
     }
 
@@ -34,12 +42,22 @@ impl EnkryptitContext {
                 }
 
                 Interface::Tui => rpassword::prompt_password("Enter password: ")
-                    .map_err(|e| EnkryptitError::TuiError(e))?,
+                    .map_err(EnkryptitError::TuiError)?,
             };
 
             self.password = Some(Zeroizing::new(pwd));
         }
 
         Ok(self.password.as_ref().unwrap())
+    }
+
+    pub fn resolve_compression(
+        &self,
+        path: &str,
+    ) -> Result<CompressionType, EnkryptitError> {
+        match self.compression_type {
+            CompressionType::Auto => infer_compression(path),
+            compression => Ok(compression),
+        }
     }
 }

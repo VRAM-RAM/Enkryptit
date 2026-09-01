@@ -94,7 +94,7 @@ pub fn browse_files_then_folders(
 fn treat_objects(objects: Vec<String>, password: Option<String>) -> Result<(), EnkryptitError> {
     let parameters = load_params()?;
 
-    let mut context = EnkryptitContext::new(Interface::Tui, password);
+    let mut context = EnkryptitContext::new(Interface::Tui, password, parameters.compression);
 
     for path_str in objects {
         match treat_object(&parameters, &path_str, &mut context)? {

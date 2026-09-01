@@ -292,3 +292,18 @@ Tests result :
 ```bash
 test result: ok. 146 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.05s
 ```
+
+Todo : Modify how folder encryption works (especially error handling & progress bar)
+
+## DAY-10 Added `Auto` compression type : Enkryptit resolves the compression to use.
+
+Added an `Auto` *CompressionType* : Enkryptit can infer the *CompressionType* to use, basing on :
+
+- The size of the file
+- It's Mime extension
+
+Created `/context` (`context.rs` --> `/context`)
+\
+Added tests & modified existing ones.
+\
+Added the possibility to choose `Auto` in both *Cli* and *Tui*.

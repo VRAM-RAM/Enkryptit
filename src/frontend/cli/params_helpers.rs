@@ -1,3 +1,4 @@
+use crate::log_error;
 use crate::parameters::params::{load_params, save_params};
 use crate::types::CompressionType;
 use crate::types::KeyParams;
@@ -78,8 +79,9 @@ pub fn update_params(
                     "lz4" | "2" => params.compression = CompressionType::Lz4,
                     "xz" | "3" => params.compression = CompressionType::Xz,
                     "none" | "no" | "4" => params.compression = CompressionType::NoComp,
+                    "auto" | "a" | "5" => params.compression = CompressionType::Auto,
                     other => {
-                        eprintln!("[ERROR] Unknown compression: {}", other);
+                        log_error!(format!("Unknown compression: {}", other));
                         std::process::exit(1);
                     }
                 }
@@ -91,7 +93,7 @@ pub fn update_params(
                     "os" | "2" => params.key_params = KeyParams::Os,
                     "file" | "3" => params.key_params = KeyParams::File,
                     other => {
-                        eprintln!("[ERROR] Unknown key type: {}", other);
+                        log_error!(format!("Unknown key type: {}", other));
                         std::process::exit(1);
                     }
                 }
@@ -101,7 +103,7 @@ pub fn update_params(
                 match parse_parallelism(&p) {
                     Ok(par) => params.parallelism = par,
                     Err(msg) => {
-                        eprintln!("[ERROR] {}", msg);
+                        log_error!(msg);
                         std::process::exit(1);
                     }
                 }
@@ -110,13 +112,13 @@ pub fn update_params(
             match save_params(&params) {
                 Ok(_) => println!("\n Params were changed ! \n"),
                 Err(e) => {
-                    eprintln!("[ERROR] Failed to save: {}", e);
+                    log_error!(format!("Failed to save: {}", e));
                     std::process::exit(1);
                 }
             }
         }
         Err(e) => {
-            eprintln!("[ERROR] {}", e);
+            log_error!(e);
             std::process::exit(1);
         }
     }
