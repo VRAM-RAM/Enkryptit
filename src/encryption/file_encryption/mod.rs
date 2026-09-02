@@ -9,14 +9,12 @@ use crate::encryption::file_encryption::single::{decrypt_file_single, encrypt_fi
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::MetaDatas;
-use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType::{self};
 use crate::types::{Mode, ParallelismType};
 
 /// Public function that encrypts a file (it also resolves the key and keytype & compression)
 pub fn encrypt_file(
     path: &str,
-    parameters: &EnkryptitParams,
     keytype: &KeyType,
     context: &mut EnkryptitContext,
 ) -> Result<String, EnkryptitError> {
@@ -25,14 +23,17 @@ pub fn encrypt_file(
 
     // We resolve the compression type
     let compression = context.resolve_compression(path)?;
-    println!("Compression choosed: {:?}", compression);
+    
+    // We resolve the parallelism type
+    let parallelism = context.resolve_parallelism(path)?;
 
     // We match the parallelism type
-    match parameters.parallelism {
-        ParallelismType::Single => encrypt_file_single(path, parameters.compression, enkryptit_key),
+    match parallelism {
+        ParallelismType::Single => encrypt_file_single(path, compression, enkryptit_key),
         ParallelismType::MultiThread(threads) => {
             encrypt_multithread_file(path, compression, enkryptit_key, threads)
         }
+        ParallelismType::Auto => unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue.")
     }
 }
 
@@ -42,7 +43,6 @@ pub fn decrypt_file(
     meta_bytes: &[u8],
     payload_offset: u64,
     context: &mut EnkryptitContext,
-    parallelism: ParallelismType,
 ) -> Result<String, EnkryptitError> {
     // First, we deserialize the metadata
     let metadatas: MetaDatas = postcard::from_bytes(meta_bytes)?;
@@ -53,6 +53,8 @@ pub fn decrypt_file(
 
     // We resolve the key
     let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
+
+    let parallelism = context.resolve_parallelism(path)?;
 
     match parallelism {
         ParallelismType::Single => decrypt_file_single(
@@ -70,5 +72,6 @@ pub fn decrypt_file(
             compression_type,
             threads,
         ),
+        ParallelismType::Auto => unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue.")
     }
 }

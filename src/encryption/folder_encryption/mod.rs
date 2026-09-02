@@ -1,4 +1,5 @@
 pub mod entries;
+pub mod collect_entry;
 pub mod intern_archive_encryption;
 
 use crate::context::EnkryptitContext;
@@ -9,7 +10,6 @@ use crate::encryption::folder_encryption::intern_archive_encryption::{
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, FolderMetadata};
-use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType;
 use crate::types::Mode;
 use postcard::from_bytes;
@@ -20,7 +20,6 @@ use std::path::Path;
 /// Encrypt a folder into a single .encky archive file (v2 format: metadata at the end)
 pub fn encrypt_folder(
     folder_path: &str,
-    parameters: &EnkryptitParams,
     context: &mut EnkryptitContext,
     keytype: &KeyType,
 ) -> Result<String, EnkryptitError> {
@@ -28,7 +27,7 @@ pub fn encrypt_folder(
     let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, folder_path)?;
 
     // Step 1: Collect all file entries from directory tree (follow symlinks)
-    let mut entries = collect_folder_entries(folder_path)?;
+    let mut entries = collect_folder_entries(folder_path, context)?;
 
     if entries.is_empty() {
         return Err(EnkryptitError::FileError);
@@ -36,7 +35,6 @@ pub fn encrypt_folder(
 
     // Step 2: Build FolderMetadata (offsets will be filled after encryption)
     let mut folder_meta = FolderMetadata::new(
-        parameters.compression,
         enkryptit_key.key_type_as_ref().clone(),
     );
 
@@ -56,6 +54,7 @@ pub fn encrypt_folder(
 
         // the header placeholder
         let placeholder_header = ArchiveHeader::new(true, 0);
+
         // We serialize it
         let mut header_bytes = placeholder_header.pack()?;
         // And resize with HEADER_REGION_SIZE
@@ -77,8 +76,15 @@ pub fn encrypt_folder(
     for entry in &mut entries {
         entry.offset = current_offset;
 
+
+        // We build the full path for compression type resolution
+        let full_path = Path::new(folder_path).join(&entry.relative_path);
+
         // We resolve the compression for the given entry
-        let compression = context.resolve_compression(&entry.relative_path)?;
+        let compression = match context.resolve_compression(full_path.to_str().unwrap_or(&entry.relative_path)) {
+            Ok(compression) => compression,
+            Err(_) => {eprintln!("Error in COMPRESSION TYPE RESOLUTION !!!!!!"); continue}
+        };
 
         // For more informations, please refeer to `encrypt_single_file_into_archive()`
         let bytes_written = encrypt_single_file_into_archive(
@@ -134,7 +140,6 @@ pub fn decrypt_folder(
 ) -> Result<String, EnkryptitError> {
     // First, we deserialize the metadata
     let metadatas: FolderMetadata = from_bytes(meta_bytes)?;
-    let compression_type = metadatas.compression;
     let entries = metadatas.entries;
 
     // Then, we resolve the key & keytype and create a new EnkryptitKey
@@ -160,7 +165,7 @@ pub fn decrypt_folder(
             &entry.relative_path,
             entry.file_nonce,
             entry.offset, // used for progress bar display
-            compression_type,
+            entry.compression,
             enkryptit_key.key_as_ref(),
             offset,
         );

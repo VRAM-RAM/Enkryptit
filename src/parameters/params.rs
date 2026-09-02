@@ -1,6 +1,6 @@
 use crate::errors::EnkryptitError;
 use crate::types::{
-    CompressionType::{self, Zstd},
+    CompressionType::{self},
     KeyParams, ParallelismType,
 };
 use directories::ProjectDirs;
@@ -35,8 +35,8 @@ impl Default for EnkryptitParams {
     fn default() -> Self {
         Self {
             key_params: KeyParams::PassWord,
-            compression: Zstd,
-            parallelism: ParallelismType::Single,
+            compression: CompressionType::Auto,
+            parallelism: ParallelismType::Auto,
         }
     }
 }

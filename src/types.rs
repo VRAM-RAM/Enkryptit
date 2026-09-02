@@ -8,7 +8,7 @@ pub const CHUNK_SIZE: usize = 8 * 1024 * 1024;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// KeyType enum. Contains :
-/// - Password(String)
+/// - Password
 /// - Pwd256(salt)
 /// - FromFile
 /// - FromOS
@@ -73,6 +73,7 @@ pub enum Interface {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ParallelismType {
+    Auto,
     MultiThread(u8),
     Single,
 }

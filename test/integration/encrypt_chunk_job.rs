@@ -18,7 +18,7 @@ use tempfile::NamedTempFile;
 
 const KEY_FROM_FILE: KeyType = KeyType::FromFile;
 
-fn params_multi(compression: CompressionType, threads: u8) -> EnkryptitParams {
+fn _params_multi(compression: CompressionType, threads: u8) -> EnkryptitParams {
     EnkryptitParams {
         compression,
         key_params: KeyParams::File,
@@ -61,16 +61,10 @@ fn assert_roundtrip(
     let tmp_file = NamedTempFile::new().unwrap();
     fs::write(tmp_file.path(), content).unwrap();
 
-    let enc_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression);
-    let enc_params = EnkryptitParams {
-        compression,
-        key_params: KeyParams::File,
-        parallelism: enc_parallelism,
-    };
+    let enc_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression, enc_parallelism);
 
     let archive_path = encrypt_file(
         tmp_file.path().to_str().unwrap(),
-        &enc_params,
         &KEY_FROM_FILE,
         enc_ctx,
     )
@@ -78,13 +72,12 @@ fn assert_roundtrip(
 
     let (meta, payload_offset) = read_file_archive_meta(&archive_path);
 
-    let dec_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression);
+    let dec_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression, dec_parallelism);
     decrypt_file(
         &archive_path,
         &meta,
         payload_offset,
         dec_ctx,
-        dec_parallelism,
     )
     .expect("decryption must succeed");
 
@@ -258,11 +251,9 @@ mod tests {
 
     #[test]
     fn encrypt_multithread_nonexistent_file_errors() {
-        let ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp);
-        let params = params_multi(CompressionType::NoComp, 4);
+        let ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp, ParallelismType::MultiThread(4));
         let result = encrypt_file(
             "/this/path/does/not/exist.txt",
-            &params,
             &KEY_FROM_FILE,
             ctx,
         );

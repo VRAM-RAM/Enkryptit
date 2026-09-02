@@ -75,6 +75,7 @@ pub struct FileEntry {
     pub relative_path: String,
     pub offset: u64,
     pub permissions: Option<u32>,
+    pub compression: CompressionType,
     pub file_nonce: [u8; 24],
 }
 
@@ -95,15 +96,13 @@ impl Eq for FileEntry {}
 /// - The entries that the folder contains
 #[derive(Serialize, Deserialize)]
 pub struct FolderMetadata {
-    pub compression: CompressionType,
     pub key_type: KeyType,
     pub entries: Vec<FileEntry>,
 }
 
 impl FolderMetadata {
-    pub fn new(compression: CompressionType, key_type: KeyType) -> Self {
+    pub fn new(key_type: KeyType) -> Self {
         Self {
-            compression,
             key_type,
             entries: Vec::new(),
         }

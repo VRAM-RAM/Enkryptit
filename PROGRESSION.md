@@ -295,6 +295,8 @@ test result: ok. 146 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fi
 
 Todo : Modify how folder encryption works (especially error handling & progress bar)
 
+--- 
+
 ## DAY-10 Added `Auto` compression type : Enkryptit resolves the compression to use.
 
 Added an `Auto` *CompressionType* : Enkryptit can infer the *CompressionType* to use, basing on :
@@ -307,3 +309,30 @@ Created `/context` (`context.rs` --> `/context`)
 Added tests & modified existing ones.
 \
 Added the possibility to choose `Auto` in both *Cli* and *Tui*.
+\
+Also added an `Auto` *ParallelismType*.
+\
+Next steps : 
+
+- Also add *Parallelism* inference, but for folders
+- Implement *multithreading* in intern entry encryption
+- Implement *multithreading* in folder encryption itself (entries in parallel)
+- Added tests
+
+Test results :
+```bash
+test result: FAILED. 155 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.67s
+```
+
+## DAY-11 
+
+Modifications :
+- Fixed an issue with `CompressionType::Auto` resolution in `folder_encryption/`
+- To fix it, and to make the architecture cleaner, created `/encryption/folder_encryption/collect_entry.rs`
+
+But day 11 isn’t over yet...
+
+Tests results (for now) :
+```bash
+test result: FAILED. 157 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.56s
+```

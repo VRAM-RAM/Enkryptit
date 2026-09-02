@@ -29,7 +29,7 @@ mod tests {
     fn auto(dir: &TempDir, name: &str, bytes: &[u8]) -> CompressionType {
         let path = dir.path().join(name);
         std::fs::write(&path, bytes).unwrap();
-        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Auto);
+        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Auto, eck::types::ParallelismType::Auto);
         ctx.resolve_compression(path.to_str().unwrap())
             .expect("auto inference must succeed")
     }
@@ -42,7 +42,7 @@ mod tests {
         let mut f = std::fs::File::create(&path).unwrap();
         f.write_all(head).unwrap();
         f.set_len(len).unwrap();
-        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Auto);
+        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Auto, eck::types::ParallelismType::Auto);
         ctx.resolve_compression(path.to_str().unwrap())
             .expect("auto inference must succeed")
     }
@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn explicit_compression_short_circuits_inference() {
-        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Xz);
+        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Xz, eck::types::ParallelismType::Auto);
         // Path never touched: non-Auto must not hit the filesystem.
         let resolved = ctx.resolve_compression("/nonexistent/does/not/exist").unwrap();
         assert_eq!(resolved, CompressionType::Xz);

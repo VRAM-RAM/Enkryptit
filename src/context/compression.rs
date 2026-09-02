@@ -3,11 +3,7 @@ use crate::types::CompressionType;
 use std::{fs::File};
 use crate::errors::EnkryptitError;
 use infer::get_from_path;
-
-const LOW_BOUNDARY: u64 = 50 << 20;                // 50 MiB
-const MID_INFERIOR_BOUNDARY: u64 = 250 << 20;      // 250 MiB
-const MID_SUPERIOR_BOUNDARY: u64 = 1 << 30;        // 1 GiB
-const SUPERIOR_BOUNDARY: u64 = 5 << 30;            // 5 GiB
+use crate::context::{LOW_BOUNDARY, MID_INFERIOR_BOUNDARY, MID_SUPERIOR_BOUNDARY, SUPERIOR_BOUNDARY};
 
 pub fn infer_compression(path: &str) -> Result<CompressionType, EnkryptitError> {
     let file = File::open(path)?;

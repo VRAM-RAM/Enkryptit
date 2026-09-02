@@ -33,7 +33,7 @@ pub fn handle_object_treatment_with_password(
 
     let parameters = load_params()?;
 
-    let mut context = EnkryptitContext::new(Interface::Tui, password, parameters.compression);
+    let mut context = EnkryptitContext::new(Interface::Tui, password, parameters.compression, parameters.parallelism);
 
     match treat_object(&parameters, &path, &mut context)? {
         Output::Success { message } => {

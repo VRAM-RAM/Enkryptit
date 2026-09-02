@@ -38,7 +38,7 @@ pub fn treat_object(
     let keytype = parameters.key_params.to_type();
 
     if Path::new(&path).is_dir() {
-        return encrypt_folder_case(path, parameters, context, &keytype);
+        return encrypt_folder_case(path, context, &keytype);
     }
 
     match read_file(&path) {
@@ -52,11 +52,11 @@ pub fn treat_object(
             if is_folder_archive {
                 decrypt_folder_case(path, context, meta, payload_offset, version)
             } else {
-                decrypt_file_case(path, meta, context, payload_offset, parameters.parallelism)
+                decrypt_file_case(path, meta, context, payload_offset)
             }
         }
 
-        Ok(ParsedFile::Plain) => encrypt_file_case(parameters, path, context, &keytype),
+        Ok(ParsedFile::Plain) => encrypt_file_case(path, context, &keytype),
 
         Err(_) => Ok(Output::CorruptedFile),
     }

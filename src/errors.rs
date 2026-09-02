@@ -1,4 +1,4 @@
-use std::sync::mpsc::RecvError;
+use std::{ffi::OsStr, path::{PathBuf, StripPrefixError}, sync::mpsc::RecvError};
 
 use thiserror::Error;
 
@@ -11,6 +11,18 @@ pub enum EnkryptitError {
 
     #[error("postcard error: {0}")]
     PostcardError(#[from] postcard::Error),
+
+    #[error("Directory found is the directory of the folder")]
+    DirectoryIsFolder,
+
+    #[error("Error while stripping a prefix : {0}")]
+    StripPrefixError(StripPrefixError),
+
+    #[error("Failed to read metadata of file")]
+    FailedToReadMetadata(PathBuf),
+
+    #[error("File is a SymLink (shortcut)")]
+    FileIsASymLink,
 
     #[error("Send error to mspc channel")]
     SendError,

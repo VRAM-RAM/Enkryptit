@@ -98,11 +98,12 @@ fn change_key_type(input: &impl TuiInput) -> Result<(), EnkryptitError> {
 fn change_parallelism(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let old_params = load_params()?;
 
-    let choices = vec!["Single", "MultiThread"];
+    let choices = vec!["Auto (automatically choosed by Enkryptit!)", "Single", "MultiThread"];
 
     let choice = input.select("Select parallelism type:", &choices)?;
 
     let pt = match choice.as_str() {
+        "Auto (automatically choosed by Enkryptit!)" => ParallelismType::Auto,
         "Single" => ParallelismType::Single,
         "MultiThread" => ParallelismType::MultiThread(choose_threads(input)?),
         _ => ParallelismType::Single,

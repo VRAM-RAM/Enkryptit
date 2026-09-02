@@ -23,15 +23,19 @@ pub fn show_params() {
 }
 
 /// Helper for parsing the parallelism CLI value.
-/// Accepts : `single` (or `none`), `multi` (or `multithread`), and `multi:<n>` (or `multi <n>`)
+/// Accepts : `single`, `multi` (or `multithread`), `multi:<n>` (or `multi <n>`), `auto`, `automatic`
 /// where `n` is a strictly positive number of threads (defaults to 4).
 fn parse_parallelism(value: &str) -> Result<ParallelismType, String> {
     let lower = value.to_lowercase();
 
-    if lower == "single" || lower == "none" {
+    if lower == "single" || lower == "no" || lower == "none" {
         return Ok(ParallelismType::Single);
     }
 
+    if lower == "auto" || lower == "automatic" {
+        return  Ok(ParallelismType::Auto);
+    }
+    
     // Support "multi:<n>" and "multi <n>" forms, and plain "multi".
     let (base, count_str) = if let Some(rest) = lower.strip_prefix("multi:") {
         ("multi", Some(rest))

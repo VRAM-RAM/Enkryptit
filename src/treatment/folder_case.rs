@@ -2,13 +2,11 @@ use crate::context::EnkryptitContext;
 use crate::encryption::folder_encryption::{decrypt_folder, encrypt_folder};
 use crate::errors::EnkryptitError;
 use crate::frontend::cli::Output;
-use crate::parameters::params::EnkryptitParams;
 use crate::types::KeyType::{self};
 
 /// Public helper for encrypting a folder. (Converts Ok<>/EnkryptitError to Output).
 pub fn encrypt_folder_case(
     path: &str,
-    parameters: &EnkryptitParams,
     context: &mut EnkryptitContext,
     key_type: &KeyType,
 ) -> Result<Output, EnkryptitError> {
@@ -19,7 +17,7 @@ pub fn encrypt_folder_case(
         None => path,
     };
 
-    match encrypt_folder(path, parameters, context, key_type) {
+    match encrypt_folder(path, context, key_type) {
         Ok(path) => Ok(Output::Success {
             message: format!("folder was encrypted at {} !", path),
         }),

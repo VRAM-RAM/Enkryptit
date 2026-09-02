@@ -62,10 +62,9 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("hello.txt"), b"Hello from single file!").unwrap();
 
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
-            &params,
             &mut context,
             &KeyType::FromFile,
         )
@@ -103,11 +102,10 @@ mod tests {
         fs::write(folder.join("file1.txt"), b"Content of file 1").unwrap();
         fs::write(folder.join("subdir/file2.txt"), b"Content of file 2").unwrap();
         fs::write(folder.join("subdir/file3.txt"), b"Third file content here").unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
 
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
-            &params,
             &mut context,
             &KeyType::FromFile,
         )
@@ -156,10 +154,9 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("a.txt"), b"Zstd compressed content").unwrap();
         fs::write(folder.join("b.bin"), vec![0xAB; 1024 * 100]).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
-            &params,
             &mut context,
             &KeyType::FromFile,
         )
@@ -196,10 +193,9 @@ mod tests {
         let folder = tmp.path().join("lz4folder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("data.bin"), vec![0x42; 50_000]).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
-            &params,
             &mut context,
             &KeyType::FromFile,
         )
@@ -231,11 +227,10 @@ mod tests {
         let folder = tmp.path().join("xzfolder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("readme.txt"), b"XZ compression test content").unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
 
         let archive_path = encrypt_folder(
             folder.to_str().unwrap(),
-            &params,
             &mut context,
             &KeyType::FromFile,
         )
@@ -257,12 +252,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("empty");
         fs::create_dir(&folder).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp);
+        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp, eck::types::ParallelismType::Auto);
 
-        let params = test_params_single(CompressionType::NoComp);
         let result = encrypt_folder(
             folder.to_str().unwrap(),
-            &params,
             &mut context,
             &KeyType::FromFile,
         );
@@ -277,8 +270,9 @@ mod tests {
         fs::write(folder.join("root.txt"), b"r").unwrap();
         fs::write(folder.join("a/mid.txt"), b"m").unwrap();
         fs::write(folder.join("a/b/c/deep.txt"), b"d").unwrap();
+        let context = &EnkryptitContext { interface: eck::types::Interface::Cli, password: None, compression_type: CompressionType::Auto, parallelism: eck::types::ParallelismType::Auto };
 
-        let entries = collect_folder_entries(folder.to_str().unwrap()).unwrap();
+        let entries = collect_folder_entries(folder.to_str().unwrap(), context).unwrap();
         assert_eq!(entries.len(), 3);
 
         let mut paths: Vec<&str> = entries.iter().map(|e| e.relative_path.as_str()).collect();

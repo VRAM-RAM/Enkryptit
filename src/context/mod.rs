@@ -1,11 +1,17 @@
 mod compression;
+mod parallelism;
 
 use crate::context::compression::{infer_compression};
+use crate::context::parallelism::infer_parallelism;
 use crate::enter_password;
 use crate::errors::EnkryptitError;
-use crate::types::{CompressionType, Interface};
+use crate::types::{CompressionType, Interface, ParallelismType};
 use zeroize::Zeroizing;
 
+pub const LOW_BOUNDARY: u64 = 50 << 20;                // 50 MiB
+pub const MID_INFERIOR_BOUNDARY: u64 = 250 << 20;      // 250 MiB
+pub const MID_SUPERIOR_BOUNDARY: u64 = 1 << 30;        // 1 GiB
+pub const SUPERIOR_BOUNDARY: u64 = 5 << 30;            // 5 GiB
 
 /// The Context, passed trough the program.
 /// \
@@ -20,14 +26,23 @@ pub struct EnkryptitContext {
 
     /// The CompressionType used by the operation, and resolved by the context.
     pub compression_type: CompressionType,
+
+    /// The ParallelismType used by the operation, and resolved by the context.
+    /// This parallelism type is only used for intern entries and files.
+    /// For folder encryption itself, we infer at the beginning of the treatment,
+    /// since the parallelism resolution for a folder is based on :
+    /// - It's size
+    /// - The number of files it contains
+    pub parallelism: ParallelismType,
 }
 
 impl EnkryptitContext {
-    pub fn new(interface: Interface, password: Option<String>, compression_type: CompressionType) -> Self {
+    pub fn new(interface: Interface, password: Option<String>, compression_type: CompressionType, parallelism: ParallelismType) -> Self {
         Self {
             interface,
             password: password.map(Zeroizing::new),
-            compression_type
+            compression_type,
+            parallelism,
         }
     }
 
@@ -58,6 +73,16 @@ impl EnkryptitContext {
         match self.compression_type {
             CompressionType::Auto => infer_compression(path),
             compression => Ok(compression),
+        }
+    }
+
+    pub fn resolve_parallelism(
+        &self,
+        path: &str,
+    ) -> Result<ParallelismType, EnkryptitError> {
+        match self.parallelism {
+            ParallelismType::Auto => infer_parallelism(path),
+            type_ => Ok(type_)
         }
     }
 }
