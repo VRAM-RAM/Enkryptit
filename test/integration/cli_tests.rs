@@ -72,7 +72,8 @@ mod tests {
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("Actual parameters"), "stdout: {stdout}");
         assert!(stdout.contains("Key Type : PassWord"), "stdout: {stdout}");
-        assert!(stdout.contains("Compression : Zstd"), "stdout: {stdout}");
+        assert!(stdout.contains("Compression : Auto"), "stdout: {stdout}");
+        assert!(stdout.contains("Parallelism : Auto"), "stdout: {stdout}");
     }
 
     // -- Compression type settings tests
@@ -412,7 +413,8 @@ mod tests {
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("Key Type : PassWord"), "stdout: {stdout}");
-        assert!(stdout.contains("Compression : Zstd"), "stdout: {stdout}");
+        assert!(stdout.contains("Compression : Auto"), "stdout: {stdout}");
+        assert!(stdout.contains("Parallelism : Auto"), "stdout: {stdout}");
     }
 
     #[test]

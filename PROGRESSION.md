@@ -324,6 +324,8 @@ Test results :
 test result: FAILED. 155 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.67s
 ```
 
+---
+
 ## DAY-11 
 
 Modifications :
@@ -334,5 +336,5 @@ But day 11 isn’t over yet...
 
 Tests results (for now) :
 ```bash
-test result: FAILED. 157 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.56s
+test result: ok. 159 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.59s
 ```
