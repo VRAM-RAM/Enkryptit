@@ -1,6 +1,7 @@
 mod compression;
 mod parallelism;
 
+use std::fs::File;
 use crate::context::compression::{infer_compression};
 use crate::context::parallelism::infer_parallelism;
 use crate::enter_password;
@@ -80,9 +81,18 @@ impl EnkryptitContext {
         &self,
         path: &str,
     ) -> Result<ParallelismType, EnkryptitError> {
+        let file = File::open(path)?;
+        let len = file.metadata()?.len();
+        self.resolve_parallelism_with_size(len)
+    }
+
+    pub fn resolve_parallelism_with_size(
+        &self,
+        size: u64
+    ) -> Result<ParallelismType, EnkryptitError> {
         match self.parallelism {
-            ParallelismType::Auto => infer_parallelism(path),
-            type_ => Ok(type_)
+            ParallelismType::Auto => infer_parallelism(size),
+            parallelism => Ok(parallelism)
         }
     }
 }

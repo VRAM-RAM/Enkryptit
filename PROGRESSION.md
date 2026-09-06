@@ -335,9 +335,17 @@ Modifications :
     - created a directory for entries (`entry/`)
     - created `intern_archive_encryption` that will contain the code for both multithreading and singlethread encryption / decryption.
     - simplified `decrypt_folder()` and `encrypt_folder()` : those functions will only resolve if the folder has to be treated with multithreading or singlethread, and then delegate the treatment to `de/encrypt_folder_single` or `de/encrypt_folder_multi`
-But day 11 isn’t over yet...
+- Added mulithreading when encrypting a folder (inside the entry encryption) : Now, `de/encrypt_folder_single` resolves the parallelism type and chooses between `encrypt_single_file_into_archive()/encrypt_multithreading_file_into_archive()` and `decrypt_single_file_from_archive()/decrypt_multithreading_file_from_archive()`.
 
-Tests results (for now) :
+Tests results :
 ```bash
-test result: ok. 159 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.59s
+test result: ok. 157 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 12.36s
 ```
+
+The folder tests fail...
+Todo :
+
+- Fix it
+- Add a smooth skipping message / error system for folder encryption
+- Add a logging system
+- Implement folder multithreading encryption (multiple files at the same time)

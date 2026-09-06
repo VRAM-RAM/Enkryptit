@@ -120,7 +120,7 @@ pub fn decrypt_folder(
     std::fs::create_dir_all(dest_folder)?;
 
     // Step 4: Decrypt each file independently - continue on failure!
-    decrypt_folder_single(archive_path, dest_folder, &entries, enkryptit_key, payload_offset, version)?;
+    decrypt_folder_single(archive_path, dest_folder, &entries, enkryptit_key, payload_offset, version, context)?;
 
     Ok(dest_folder.to_string())
 }

@@ -50,4 +50,8 @@ impl<T: EnkryptitExecutable + Send + 'static> EnkryptitPool<T> {
             .recv()
             .map_err(|e| EnkryptitError::ReceiveError(e))
     }
+
+    pub fn size(&self) -> usize {
+        self._workers.len()
+    }
 }

@@ -121,6 +121,7 @@ pub fn encrypt_multithread_file(
 
     // We write the ending 'magic'
     writer.write_all(b"ENK1END")?;
+    writer.flush()?;
 
     pb.finish();
 
@@ -246,47 +247,56 @@ pub fn decrypt_multithread_file(
 
     pb.finish();
 
+    writer.flush()?;
+
     Ok(plain_path.to_string())
 }
 
 /// Helper function to sort and write a batch of chunks, and then clear the `results` vector. Used when encrypting only.
-fn write_batch(
+pub fn write_batch(
     results: &mut Vec<ChunkResult>,
     writer: &mut BufWriter<File>,
-) -> Result<(), EnkryptitError> {
+) -> Result<u64, EnkryptitError> {
     results.sort_by_key(|r| r.index);
 
+    let mut written = 0u64;
     for chunk_result in results.iter() {
         let data = &chunk_result.data;
 
         let len = (data.len() as u32).to_le_bytes();
         writer.write_all(&len)?;
+        written += 4; // Len of the len buffer
+
         writer.write_all(data)?;
+        written += data.len() as u64;
     }
 
     results.clear();
 
-    Ok(())
+    Ok(written)
 }
 
 /// Helper function to sort and write a batch of decrypted chunks (the plaintext),
 /// without any length prefix, and then clear the `results` vector. Used when decrypting only.
-fn write_batch_plain(
+pub fn write_batch_plain(
     results: &mut Vec<ChunkResult>,
     writer: &mut BufWriter<File>,
-) -> Result<(), EnkryptitError> {
+) -> Result<u64, EnkryptitError> {
     results.sort_by_key(|r| r.index);
-
+    
+    let mut written = 0u64;
+    
     for chunk_result in results.iter() {
         writer.write_all(&chunk_result.data)?;
+        written += chunk_result.data.len() as u64;
     }
 
     results.clear();
 
-    Ok(())
+    Ok(written)
 }
 
-fn receive_results<T: EnkryptitExecutable + Send + 'static>(
+pub fn receive_results<T: EnkryptitExecutable + Send + 'static>(
     results: &mut Vec<T::Output>,
     pool: &EnkryptitPool<T>,
     num_threads: u8,
