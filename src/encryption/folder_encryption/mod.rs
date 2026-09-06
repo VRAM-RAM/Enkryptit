@@ -1,9 +1,9 @@
-pub mod entries;
-pub mod collect_entry;
+pub mod entry;
 pub mod intern_archive_encryption;
+pub mod multithreading;
 
 use crate::context::EnkryptitContext;
-use crate::encryption::folder_encryption::entries::collect_folder_entries;
+use crate::encryption::folder_encryption::entry::collect_entries_from_folder::collect_folder_entries;
 use crate::encryption::folder_encryption::intern_archive_encryption::{
     decrypt_single_file_from_archive, encrypt_single_file_into_archive,
 };
@@ -143,8 +143,7 @@ pub fn decrypt_folder(
     let entries = metadatas.entries;
 
     // Then, we resolve the key & keytype and create a new EnkryptitKey
-    let enkryptit_key =
-        EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, archive_path)?;
+    let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, archive_path)?;
 
     // Step 3: Create destination directory structure
     let dest_folder = archive_path.strip_suffix(".encky").unwrap_or(archive_path);

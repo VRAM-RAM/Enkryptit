@@ -1,6 +1,6 @@
 use crate::context::EnkryptitContext;
 use crate::encryption::encryption_primitives::generate_nonce;
-use crate::encryption::folder_encryption::collect_entry::collect_entry;
+use crate::encryption::folder_encryption::entry::collect_entry::collect_entry;
 use crate::errors::EnkryptitError;
 use crate::metadatas::FileEntry;
 use std::path::{PathBuf};
