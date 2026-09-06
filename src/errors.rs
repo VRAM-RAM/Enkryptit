@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::{PathBuf, StripPrefixError}, sync::mpsc::RecvError};
+use std::{path::{PathBuf, StripPrefixError}, sync::mpsc::RecvError};
 
 use thiserror::Error;
 

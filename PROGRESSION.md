@@ -331,7 +331,10 @@ test result: FAILED. 155 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out
 Modifications :
 - Fixed an issue with `CompressionType::Auto` resolution in `folder_encryption/`
 - To fix it, and to make the architecture cleaner, created `/encryption/folder_encryption/collect_entry.rs`
-
+- Refactorization of `folder_encryption/` :
+    - created a directory for entries (`entry/`)
+    - created `intern_archive_encryption` that will contain the code for both multithreading and singlethread encryption / decryption.
+    - simplified `decrypt_folder()` and `encrypt_folder()` : those functions will only resolve if the folder has to be treated with multithreading or singlethread, and then delegate the treatment to `de/encrypt_folder_single` or `de/encrypt_folder_multi`
 But day 11 isn’t over yet...
 
 Tests results (for now) :

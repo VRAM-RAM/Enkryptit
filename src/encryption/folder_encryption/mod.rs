@@ -1,12 +1,11 @@
 pub mod entry;
-pub mod intern_archive_encryption;
 pub mod multithreading;
+pub mod intern_archive_encryption;
+pub mod single;
 
 use crate::context::EnkryptitContext;
 use crate::encryption::folder_encryption::entry::collect_entries_from_folder::collect_folder_entries;
-use crate::encryption::folder_encryption::intern_archive_encryption::{
-    decrypt_single_file_from_archive, encrypt_single_file_into_archive,
-};
+use crate::encryption::folder_encryption::single::{decrypt_folder_single, encrypt_folder_single};
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, FolderMetadata};
@@ -15,7 +14,6 @@ use crate::types::Mode;
 use postcard::from_bytes;
 use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
-use std::path::Path;
 
 /// Encrypt a folder into a single .encky archive file (v2 format: metadata at the end)
 pub fn encrypt_folder(
@@ -70,35 +68,7 @@ pub fn encrypt_folder(
     let data_start: u64 = 1 + HEADER_REGION_SIZE as u64;
 
     // Step 4: Encrypt each file, tracking offsets
-    let mut current_offset = data_start;
-
-    // We iterate on each entry
-    for entry in &mut entries {
-        entry.offset = current_offset;
-
-
-        // We build the full path for compression type resolution
-        let full_path = Path::new(folder_path).join(&entry.relative_path);
-
-        // We resolve the compression for the given entry
-        let compression = match context.resolve_compression(full_path.to_str().unwrap_or(&entry.relative_path)) {
-            Ok(compression) => compression,
-            Err(_) => {eprintln!("Error in COMPRESSION TYPE RESOLUTION !!!!!!"); continue}
-        };
-
-        // For more informations, please refeer to `encrypt_single_file_into_archive()`
-        let bytes_written = encrypt_single_file_into_archive(
-            folder_path,
-            &entry.relative_path,
-            entry.file_nonce,
-            compression,
-            enkryptit_key.key_as_ref(),
-            &archive_path,
-        )?;
-
-        // We update the offset
-        current_offset += bytes_written;
-    }
+    encrypt_folder_single(folder_path, enkryptit_key, &mut entries, data_start, context, &archive_path)?;
 
     // Step 5: Rebuild metadata with correct offsets and write at end of archive
     folder_meta.entries.clear();
@@ -150,51 +120,7 @@ pub fn decrypt_folder(
     std::fs::create_dir_all(dest_folder)?;
 
     // Step 4: Decrypt each file independently - continue on failure!
-    for entry in entries {
-        let offset = if version >= 2 {
-            entry.offset
-        } else {
-            payload_offset
-        };
-
-        let decrypt_result = decrypt_single_file_from_archive(
-            archive_path,
-            dest_folder,
-            entry.permissions,
-            &entry.relative_path,
-            entry.file_nonce,
-            entry.offset, // used for progress bar display
-            entry.compression,
-            enkryptit_key.key_as_ref(),
-            offset,
-        );
-
-        match decrypt_result {
-            Ok(bytes_consumed) => {
-                if version < 2 {
-                    // v1: we don't know the exact offset, but we tried.
-                    // For v1 archives this path is inherently unreliable.
-                    let _ = bytes_consumed;
-                }
-            }
-            Err(e) => {
-                eprintln!(
-                    "[WARNING] Failed to decrypt {}: {} - creating placeholder",
-                    entry.relative_path, e
-                );
-
-                // Create 0-byte placeholder file with original filename
-                let placeholder = Path::new(dest_folder).join(&entry.relative_path);
-                if let Some(parent) = placeholder.parent() {
-                    std::fs::create_dir_all(parent)?;
-                }
-
-                let _ = File::create(placeholder);
-
-                continue;
-            }
-        }
-    }
+    decrypt_folder_single(archive_path, dest_folder, &entries, enkryptit_key, payload_offset, version)?;
 
     Ok(dest_folder.to_string())
 }
