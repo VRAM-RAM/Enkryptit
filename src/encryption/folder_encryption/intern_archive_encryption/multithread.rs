@@ -101,6 +101,7 @@ pub fn encrypt_multithreading_file_into_archive(
 
     // We write the ending 'magic'
     archive.write_all(b"ENK1END")?;
+    bytes_written += 7;
 
     Ok(bytes_written)
 }

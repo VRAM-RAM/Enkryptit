@@ -339,13 +339,11 @@ Modifications :
 
 Tests results :
 ```bash
-test result: ok. 157 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 12.36s
+test result: ok. 159 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 12.36s
 ```
 
-The folder tests fail...
 Todo :
 
-- Fix it
 - Add a smooth skipping message / error system for folder encryption
 - Add a logging system
 - Implement folder multithreading encryption (multiple files at the same time)

@@ -107,7 +107,7 @@ pub fn decrypt_folder_single(archive_path: &str, dest_folder: &str, entries: &Ve
                     entry.permissions,
                     &entry.relative_path,
                     entry.file_nonce,
-                    entry.offset,
+                    offset,
                     entry.compression,
                     key.key_as_ref(),
                     offset,
