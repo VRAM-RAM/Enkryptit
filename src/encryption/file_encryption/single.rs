@@ -1,11 +1,10 @@
 use crate::encryption::encryption_flow::{decrypt_stream, encrypt_stream};
 use crate::encryption::encryption_primitives::generate_nonce;
+use crate::encryption::file::read_file;
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, MetaDatas};
 use crate::types::CompressionType;
-use std::fs::File;
-use std::io::BufReader;
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
 use zeroize::Zeroize;
@@ -17,10 +16,7 @@ pub fn encrypt_file_single(
     enkryptit_key: EnkryptitKey,
 ) -> Result<String, EnkryptitError> {
     // Opens the file
-    let file = File::open(path)?;
-    let total_size: u64 = file.metadata()?.len();
-
-    let reader = BufReader::new(file);
+    let file = read_file(path)?;
 
     // Generates the nonce
     let mut master_nonce = generate_nonce();
@@ -57,11 +53,11 @@ pub fn encrypt_file_single(
     // We encrypt the stream in place
     let _ = encrypt_stream(
         &mut writer,
-        reader,
+        file.reader,
         master_nonce,
         enkryptit_key.key_as_ref(),
         compression,
-        total_size,
+        file.len,
     )?;
 
     // And finally, we `zeroize` the master nonce (key is automatically dropped and Zeroized).
@@ -81,22 +77,20 @@ pub fn decrypt_file_single(
     compression: CompressionType,
 ) -> Result<String, EnkryptitError> {
     // We open the file
-    let file = File::open(path)?;
-    let total_size: u64 = file.metadata()?.len();
-    let mut reader = BufReader::new(file);
+    let mut file = read_file(path)?;
 
     let plain_path = path.strip_suffix(".encky").unwrap_or(path);
     // Create a placeholder for the new file
     let new_file = std::fs::File::create(plain_path)?;
     let mut writer = BufWriter::new(new_file);
 
-    reader.seek(SeekFrom::Start(payload_offset))?;
+    file.reader.seek(SeekFrom::Start(payload_offset))?;
 
     // Decrypts the stream in-place
     let _ = decrypt_stream(
         &mut writer,
-        reader,
-        total_size,
+        file.reader,
+        file.len,
         enkryptit_key.key_as_ref(),
         compression,
         master_nonce,

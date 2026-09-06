@@ -1,6 +1,6 @@
-use crate::encryption::encrypt_chunk_job::EncryptChunkJob;
+use crate::encryption::chunk_job::{encrypt::EncryptChunkJob, decrypt::DecryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk};
+use crate::encryption::file::read_file;
 use crate::errors::EnkryptitError;
-use crate::parallelism::EnkryptitJob;
 use crate::parallelism::pool::EnkryptitPool;
 use crate::types::CompressionType;
 use std::fs::File;
@@ -15,7 +15,6 @@ use crate::encryption::file_encryption::multithread::write_batch;
 use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 use std::io::Write;
 use crate::encryption::file_encryption::multithread::write_batch_plain;
-use crate::encryption::encrypt_chunk_job::DecryptChunkJob;
 
 /// Encrypt a single file into the archive stream with unique nonce per file, using multithreading
 pub fn encrypt_multithreading_file_into_archive(
@@ -35,9 +34,7 @@ pub fn encrypt_multithreading_file_into_archive(
         // TODO! Add a smooth skipping + logging system !!!!!!!
     }
 
-    let file = File::open(full_file_path)?;
-    let total_size: u64 = file.metadata()?.len();
-    let estimated_max_steps = total_size / CHUNK_SIZE as u64;
+    let mut file = read_file(full_file_path)?;
     
     // We prepare the shared cipher for Multithreading
     let cipher = Arc::new(XChaCha20Poly1305::new(cipher_key.into()));
@@ -46,7 +43,6 @@ pub fn encrypt_multithreading_file_into_archive(
     let mut bytes_written: u64 = 0;
 
     let mut archive = BufWriter::new(File::options().append(true).open(archive_path)?);
-    let mut reader = BufReader::new(file);
 
     let arc_compression = Arc::new(compression);
     let arc_nonce = Arc::new(file_nonce);
@@ -56,11 +52,11 @@ pub fn encrypt_multithreading_file_into_archive(
     let mut step: u64 = 0;
     let mut results = Vec::with_capacity(num_threads as usize);
     let mut submitted = 0u8;
-    let pb = GradientProgressBar::with_total_steps(estimated_max_steps, "Encrypting file...");
+    let pb = GradientProgressBar::with_total_steps(file.estimated_steps, "Encrypting file...");
 
 
     loop {
-        let bytes_read = reader.read(&mut buffer)?;
+        let bytes_read = file.reader.read(&mut buffer)?;
 
         if bytes_read == 0 {
             break;
@@ -75,18 +71,7 @@ pub fn encrypt_multithreading_file_into_archive(
             submitted = 0;
         }
 
-        let job = EncryptChunkJob {
-            index: step,
-            data: buffer[..bytes_read].to_vec(),
-            master_nonce: arc_nonce.clone(),
-            compression: arc_compression.clone(),
-            cipher: cipher.clone()
-        };
-
-        pool.submit(EnkryptitJob {
-            index: step,
-            task: job,
-        })?;
+        submit_encrypt_chunk(pool, step, buffer[..bytes_read].to_vec(), arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
 
         submitted += 1;
         step += 1;
@@ -205,19 +190,7 @@ pub fn decrypt_multithreading_file_from_archive(
         }
 
         // We create the job
-        let job = DecryptChunkJob {
-            index: step,
-            data: payload.clone(),
-            master_nonce: arc_nonce.clone(),
-            compression: arc_compression.clone(),
-            cipher: cipher.clone(),
-        };
-
-        // We submit the job to the pool
-        pool.submit(EnkryptitJob {
-            index: step,
-            task: job,
-        })?;
+        submit_decrypt_chunk(pool, step, payload, arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
 
         // We increment
         submitted += 1;

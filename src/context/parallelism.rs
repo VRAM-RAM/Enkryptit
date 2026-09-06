@@ -7,8 +7,6 @@ pub fn infer_parallelism(size: u64) -> Result<ParallelismType, EnkryptitError> {
         .map(|n| n.get())
         .unwrap_or(1);
 
-    println!("Cpus : {}", cpus);
-
     Ok(match size {
         0..LOW_BOUNDARY => ParallelismType::Single,
         LOW_BOUNDARY..MID_INFERIOR_BOUNDARY => {

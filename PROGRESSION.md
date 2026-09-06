@@ -326,7 +326,7 @@ test result: FAILED. 155 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out
 
 ---
 
-## DAY-11 
+## DAY-11 Fixed and issue with `Auto` CompressionType, added multithreading when encrypting/decrypting an entry of a folder
 
 Modifications :
 - Fixed an issue with `CompressionType::Auto` resolution in `folder_encryption/`
@@ -347,3 +347,58 @@ Todo :
 - Add a smooth skipping message / error system for folder encryption
 - Add a logging system
 - Implement folder multithreading encryption (multiple files at the same time)
+
+---
+
+## DAY-12 
+
+- Modified `encryption/folder_encryption/intern_archive_encryption/` : now contains, in `mod.rs`, the code for treating a `FileEntry`. It makes `folder_encryption/single.rs` much more simpler :
+
+```rust
+use crate::{context::EnkryptitContext, encryption::{encrypt_chunk_job::{DecryptChunkJob, EncryptChunkJob}, folder_encryption::intern_archive_encryption::{treat_entry_decryption, treat_entry_encryption}}, errors::EnkryptitError, key::EnkryptitKey, metadatas::FileEntry, parallelism::pool::EnkryptitPool};
+
+pub fn encrypt_folder_single(folder_path: &str, key: EnkryptitKey, entries: &mut Vec<FileEntry>, offset: u64, context: &mut EnkryptitContext, archive_path: &str) -> Result<(), EnkryptitError> {
+    let mut current_offset = offset;
+    let mut pool: Option<EnkryptitPool<EncryptChunkJob>> = None;
+
+    for entry in entries {
+        current_offset += treat_entry_encryption(&mut pool, folder_path, entry, current_offset, context, archive_path, &key)?;
+    }
+
+    Ok(())
+}
+
+pub fn decrypt_folder_single(archive_path: &str, dest_folder: &str, entries: &Vec<FileEntry>, key: EnkryptitKey, payload_offset: u64, version: u8, context: &mut EnkryptitContext) -> Result<(), EnkryptitError> {
+    let mut pool: Option<EnkryptitPool<DecryptChunkJob>> = None;
+
+    for entry in entries {
+        treat_entry_decryption(&mut pool, version, dest_folder, &entry, context, archive_path, &key, payload_offset)?;
+    }
+
+    Ok(())
+}
+```
+
+- Splitted `encryption/encrypt_chunk_job.rs` into `encryption/chunk_job/` that contains :
+    - `decrypt.rs` : `DecryptChunkJob` and its implementation.
+    - `encrypt.rs` : `EncryptChunkJob` and its implementation.
+    - `mod.rs` : **Module** file, that exposes two helpers for submitting a decryption job or an encryption job.
+    - `result.rs` : `ChunkResult` structure
+
+- Created `encryption/file.rs`, that contains an helper for reading & treating files.
+- Modified almost every file in `/encryption/file_encryption/` and `/encryption/folder_encryption/` to match the new architectural changes.
+
+Test results:
+
+```bash
+test result: ok. 159 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.96s
+```
+
+Todo :
+
+- Add a smooth skipping message / error system for folder encryption
+- Add a logging system
+- Continue implementing folder multithreading encryption (multiple files at the same time)
+
+
+

@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
-use eck::encryption::encrypt_chunk_job::{ChunkResult, DecryptChunkJob, EncryptChunkJob};
+use eck::encryption::chunk_job::{result::ChunkResult, decrypt::DecryptChunkJob, encrypt::EncryptChunkJob};
 use eck::errors::EnkryptitError;
 use eck::parallelism::EnkryptitJob;
 use eck::parallelism::executable::EnkryptitExecutable;

@@ -21,7 +21,7 @@ impl FolderParallelizationParams {
         system.refresh_memory();
 
         // We get the current available memory
-        let available_memory = system.available_memory() / 4;
+        let available_memory = system.available_memory();
 
         // The available threads
         let cpus = std::thread::available_parallelism()

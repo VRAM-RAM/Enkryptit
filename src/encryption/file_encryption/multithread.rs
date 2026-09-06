@@ -1,20 +1,20 @@
-use crate::encryption::encrypt_chunk_job::ChunkResult;
-use crate::encryption::encrypt_chunk_job::{DecryptChunkJob, EncryptChunkJob};
+use crate::encryption::chunk_job::result::ChunkResult;
+use crate::encryption::chunk_job::{decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk};
 use crate::encryption::encryption_primitives::generate_nonce;
+use crate::encryption::file::{read_file};
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, MetaDatas};
-use crate::parallelism::EnkryptitJob;
 use crate::parallelism::executable::EnkryptitExecutable;
 use crate::parallelism::pool::EnkryptitPool;
 use crate::types::{CHUNK_SIZE, CompressionType};
-use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{Read};
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
 use std::sync::Arc;
 use gradient_bar::GradientProgressBar;
+use crate::encryption::shared_cipher;
 
 /// Public function that `encrypts` a file, using a pool of workers. `num_threads` determines the number of workers.
 /// The function first initialize the pool of workers. Then, when processing, it submits a jobs to the pool of workers.
@@ -30,15 +30,13 @@ pub fn encrypt_multithread_file(
     let pool = EnkryptitPool::<EncryptChunkJob>::new(num_threads as usize)?;
 
     // Then, we open the file and create the reader
-    let file = File::open(path)?;
-    let estimated_max_steps = file.metadata()?.len() / CHUNK_SIZE as u64;
-    let mut reader = BufReader::new(file);
+    let mut file = read_file(path)?;
 
     // Generates the nonce
     let master_nonce = generate_nonce();
 
     // We prepare the shared cipher for Multithreading
-    let cipher = Arc::new(XChaCha20Poly1305::new(enkryptit_key.key_as_ref().into()));
+    let cipher = shared_cipher(enkryptit_key.key_as_ref());
 
     // And creates the metadata
     let metadata = MetaDatas::new(enkryptit_key.key_type(), compression, master_nonce).pack()?;
@@ -74,10 +72,10 @@ pub fn encrypt_multithread_file(
     let mut results = Vec::with_capacity(num_threads as usize);
     let mut submitted = 0u8;
 
-    let pb = GradientProgressBar::with_total_steps(estimated_max_steps, "Encrypting...");
+    let pb = GradientProgressBar::with_total_steps(file.estimated_steps, "Encrypting...");
 
     loop {
-        let bytes_read = reader.read(&mut buffer)?;
+        let bytes_read = file.reader.read(&mut buffer)?;
 
         if bytes_read == 0 {
             break;
@@ -92,20 +90,8 @@ pub fn encrypt_multithread_file(
             submitted = 0;
         }
 
-        // We create the job
-        let job = EncryptChunkJob {
-            index: step,
-            data: buffer[..bytes_read].to_vec(),
-            master_nonce: arc_nonce.clone(),
-            compression: arc_compression.clone(),
-            cipher: cipher.clone(),
-        };
-
-        // We submit the job to the pool
-        pool.submit(EnkryptitJob {
-            index: step,
-            task: job,
-        })?;
+        // We create the job and submit it
+        submit_encrypt_chunk(&pool, step, buffer[..bytes_read].to_vec(), arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
 
         // We increment
         submitted += 1;
@@ -145,19 +131,18 @@ pub fn decrypt_multithread_file(
     let pool = EnkryptitPool::<DecryptChunkJob>::new(num_threads as usize)?;
 
     // We open the file
-    let file = File::open(path)?;
-    let estimated_max_steps = file.metadata()?.len() / CHUNK_SIZE as u64;
-    let mut reader = BufReader::new(file);
+    let mut file = read_file(path)?;
 
     let plain_path = path.strip_suffix(".encky").unwrap_or(path);
+    
     // Create a placeholder for the new file
     let new_file = std::fs::File::create(plain_path)?;
     let mut writer = BufWriter::new(new_file);
 
-    reader.seek(SeekFrom::Start(payload_offset))?;
+    file.reader.seek(SeekFrom::Start(payload_offset))?;
 
     // We prepare the shared cipher for Multithreading
-    let cipher = Arc::new(XChaCha20Poly1305::new(enkryptit_key.key_as_ref().into()));
+    let cipher = shared_cipher(enkryptit_key.key_as_ref());
 
     // We create the Arc<> wrappers around compression type and master nonce
     let arc_compression = Arc::new(compression);
@@ -168,12 +153,12 @@ pub fn decrypt_multithread_file(
     let mut results = Vec::with_capacity(num_threads as usize);
     let mut submitted = 0u8;
 
-    let pb = GradientProgressBar::with_total_bytes(estimated_max_steps, "Decrypting...");
+    let pb = GradientProgressBar::with_total_bytes(file.estimated_steps, "Decrypting...");
 
     loop {
         let mut len_buf = [0u8; 4];
 
-        match reader.read_exact(&mut len_buf) {
+        match file.reader.read_exact(&mut len_buf) {
             // If we got no error, we continue
             Ok(_) => {}
             // If we have an Eof, we exit the loop
@@ -193,7 +178,7 @@ pub fn decrypt_multithread_file(
         // In consequence, we need to catch this case, and treat it as an exception.
         if &len_buf == b"ENK1" {
             let mut end = [0u8; 3];
-            reader.read_exact(&mut end)?;
+            file.reader.read_exact(&mut end)?;
 
             if &end != b"END" {
                 // invalid magic
@@ -207,7 +192,7 @@ pub fn decrypt_multithread_file(
 
         let mut payload = vec![0u8; len];
 
-        reader.read_exact(&mut payload)?;
+        file.reader.read_exact(&mut payload)?;
 
         // If we submitted as jobs as we have workers, we receive and write the results.
         if submitted >= num_threads {
@@ -218,20 +203,7 @@ pub fn decrypt_multithread_file(
             submitted = 0;
         }
 
-        // We create the job
-        let job = DecryptChunkJob {
-            index: step,
-            data: payload.clone(),
-            master_nonce: arc_nonce.clone(),
-            compression: arc_compression.clone(),
-            cipher: cipher.clone(),
-        };
-
-        // We submit the job to the pool
-        pool.submit(EnkryptitJob {
-            index: step,
-            task: job,
-        })?;
+        submit_decrypt_chunk(&pool, step, payload, arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
 
         // We increment
         submitted += 1;
@@ -302,13 +274,8 @@ pub fn receive_results<T: EnkryptitExecutable + Send + 'static>(
     num_threads: u8,
 ) -> Result<(), EnkryptitError> {
     for _ in 0..num_threads {
-        match pool.recv() {
-            Ok(result) => match result {
-                Ok(chunk_result) => results.push(chunk_result),
-                Err(e) => return Err(e),
-            },
-            Err(e) => return Err(e),
-        }
+        let result = pool.recv()??;
+        results.push(result);
     }
 
     Ok(())
