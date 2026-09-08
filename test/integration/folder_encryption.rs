@@ -279,4 +279,99 @@ mod tests {
         paths.sort();
         assert_eq!(paths, vec!["a/b/c/deep.txt", "a/mid.txt", "root.txt"]);
     }
+
+    // --- Day-10/11 regression: Auto + Auto end-to-end roundtrip ---
+
+    const PNG_BYTES: &[u8] = b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0DIHDR";
+    const WAV_BYTES: &[u8] = b"RIFF\x00\x00\x00\x00WAVE";
+    const XML_BYTES: &[u8] = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><root/>";
+
+    #[test]
+    fn encrypt_decrypt_auto_folder_mixed_content_roundtrip() {
+        let tmp = TempDir::new().unwrap();
+        let folder = tmp.path().join("autofolder");
+        fs::create_dir(&folder).unwrap();
+        fs::write(folder.join("doc.xml"), XML_BYTES).unwrap();
+        fs::write(folder.join("sound.wav"), WAV_BYTES).unwrap();
+        fs::write(folder.join("img.png"), PNG_BYTES).unwrap();
+
+        // >= 50 MiB -> Auto parallelism resolves to MultiThread on encryption.
+        // The ENK1END (+7) bytes of this entry feed the offsets of the following
+        // ones, so a single off-by-7 would break the whole archive.
+        let large_size: u64 = 55 * 1024 * 1024;
+        let large_path = folder.join("large_sparse.bin");
+        // All-zero sparse file with no detectable magic: inference = Unknown,
+        // 55 MiB -> Lz4 compression + MultiThread parallelism.
+        fs::File::create(&large_path).unwrap().set_len(large_size).unwrap();
+
+        let mut context = EnkryptitContext::new(
+            eck::types::Interface::Cli,
+            None,
+            CompressionType::Auto,
+            eck::types::ParallelismType::Auto,
+        );
+
+        let archive_path = encrypt_folder(
+            folder.to_str().unwrap(),
+            &mut context,
+            &KeyType::FromFile,
+        )
+        .unwrap();
+
+        let (version, meta_bytes) = read_archive_meta(&archive_path);
+        let folder_meta: FolderMetadata = from_bytes(&meta_bytes).unwrap();
+        assert_eq!(folder_meta.entries.len(), 4);
+
+        let mut paths: Vec<&str> = folder_meta
+            .entries
+            .iter()
+            .map(|e| e.relative_path.as_str())
+            .collect();
+        paths.sort_unstable();
+        assert_eq!(
+            paths,
+            vec!["doc.xml", "img.png", "large_sparse.bin", "sound.wav"]
+        );
+
+        // Every entry must have a pinned (non-Auto) compression, identical to
+        // the context inference. This guards the historical bug where a raw
+        // `Auto` ended up stored in the metadata and panicked in `decompress`.
+        let mut min_offset = u64::MAX;
+        for entry in &folder_meta.entries {
+            assert_ne!(
+                entry.compression,
+                CompressionType::Auto,
+                "Auto must be resolved before storage: {} (regression guard)",
+                entry.relative_path
+            );
+            let full = folder.join(&entry.relative_path);
+            let expected = context
+                .resolve_compression(full.to_str().unwrap())
+                .unwrap();
+            assert_eq!(
+                entry.compression, expected,
+                "stored compression must match inference for {}",
+                entry.relative_path
+            );
+            assert_eq!(entry.file_nonce.len(), 24);
+            min_offset = min_offset.min(entry.offset);
+        }
+        // Data starts right after the fixed-size header region (1 + 64).
+        assert_eq!(min_offset, 65, "first data entry must start after the header");
+
+        fs::remove_dir_all(&folder).unwrap();
+        let dest = decrypt_folder(&archive_path, &meta_bytes, 0, version, &mut context).unwrap();
+        let base = std::path::Path::new(&dest);
+
+        assert_eq!(fs::read(base.join("doc.xml")).unwrap(), XML_BYTES);
+        assert_eq!(fs::read(base.join("sound.wav")).unwrap(), WAV_BYTES);
+        assert_eq!(fs::read(base.join("img.png")).unwrap(), PNG_BYTES);
+
+        let restored_large = fs::read(base.join("large_sparse.bin")).unwrap();
+        assert_eq!(restored_large.len(), large_size as usize);
+        assert!(
+            restored_large.iter().all(|&b| b == 0),
+            "sparse file must be restored byte-exact"
+        );
+    }
 }

@@ -3,7 +3,7 @@
 //! Test Postcard-based metadata storage and retrieval (encryption parameters, compression type)
 
 use eck::VERSION;
-use eck::metadatas::{ArchiveHeader, MAGIC, MetaDatas};
+use eck::metadatas::{ArchiveHeader, MAGIC, FileEntry, FolderMetadata, MetaDatas};
 use eck::types::{CompressionType, KeyType};
 use postcard;
 use rand::{RngCore, rngs::OsRng};
@@ -265,5 +265,101 @@ mod tests {
         let header = ArchiveHeader::new(false, 0);
 
         assert_eq!(header.version, VERSION);
+    }
+
+    // --- FolderMetadata / FileEntry (DAY-11: per-entry compression) ---
+
+    fn sample_file_entry() -> FileEntry {
+        FileEntry {
+            relative_path: "sub/dir/a.txt".to_string(),
+            offset: 42,
+            permissions: Some(0o644),
+            compression: CompressionType::Lz4,
+            file_nonce: [0xAA; 24],
+        }
+    }
+
+    #[test]
+    fn file_entry_roundtrip_preserves_compression() {
+        let entry = sample_file_entry();
+        let packed = postcard::to_allocvec(&entry).unwrap();
+
+        let unpacked: FileEntry = postcard::from_bytes(&packed).unwrap();
+
+        // Compared field-by-field: `FileEntry::eq` intentionally ignores
+        // `compression`, so we assert the new field explicitly.
+        assert_eq!(unpacked.relative_path, "sub/dir/a.txt");
+        assert_eq!(unpacked.offset, 42);
+        assert_eq!(unpacked.permissions, Some(0o644));
+        assert_eq!(unpacked.compression, CompressionType::Lz4);
+        assert_eq!(unpacked.file_nonce, [0xAA; 24]);
+    }
+
+    #[test]
+    fn file_entry_roundtrip_keeps_each_compression_type() {
+        for comp in [
+            CompressionType::Zstd,
+            CompressionType::Lz4,
+            CompressionType::Xz,
+            CompressionType::NoComp,
+            CompressionType::Auto,
+        ] {
+            let entry = FileEntry {
+                relative_path: "a.bin".to_string(),
+                offset: 1,
+                permissions: None,
+                compression: comp,
+                file_nonce: [0u8; 24],
+            };
+            let packed = postcard::to_allocvec(&entry).unwrap();
+            let unpacked: FileEntry = postcard::from_bytes(&packed).unwrap();
+            assert_eq!(unpacked.compression, comp);
+        }
+    }
+
+    #[test]
+    fn file_entry_permissions_none_roundtrip() {
+        let entry = FileEntry {
+            permissions: None,
+            ..sample_file_entry()
+        };
+        let packed = postcard::to_allocvec(&entry).unwrap();
+        let unpacked: FileEntry = postcard::from_bytes(&packed).unwrap();
+        assert_eq!(unpacked.permissions, None);
+    }
+
+    #[test]
+    fn folder_metadata_roundtrip_with_multiple_entries() {
+        let mut meta = FolderMetadata::new(KeyType::FromFile);
+        meta.entries.push(sample_file_entry());
+        meta.entries.push(FileEntry {
+            relative_path: "root.bin".to_string(),
+            offset: 1234,
+            permissions: None,
+            compression: CompressionType::NoComp,
+            file_nonce: [0xBB; 24],
+        });
+
+        let packed = meta.pack().unwrap();
+        let unpacked: FolderMetadata = postcard::from_bytes(&packed).unwrap();
+
+        assert_eq!(unpacked.key_type, KeyType::FromFile);
+        assert_eq!(unpacked.entries.len(), 2);
+        assert_eq!(unpacked.entries[0].relative_path, "sub/dir/a.txt");
+        assert_eq!(unpacked.entries[0].compression, CompressionType::Lz4);
+        assert_eq!(unpacked.entries[1].relative_path, "root.bin");
+        assert_eq!(unpacked.entries[1].offset, 1234);
+        assert_eq!(unpacked.entries[1].compression, CompressionType::NoComp);
+        assert_eq!(unpacked.entries[1].file_nonce, [0xBB; 24]);
+    }
+
+    #[test]
+    fn folder_metadata_empty_entries_roundtrip() {
+        let meta = FolderMetadata::new(KeyType::Password);
+        let packed = meta.pack().unwrap();
+        let unpacked: FolderMetadata = postcard::from_bytes(&packed).unwrap();
+
+        assert_eq!(unpacked.key_type, KeyType::Password);
+        assert!(unpacked.entries.is_empty());
     }
 }

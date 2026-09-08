@@ -6,12 +6,19 @@
 use std::sync::Arc;
 
 use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
-use eck::encryption::chunk_job::{result::ChunkResult, decrypt::DecryptChunkJob, encrypt::EncryptChunkJob};
+use eck::context::{
+    EnkryptitContext, LOW_BOUNDARY, MID_INFERIOR_BOUNDARY, MID_SUPERIOR_BOUNDARY, SUPERIOR_BOUNDARY,
+};
+use eck::encryption::chunk_job::{
+    decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, result::ChunkResult,
+    submit_decrypt_chunk, submit_encrypt_chunk,
+};
 use eck::errors::EnkryptitError;
 use eck::parallelism::EnkryptitJob;
 use eck::parallelism::executable::EnkryptitExecutable;
 use eck::parallelism::pool::EnkryptitPool;
-use eck::types::{CHUNK_SIZE, CompressionType};
+use eck::types::{CHUNK_SIZE, CompressionType, Interface, ParallelismType};
+use tempfile::TempDir;
 
 /// A trivial executable that returns its index, so we can check that results
 /// are correctly routed back from the workers.
@@ -206,5 +213,187 @@ mod tests {
         let job = EnkryptitJob::new(7, EchoJob { value: 7 });
         let output: u64 = job.task.execute().unwrap();
         assert_eq!(output, 7);
+    }
+
+    // --- Auto parallelism inference (DAY-10) ---
+
+    fn cpus() -> u8 {
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1) as u8
+    }
+
+    fn auto_context() -> EnkryptitContext {
+        EnkryptitContext::new(Interface::Cli, None, CompressionType::NoComp, ParallelismType::Auto)
+    }
+
+    #[test]
+    fn auto_parallelism_tiny_files_are_single() {
+        let ctx = auto_context();
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(0).unwrap(),
+            ParallelismType::Single
+        );
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(1).unwrap(),
+            ParallelismType::Single
+        );
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(LOW_BOUNDARY - 1).unwrap(),
+            ParallelismType::Single
+        );
+    }
+
+    #[test]
+    fn auto_parallelism_low_zone_is_multithread_4() {
+        let ctx = auto_context();
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(LOW_BOUNDARY).unwrap(),
+            ParallelismType::MultiThread(4.min(cpus()))
+        );
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY - 1).unwrap(),
+            ParallelismType::MultiThread(4.min(cpus()))
+        );
+    }
+
+    #[test]
+    fn auto_parallelism_mid_inferior_zone_is_multithread_6() {
+        let ctx = auto_context();
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY).unwrap(),
+            ParallelismType::MultiThread(6.min(cpus()))
+        );
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY - 1).unwrap(),
+            ParallelismType::MultiThread(6.min(cpus()))
+        );
+    }
+
+    #[test]
+    fn auto_parallelism_mid_superior_zone_is_multithread_8() {
+        let ctx = auto_context();
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY).unwrap(),
+            ParallelismType::MultiThread(8.min(cpus()))
+        );
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY - 1).unwrap(),
+            ParallelismType::MultiThread(8.min(cpus()))
+        );
+    }
+
+    #[test]
+    fn auto_parallelism_superior_zone_uses_every_core() {
+        let ctx = auto_context();
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY).unwrap(),
+            ParallelismType::MultiThread(cpus())
+        );
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY * 2).unwrap(),
+            ParallelismType::MultiThread(cpus())
+        );
+    }
+
+    #[test]
+    fn explicit_parallelism_bypasses_size_inference() {
+        let ctx = EnkryptitContext::new(
+            Interface::Cli,
+            None,
+            CompressionType::NoComp,
+            ParallelismType::MultiThread(3),
+        );
+        // Even with a 0-byte "file", the explicit type is returned untouched.
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(0).unwrap(),
+            ParallelismType::MultiThread(3)
+        );
+
+        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::NoComp, ParallelismType::Single);
+        assert_eq!(
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY * 999).unwrap(),
+            ParallelismType::Single
+        );
+    }
+
+    #[test]
+    fn resolve_parallelism_uses_path_file_size() {
+        let dir = TempDir::new().unwrap();
+        let small = dir.path().join("small.bin");
+        std::fs::File::create(&small).unwrap().set_len(16).unwrap();
+        let ctx = auto_context();
+        assert_eq!(
+            ctx.resolve_parallelism(small.to_str().unwrap()).unwrap(),
+            ParallelismType::Single
+        );
+
+        let big = dir.path().join("big.bin");
+        std::fs::File::create(&big)
+            .unwrap()
+            .set_len(LOW_BOUNDARY + 1)
+            .unwrap();
+        assert_eq!(
+            ctx.resolve_parallelism(big.to_str().unwrap()).unwrap(),
+            ParallelismType::MultiThread(4.min(cpus()))
+        );
+    }
+
+    // --- chunk_job submit helpers (DAY-12) ---
+
+    #[test]
+    fn chunk_job_submit_helpers_roundtrip_through_pool() {
+        let encrypt_pool = EnkryptitPool::<EncryptChunkJob>::new(2).unwrap();
+        let key = [0x99u8; 32];
+        let cipher = Arc::new(XChaCha20Poly1305::new(&key.into()));
+        let master_nonce = Arc::new([0x44u8; 24]);
+        let compression = Arc::new(CompressionType::NoComp);
+
+        let payloads = [
+            b"alpha".to_vec(),
+            b"beta-beta".to_vec(),
+            b"gamma chunk payload".to_vec(),
+        ];
+
+        for (i, data) in payloads.iter().cloned().enumerate() {
+            submit_encrypt_chunk(
+                &encrypt_pool,
+                i as u64,
+                data,
+                master_nonce.clone(),
+                compression.clone(),
+                cipher.clone(),
+            )
+            .unwrap();
+        }
+
+        let mut encrypted = Vec::new();
+        for _ in 0..payloads.len() {
+            encrypted.push(encrypt_pool.recv().unwrap().unwrap());
+        }
+        encrypted.sort_by_key(|r| r.index);
+
+        let decrypt_pool = EnkryptitPool::<DecryptChunkJob>::new(2).unwrap();
+        for result in encrypted {
+            submit_decrypt_chunk(
+                &decrypt_pool,
+                result.index,
+                result.data,
+                master_nonce.clone(),
+                compression.clone(),
+                cipher.clone(),
+            )
+            .unwrap();
+        }
+
+        let mut restored = Vec::new();
+        for _ in 0..payloads.len() {
+            restored.push(decrypt_pool.recv().unwrap().unwrap());
+        }
+        restored.sort_by_key(|r| r.index);
+
+        let restored: Vec<&[u8]> = restored.iter().map(|r| r.data.as_slice()).collect();
+        let expected: Vec<&[u8]> = payloads.iter().map(|p| p.as_slice()).collect();
+        assert_eq!(restored, expected);
     }
 }

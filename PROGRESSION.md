@@ -350,7 +350,7 @@ Todo :
 
 ---
 
-## DAY-12 
+## DAY-12 Architectural changes of encryption, including modification of `intern_archive_encrytption`,  creation of `encryption/chunk_job/`
 
 - Modified `encryption/folder_encryption/intern_archive_encryption/` : now contains, in `mod.rs`, the code for treating a `FileEntry`. It makes `folder_encryption/single.rs` much more simpler :
 
@@ -400,5 +400,17 @@ Todo :
 - Add a logging system
 - Continue implementing folder multithreading encryption (multiple files at the same time)
 
+---
 
+## DAY-13 Added tests for testing all the architectural changes done since DAY-9, and beginned to implement multithreading folder encryption
+
+Added :
+1. **Auto parallelism** - test/unit/parallelism.rs: boundary tests for size-based inference (Single → MT 4/6/8/cpus at the 4 size gates), explicit non-Auto short-circuit, and path-based resolution on real/sparse files.
+2. **chunk_job helpers** - submit_encrypt_chunk to submit_decrypt_chunk roundtrip through a real pool.
+3. **collect_entry** - test/unit/folder_entries.rs (new): relative path + perms, root → DirectoryIsFolder, subdir → FileIsASymLink, symlink-to-file accepted.
+4. **collect_folder_entries** - concrete per-entry compression (XML needs to return Zstd, WAV => Lz4, PNG => NoComp), empty folder, nested relative paths.
+5. **read_file** - test/unit/file.rs (new): len, estimated_steps, zero-length, missing path.
+6. **Folder metadata** — test/unit/metadatas.rs: FileEntry/FolderMetadata pack-unpack preserving the new per-entry compression field (field-by-field, since eq skips it).
+7. **Auto** + **Auto** end-to-end regression — test/integration/folder_encryption.rs: mixed-content folder (XML/WAV/PNG + 55 MiB sparse file) roundtrips byte-exact; asserts offsets start at 65 and no raw Auto leaks into entry metadata.
+8. **CLI** — `--compression auto` and `--parallelism` auto persist to config and display.
 

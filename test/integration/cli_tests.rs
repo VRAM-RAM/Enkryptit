@@ -162,6 +162,32 @@ mod tests {
         assert!(stdout.contains("Compression : Xz"), "stdout: {stdout}");
     }
 
+    #[test]
+    /// Tests setting the compression type back to `auto` (DAY-10 inference).
+    fn cli_params_set_compression_auto() {
+        let guard = TestConfigGuard::new("PassWord", "NoComp");
+
+        let output = eck_cmd(&["params", "--compression", "auto"])
+            .output()
+            .expect("Failed to execute eck params");
+
+        assert!(
+            output.status.success(),
+            "stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+
+        let saved = fs::read_to_string(guard.path()).unwrap();
+        assert!(saved.contains("\"Auto\""), "config: {saved}");
+
+        let output = eck_cmd(&["params"]).output().unwrap();
+        assert!(output.status.success());
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Compression : Auto"), "stdout: {stdout}");
+    }
+
     // --- KeyType settings tests
 
     #[test]
@@ -508,6 +534,33 @@ mod tests {
         // Config must remain untouched on failure
         let saved = fs::read_to_string(guard.path()).unwrap();
         assert!(saved.contains("\"Single\""), "config: {saved}");
+    }
+
+    #[test]
+    /// Tests switching parallelism back to `auto` (DAY-10 inference).
+    fn cli_params_set_parallelism_auto() {
+        use serde_json::json;
+        let guard = TestConfigGuard::with_parallelism("PassWord", "NoComp", json!("Single"));
+
+        let output = eck_cmd(&["params", "--parallelism", "auto"])
+            .output()
+            .expect("Failed to execute eck params");
+
+        assert!(
+            output.status.success(),
+            "stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+
+        let saved = fs::read_to_string(guard.path()).unwrap();
+        assert!(saved.contains("\"Auto\""), "config: {saved}");
+
+        let output = eck_cmd(&["params"]).output().unwrap();
+        assert!(output.status.success());
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Parallelism : Auto"), "stdout: {stdout}");
     }
 
     #[test]

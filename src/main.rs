@@ -23,12 +23,19 @@ mod types;
 use crate::frontend::cli::treatment::treat_object_with_path;
 
 /// The version of `Enkryptit!`
+/// Enkryptit versions are separated between :
+/// - Nightly versions
+/// - Stable versions
+/// \
+/// This constant is only for `Nightly` version.
+/// \
+/// So, for example, if you download **Enkryptit!** v0.1.4, it is the 4th nightly version of 1st stable version.
 pub const VERSION: Version = 2;
 
 #[derive(Parser)]
 #[command(name = "eck")]
 #[command(author = "Olruix")]
-#[command(version = "0.2")]
+#[command(version = "0.0.2")]
 #[command(about = "Fast & Secure File Encryption Manager")]
 /// The `Cli` structure for **Enkryptit!** cli-tool
 /// \

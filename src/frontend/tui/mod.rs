@@ -40,7 +40,7 @@ macro_rules! show_params {
 /// Public function that launches the TUI
 pub fn launch_ui(input: &impl TuiInput) {
     println!("\n{}", "Enkryptit".cyan().bold());
-    println!("   Fast & Secure File Encryption Manager v0.{}", VERSION);
+    println!("   Fast & Secure File Encryption Manager v0.0.{}", VERSION);
 
     loop {
         let choices = vec![
