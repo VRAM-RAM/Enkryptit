@@ -9,7 +9,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use crate::types::CHUNK_SIZE;
-use gradient_bar::GradientProgressBar;
 use crate::encryption::file_encryption::multithread::receive_results;
 use crate::encryption::file_encryption::multithread::write_batch;
 use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
@@ -52,8 +51,6 @@ pub fn encrypt_multithreading_file_into_archive(
     let mut step: u64 = 0;
     let mut results = Vec::with_capacity(num_threads as usize);
     let mut submitted = 0u8;
-    let pb = GradientProgressBar::with_total_steps(file.estimated_steps, "Encrypting file...");
-
 
     loop {
         let bytes_read = file.reader.read(&mut buffer)?;
@@ -75,7 +72,6 @@ pub fn encrypt_multithreading_file_into_archive(
 
         submitted += 1;
         step += 1;
-        pb.update(step);
     }
 
     // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
@@ -98,7 +94,6 @@ pub fn decrypt_multithreading_file_from_archive(
     permissions: Option<u32>,
     relative_path: &str,
     file_nonce: [u8; 24],
-    compressed_size: u64,
     compression: CompressionType,
     cipher_key: &[u8; 32],
     offset: u64,
@@ -115,7 +110,6 @@ pub fn decrypt_multithreading_file_from_archive(
     }
 
     let file = File::create(full_file_path)?;
-    let estimated_max_steps = compressed_size / CHUNK_SIZE as u64;
 
     if let Some(p) = permissions {
         file.set_permissions(std::fs::Permissions::from_mode(p))?;
@@ -135,8 +129,6 @@ pub fn decrypt_multithreading_file_from_archive(
 
     // Bytes written
     let mut bytes_written: u64 = 0;
-
-    let pb = GradientProgressBar::with_total_bytes(estimated_max_steps, "Decrypting...");
 
     let mut writer = BufWriter::new(file);
 
@@ -195,7 +187,6 @@ pub fn decrypt_multithreading_file_from_archive(
         // We increment
         submitted += 1;
         step += 1;
-        pb.update(step);
     }
 
     // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
@@ -203,8 +194,6 @@ pub fn decrypt_multithreading_file_from_archive(
         receive_results(&mut results, &pool, submitted)?;
         bytes_written += write_batch_plain(&mut results, &mut writer)?;
     }
-
-    pb.finish();
 
     writer.flush()?;
 

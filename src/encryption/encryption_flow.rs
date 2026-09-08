@@ -15,7 +15,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
     master_nonce: [u8; 24],
     key: &[u8; 32],
     compression: CompressionType,
-    total_size: u64,
+    progress_bar: Option<GradientProgressBar>,
 ) -> Result<u64, EnkryptitError> {
     // Steps counter
     let mut step: u64 = 0;
@@ -25,8 +25,6 @@ pub fn encrypt_stream<R: Read, W: Write>(
     let mut bytes_written: u64 = 0;
 
     let mut n = reader.read(&mut buffer)?;
-
-    let pb = GradientProgressBar::with_total_bytes(total_size, "Encrypting...");
 
     // Processed counter
     let mut total_processed: u64 = 0;
@@ -60,7 +58,9 @@ pub fn encrypt_stream<R: Read, W: Write>(
 
         // We update the processed total
         total_processed += n as u64;
-        pb.update(total_processed);
+        if progress_bar.is_some() {
+            progress_bar.as_ref().unwrap().update(total_processed);
+        }
 
         buffer = next_buffer;
         n = next_n;
@@ -70,8 +70,10 @@ pub fn encrypt_stream<R: Read, W: Write>(
     writer.write_all(b"ENK1END")?;
     bytes_written += 7;
 
-    pb.finish();
-    println!();
+    if progress_bar.is_some() {
+        progress_bar.unwrap().finish();
+    }
+
     Ok(bytes_written)
 }
 
@@ -79,17 +81,13 @@ pub fn encrypt_stream<R: Read, W: Write>(
 pub fn decrypt_stream<R: Read, W: Write>(
     writer: &mut W,
     mut reader: R,
-    total_size: u64,
     key: &[u8; 32],
     compression: CompressionType,
     master_nonce: [u8; 24],
+    progress_bar: Option<GradientProgressBar>
 ) -> Result<u64, EnkryptitError> {
     let mut step: u64 = 0;
     let mut bytes_consumed: u64 = 0;
-
-    // ProgressBar creation.
-    let pb = GradientProgressBar::with_total_bytes(total_size, "Decrypting...");
-
 
     let mut total_processed: u64 = 0;
 
@@ -147,14 +145,19 @@ pub fn decrypt_stream<R: Read, W: Write>(
         payload.decompress(&mut output, compression)?;
 
         total_processed += len as u64;
-        pb.update(total_processed);
+
+        if progress_bar.is_some() {
+            progress_bar.as_ref().unwrap().update(total_processed);
+        }
 
         writer.write_all(&output)?;
         step += 1;
     }
 
     // We should add a new kind of error, something like `EndMagicNumberNotFound`, with a warning : file may have been alterated.
-    pb.finish();
-    println!();
+    if progress_bar.is_some() {
+        progress_bar.unwrap().finish();
+    }
+
     Ok(bytes_consumed)
 }

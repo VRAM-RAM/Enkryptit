@@ -402,7 +402,7 @@ Todo :
 
 ---
 
-## DAY-13 Added tests for testing all the architectural changes done since DAY-9, and beginned to implement multithreading folder encryption
+## DAY-13 Added tests for testing all the architectural changes done since DAY-9 & changed the progress bar display
 
 Added :
 1. **Auto parallelism** - test/unit/parallelism.rs: boundary tests for size-based inference (Single → MT 4/6/8/cpus at the 4 size gates), explicit non-Auto short-circuit, and path-based resolution on real/sparse files.
@@ -414,3 +414,20 @@ Added :
 7. **Auto** + **Auto** end-to-end regression — test/integration/folder_encryption.rs: mixed-content folder (XML/WAV/PNG + 55 MiB sparse file) roundtrips byte-exact; asserts offsets start at 65 and no raw Auto leaks into entry metadata.
 8. **CLI** — `--compression auto` and `--parallelism` auto persist to config and display.
 
+Moved the `GradientProgressBar` creation from `encryption_flow` to outside of it. Now, it checks if we have a bar (`.is_some()`) and in that case, updates it. It allows us not to create a bar when encrypting / decrypting an entry of a folder in `intern_archive_encryption`.
+\
+\
+Changed version from `0.0.2` to `0.0.3`.
+\
+\
+Tests results : 
+```bash
+test result: ok. 187 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.86s
+```
+
+I also choosed what to do next : I'll give up with multithreading folder encryption, because I think the I/O & RAM & Complexity (of the code) costs will be too high for a little of performance gains. Instead, we'll create :
+- Cleanup & Polish (no more *eprintln!()*, logging system, smooth skipping, `--json` mode...)
+- Ergonomic add-ons (`eck verify <path>`, `eck inspect <path>`, `eck recover <path>`)
+- Doc restructure (README + /doc, and later *mkdocs* maybe)
+- cargo clippy / fuzzy testing
+- benchmarks

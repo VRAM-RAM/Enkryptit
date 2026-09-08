@@ -22,7 +22,6 @@ pub fn encrypt_single_file_into_archive(
     }
 
     let file = File::open(full_file_path)?;
-    let total_size: u64 = file.metadata()?.len();
 
     let reader = BufReader::new(file);
 
@@ -36,7 +35,7 @@ pub fn encrypt_single_file_into_archive(
             file_nonce,
             cipher_key,
             compression,
-            total_size,
+            None,
         )
     }
 }
@@ -48,7 +47,6 @@ pub fn decrypt_single_file_from_archive(
     permissions: Option<u32>,
     relative_path: &str,
     file_nonce: [u8; 24],
-    compressed_size: u64,
     compression: CompressionType,
     cipher_key: &[u8; 32],
     offset: u64,
@@ -74,10 +72,10 @@ pub fn decrypt_single_file_from_archive(
         decrypt_stream(
             &mut writer,
             reader,
-            compressed_size,
             cipher_key,
             compression,
             file_nonce,
+            None
         )
     }
 }

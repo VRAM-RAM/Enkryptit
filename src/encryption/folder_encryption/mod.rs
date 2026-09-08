@@ -1,5 +1,4 @@
 pub mod entry;
-pub mod multithreading;
 pub mod intern_archive_encryption;
 pub mod single;
 
@@ -11,6 +10,7 @@ use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, FolderMetadata};
 use crate::types::KeyType;
 use crate::types::Mode;
+use gradient_bar::GradientProgressBar;
 use postcard::from_bytes;
 use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
@@ -23,6 +23,8 @@ pub fn encrypt_folder(
 ) -> Result<String, EnkryptitError> {
     // Creates the Enkryptit key (resolves both key and keytype)
     let enkryptit_key = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, folder_path)?;
+
+    let pb = GradientProgressBar::new_spinner("Treating folder...");
 
     // Step 1: Collect all file entries from directory tree (follow symlinks)
     let mut entries = collect_folder_entries(folder_path, context)?;
@@ -67,8 +69,12 @@ pub fn encrypt_folder(
     // Compute the beginning offset
     let data_start: u64 = 1 + HEADER_REGION_SIZE as u64;
 
+    pb.finish();
+
     // Step 4: Encrypt each file, tracking offsets
     encrypt_folder_single(folder_path, enkryptit_key, &mut entries, data_start, context, &archive_path)?;
+
+    let pb = GradientProgressBar::new_spinner("Finishing folder treatment...");
 
     // Step 5: Rebuild metadata with correct offsets and write at end of archive
     folder_meta.entries.clear();
@@ -97,6 +103,8 @@ pub fn encrypt_folder(
         archive_file.write_all(&final_header_bytes)?;
     }
 
+    pb.finish();
+
     Ok(archive_path)
 }
 
@@ -108,6 +116,7 @@ pub fn decrypt_folder(
     version: u8,
     context: &mut EnkryptitContext,
 ) -> Result<String, EnkryptitError> {
+
     // First, we deserialize the metadata
     let metadatas: FolderMetadata = from_bytes(meta_bytes)?;
     let entries = metadatas.entries;
@@ -118,7 +127,6 @@ pub fn decrypt_folder(
     // Step 3: Create destination directory structure
     let dest_folder = archive_path.strip_suffix(".encky").unwrap_or(archive_path);
     std::fs::create_dir_all(dest_folder)?;
-
     // Step 4: Decrypt each file independently - continue on failure!
     decrypt_folder_single(archive_path, dest_folder, &entries, enkryptit_key, payload_offset, version, context)?;
 

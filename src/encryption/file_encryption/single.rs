@@ -7,6 +7,7 @@ use crate::metadatas::{ArchiveHeader, MetaDatas};
 use crate::types::CompressionType;
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
+use gradient_bar::GradientProgressBar;
 use zeroize::Zeroize;
 
 /// Public function that encrypts a file (it also resolves the key and keytype) - single thread
@@ -50,6 +51,8 @@ pub fn encrypt_file_single(
     // And the metadata
     writer.write_all(&metadata)?;
 
+    let progress_bar = GradientProgressBar::with_total_bytes(file.len, "Encrypting...");
+
     // We encrypt the stream in place
     let _ = encrypt_stream(
         &mut writer,
@@ -57,7 +60,7 @@ pub fn encrypt_file_single(
         master_nonce,
         enkryptit_key.key_as_ref(),
         compression,
-        file.len,
+        Some(progress_bar),
     )?;
 
     // And finally, we `zeroize` the master nonce (key is automatically dropped and Zeroized).
@@ -86,14 +89,16 @@ pub fn decrypt_file_single(
 
     file.reader.seek(SeekFrom::Start(payload_offset))?;
 
+    let progress_bar = GradientProgressBar::with_total_bytes(file.len, "Decrypting...");
+
     // Decrypts the stream in-place
     let _ = decrypt_stream(
         &mut writer,
         file.reader,
-        file.len,
         enkryptit_key.key_as_ref(),
         compression,
         master_nonce,
+        Some(progress_bar)
     )?;
 
     writer.flush()?;
