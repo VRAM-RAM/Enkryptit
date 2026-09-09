@@ -1,7 +1,7 @@
 use crate::context::EnkryptitContext;
 use crate::encryption::folder_encryption::{decrypt_folder, encrypt_folder};
 use crate::errors::EnkryptitError;
-use crate::frontend::cli::Output;
+use crate::frontend::Output;
 use crate::types::KeyType::{self};
 
 /// Public helper for encrypting a folder. (Converts Ok<>/EnkryptitError to Output).

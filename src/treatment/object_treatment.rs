@@ -1,6 +1,6 @@
 use crate::context::EnkryptitContext;
 use crate::errors::EnkryptitError;
-use crate::frontend::cli::Output;
+use crate::frontend::Output;
 use crate::metadatas::{ArchiveHeader, MAGIC};
 use crate::parameters::params::EnkryptitParams;
 use crate::treatment::file_case::{decrypt_file_case, encrypt_file_case};
@@ -41,13 +41,12 @@ pub fn treat_object(
         return encrypt_folder_case(path, context, &keytype);
     }
 
-    match read_file(&path) {
+    match read_file(path) {
         Ok(ParsedFile::Enkryptit {
             meta,
             payload_offset,
             is_folder_archive,
             version,
-            ..
         }) => {
             if is_folder_archive {
                 decrypt_folder_case(path, context, meta, payload_offset, version)
@@ -71,7 +70,7 @@ pub fn treat_object(
 /// - Compare the Magic number
 /// - Reads the metadata (two different ways : at the beginning of the file if the version is 1, at the end if the version is 2)
 /// - Returns the ParsedFile result
-fn read_file(path: &str) -> Result<ParsedFile, EnkryptitError> {
+pub fn read_file(path: &str) -> Result<ParsedFile, EnkryptitError> {
     let file = File::open(path)?;
     let file_len = file.metadata()?.len();
     let mut reader = BufReader::new(file);

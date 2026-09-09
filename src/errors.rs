@@ -1,5 +1,6 @@
 use std::{path::{PathBuf, StripPrefixError}, sync::mpsc::RecvError};
 
+use fmodeparser::{FullPermissionError};
 use thiserror::Error;
 
 #[allow(dead_code)]
@@ -9,8 +10,14 @@ pub enum EnkryptitError {
     #[error("operation interrupted")]
     Break,
 
+    #[error("Error while parsing file permissions : {0}")]
+    FilePermissionsParsingError(#[from] FullPermissionError),
+
     #[error("postcard error: {0}")]
     PostcardError(#[from] postcard::Error),
+
+    #[error("Path is incorrect : {0}")]
+    PathIsIncorrect(String),
 
     #[error("Directory found is the directory of the folder")]
     DirectoryIsFolder,

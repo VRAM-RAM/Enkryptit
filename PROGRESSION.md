@@ -431,3 +431,10 @@ I also choosed what to do next : I'll give up with multithreading folder encrypt
 - Doc restructure (README + /doc, and later *mkdocs* maybe)
 - cargo clippy / fuzzy testing
 - benchmarks
+
+## DAY-14
+
+- Modified `ParallelismType::Auto` min cpus (`8, 12 and 16` instead of `4, 6 and 8`)
+- Moved `Output` enum from `frontend::cli` to `frontend`
+- Beginned to implement `eck inspect <path>` backend.
+- Added a new `Output` : `Output::InspectionReport(InspectionReport)`

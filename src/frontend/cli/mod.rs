@@ -1,15 +1,9 @@
 use crate::{
-    errors::EnkryptitError,
     types::{CompressionType, KeyParams, ParallelismType},
 };
 pub mod params_helpers;
 pub mod treatment;
-/// Enum for Outputs, also used in Modern Ui
-pub enum Output {
-    Error { error: EnkryptitError },
-    Success { message: String },
-    CorruptedFile,
-}
+
 
 #[macro_export]
 /// Macro that prints the help

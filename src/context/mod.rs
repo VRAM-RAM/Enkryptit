@@ -1,5 +1,5 @@
-mod compression;
-mod parallelism;
+pub mod compression;
+pub mod parallelism;
 
 use std::fs::File;
 use crate::context::compression::{infer_compression};

@@ -775,6 +775,7 @@ dependencies = [
  "ctor",
  "directories",
  "dirs",
+ "fmodeparser",
  "gradient-bar",
  "hex",
  "indicatif",
@@ -921,6 +922,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "fmodeparser"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4342312c958816266bf5f3638d2727c243cc21e668173745982c96a86e44aa63"
+dependencies = [
+ "regex",
 ]
 
 [[package]]

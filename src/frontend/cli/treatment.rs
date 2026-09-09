@@ -1,6 +1,6 @@
 use crate::context::EnkryptitContext;
 use crate::errors::EnkryptitError;
-use crate::frontend::cli::Output;
+use crate::frontend::Output;
 use crate::frontend::treat_output::treat_output;
 use crate::log_error;
 use crate::parameters::params::load_params;

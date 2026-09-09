@@ -1,4 +1,4 @@
-use crate::frontend::cli::Output;
+use crate::frontend::Output;
 
 /// Helper for treating an `Output`. Given an `Output`, it prints a text in the terminal
 pub fn treat_output(output: Output) {
@@ -6,5 +6,6 @@ pub fn treat_output(output: Output) {
         Output::Success { message } => println!("Success : {}", message),
         Output::Error { error } => eprintln!("[ERROR] {}", error),
         Output::CorruptedFile => eprintln!("[ERROR] File is corrupted, or doesn't exist."),
+        Output::InspectionReport(report) => report.display(),
     }
 }

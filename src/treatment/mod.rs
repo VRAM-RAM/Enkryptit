@@ -1,4 +1,4 @@
 mod file_case;
-/// Module for treating an object (file or folder)
+pub mod inspect;
 mod folder_case;
 pub mod object_treatment;
