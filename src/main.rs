@@ -1,11 +1,7 @@
 use crate::{
     frontend::{
-        cli::params_helpers::{show_params, update_params},
-        cli::treatment::treat_objects_with_multiple_paths,
-        treat_output::treat_output,
-        tui::{input::RealTuiInput, launch_ui},
-    },
-    types::Version,
+        cli::{inspection::inspect_one_or_more_objects, params_helpers::{show_params, update_params}, treatment::treat_objects_with_multiple_paths}, treat_output::treat_output, tui::{input::RealTuiInput, launch_ui},
+    }, types::Version,
 };
 use clap::{Parser, Subcommand};
 mod compression;
@@ -60,12 +56,17 @@ struct Cli {
 #[derive(Subcommand)]
 /// All the commands available :
 /// Ui --> open the UI
+/// Inspect --> Inspect one / many files
 /// Params / Parameters
 /// |-> no arg : show current parameters
 /// |-> compression + <ALGO> : change compression algorithm
 /// |-> key type + <KEY_TYPE> : change key type
 enum Commands {
     Ui,
+    Inspect {
+        #[arg(value_name = "PATHS")]
+        paths: Vec<String>,
+    },
     Params {
         /// Change compression algorithm
         #[arg(short = 'c', long = "compression", value_name = "ALGO")]
@@ -112,6 +113,9 @@ fn main() {
                 // Else, we update the parameters
                 update_params(compression, key_type, parallelism);
             }
+        }
+        Some(Commands::Inspect { paths }) => {
+            inspect_one_or_more_objects(&paths);
         }
         Some(Commands::Parameters {
             compression,

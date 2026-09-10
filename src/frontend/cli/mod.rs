@@ -3,6 +3,7 @@ use crate::{
 };
 pub mod params_helpers;
 pub mod treatment;
+pub mod inspection;
 
 
 #[macro_export]

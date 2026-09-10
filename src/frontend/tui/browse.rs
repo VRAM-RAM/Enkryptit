@@ -107,6 +107,7 @@ fn treat_objects(objects: Vec<String>, password: Option<String>) -> Result<(), E
             Output::CorruptedFile => {
                 log_error!("File is corrupted or doesn't exist");
             }
+            Output::InspectionReport(report) => report.display()?
         }
     }
     Ok(())

@@ -6,6 +6,8 @@ pub fn treat_output(output: Output) {
         Output::Success { message } => println!("Success : {}", message),
         Output::Error { error } => eprintln!("[ERROR] {}", error),
         Output::CorruptedFile => eprintln!("[ERROR] File is corrupted, or doesn't exist."),
-        Output::InspectionReport(report) => report.display(),
+        Output::InspectionReport(report) => if let Err(e) = report.display() {
+            eprintln!("[ERROR] {}", e)
+        },
     }
 }

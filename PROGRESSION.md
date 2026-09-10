@@ -432,9 +432,30 @@ I also choosed what to do next : I'll give up with multithreading folder encrypt
 - cargo clippy / fuzzy testing
 - benchmarks
 
-## DAY-14
+---
+
+## DAY-14 ParallelismType maximum cpus modification and `eck inspect <path>` implementation
 
 - Modified `ParallelismType::Auto` min cpus (`8, 12 and 16` instead of `4, 6 and 8`)
 - Moved `Output` enum from `frontend::cli` to `frontend`
-- Beginned to implement `eck inspect <path>` backend.
+- Fully implemented `eck inspect <path>` backend.
 - Added a new `Output` : `Output::InspectionReport(InspectionReport)`
+- Modified tests (parallelism tests) to match with the new max cpus in `ParallelismType::Auto` resolution.
+- Added `frontend/cli/inspection.rs`, that contains an helper for inspecting object(s).
+- Wired the cli with the **inspection**.
+
+Tests results : 
+```bash
+test result: ok. 187 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 13.35s
+```
+
+Next things to do :
+- Wire **inspection** to the *TUI* (and refactor a little the TUI)
+- Cleanup `diplay()` for *InspectionReport* (raw ansi colors to constants (`const LABEL: u8 = ...`)) 
+- Cleanup & Polish (no more *eprintln!()*, logging system, smooth skipping, `--json` mode...)
+- Ergonomic add-ons (`eck verify <path>`, `eck inspect <path>`, `eck recover <path>`)
+- Doc restructure (README + /doc, and later *mkdocs* maybe)
+- cargo clippy / fuzzy testing
+- benchmarks
+
+---

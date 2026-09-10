@@ -245,41 +245,41 @@ mod tests {
     }
 
     #[test]
-    fn auto_parallelism_low_zone_is_multithread_4() {
+    fn auto_parallelism_low_zone_is_multithread_8() {
         let ctx = auto_context();
         assert_eq!(
             ctx.resolve_parallelism_with_size(LOW_BOUNDARY).unwrap(),
-            ParallelismType::MultiThread(4.min(cpus()))
+            ParallelismType::MultiThread(8.min(cpus()))
         );
         assert_eq!(
             ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY - 1).unwrap(),
-            ParallelismType::MultiThread(4.min(cpus()))
+            ParallelismType::MultiThread(8.min(cpus()))
         );
     }
 
     #[test]
-    fn auto_parallelism_mid_inferior_zone_is_multithread_6() {
+    fn auto_parallelism_mid_inferior_zone_is_multithread_12() {
         let ctx = auto_context();
         assert_eq!(
             ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY).unwrap(),
-            ParallelismType::MultiThread(6.min(cpus()))
+            ParallelismType::MultiThread(12.min(cpus()))
         );
         assert_eq!(
             ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY - 1).unwrap(),
-            ParallelismType::MultiThread(6.min(cpus()))
+            ParallelismType::MultiThread(12.min(cpus()))
         );
     }
 
     #[test]
-    fn auto_parallelism_mid_superior_zone_is_multithread_8() {
+    fn auto_parallelism_mid_superior_zone_is_multithread_16() {
         let ctx = auto_context();
         assert_eq!(
             ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY).unwrap(),
-            ParallelismType::MultiThread(8.min(cpus()))
+            ParallelismType::MultiThread(16.min(cpus()))
         );
         assert_eq!(
             ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY - 1).unwrap(),
-            ParallelismType::MultiThread(8.min(cpus()))
+            ParallelismType::MultiThread(16.min(cpus()))
         );
     }
 
@@ -335,7 +335,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             ctx.resolve_parallelism(big.to_str().unwrap()).unwrap(),
-            ParallelismType::MultiThread(4.min(cpus()))
+            ParallelismType::MultiThread(8.min(cpus()))
         );
     }
 

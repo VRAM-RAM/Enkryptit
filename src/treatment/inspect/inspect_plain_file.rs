@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::path::Path;
 use infer::get_from_path;
-use std::fs::metadata;
 
 use crate::{context::{compression::infer_compression, parallelism::infer_parallelism}, errors::EnkryptitError, treatment::inspect::InspectionReport};
 
@@ -53,7 +52,7 @@ pub fn inspect_plain_file(path: &str) -> Result<InspectionReport, EnkryptitError
 
     
     let compression = infer_compression(path)?;
-    let parallelism = infer_parallelism(file.metadata()?.len())?;
+    let parallelism = infer_parallelism(metadata.len())?;
 
     Ok(InspectionReport::PlaintextFile { name: name.to_string(), directory: directory.to_string_lossy().to_string(), size: metadata.len() as usize, permissions: perms, extension: extension.to_string(), mime_extension: mime, predicted_compression_type: compression, predicted_parallelism_type: parallelism })
 }

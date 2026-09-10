@@ -45,5 +45,6 @@ pub fn handle_object_treatment_with_password(
             log_error!("File is corrupted or doesn't exist");
             Ok(())
         }
+        Output::InspectionReport(report) => report.display()
     }
 }

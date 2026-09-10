@@ -23,11 +23,11 @@ pub fn inspect_object(path: &str) -> Result<Output, EnkryptitError> {
     }
 
     match read_file(path) {
-        Ok(ParsedFile::Enkryptit { meta, version, payload_offset, is_folder_archive }) => {
+        Ok(ParsedFile::Enkryptit { meta, version, is_folder_archive, .. }) => {
             if is_folder_archive {
-                return Ok(Output::InspectionReport(inspect_encrypted_archive()?));
+                return Ok(Output::InspectionReport(inspect_encrypted_archive(path, &meta, version)?));
             } else {
-                return Ok(Output::InspectionReport(inspect_encrypted_file()?))
+                return Ok(Output::InspectionReport(inspect_encrypted_file(path, &meta, version)?))
             }
         }
 

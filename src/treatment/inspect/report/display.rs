@@ -17,67 +17,71 @@ impl InspectionReport {
 
 fn display_plaintext_file(name: &str, directory: &str, size: usize, permissions: Option<u32>, extension: &str, mime_extension: &str, ct: &CompressionType, pt: &ParallelismType) -> Result<(), EnkryptitError> {
     println!();
-    println!("{}", "Inspection Report".ansi_color(27)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
+    println!("{}", "Inspection Report".ansi_color(39)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
     println!();
-    println!("{}{}", "Type : ".ansi_color(26), "Plaintext File (Not encrypted with Enkryptit!)".ansi_color(202));
-    println!("{}{}", "Name : ".ansi_color(26), name.ansi_color(202));
-    println!("{}{}", "Directory : ".ansi_color(26), directory.ansi_color(202));
-    println!("{}{}", "Size : ".ansi_color(26), size.to_string().ansi_color(202));
+    println!("{}{}", "Type : ".ansi_color(245), "Plaintext File (Not encrypted with Enkryptit!)".ansi_color(214));
+    println!("{}{}", "Name : ".ansi_color(245), name.ansi_color(252));
+    println!("{}{}", "Directory : ".ansi_color(245), directory.ansi_color(252));
+    println!("{}{}{}", "Size : ".ansi_color(245), to_kb(size).to_string().ansi_color(252), " KiB".ansi_color(245));
 
     if permissions.is_some() {
         let fullperms =  FullPermission::new(permissions.unwrap())?;
-        println!("{}{}", "Permissions : ".ansi_color(26), fullperms.to_string().ansi_color(202));    
+        println!("{}{}", "Permissions : ".ansi_color(245), fullperms.to_string().ansi_color(252));    
     }
 
-    println!("{}{}", "Shown extension : ".ansi_color(26), extension.ansi_color(202));
-    println!("{}{}", "Real extension : ".ansi_color(26), mime_extension.ansi_color(202));
-    println!("{}{}", "Recommanded compression type (for encrypting) : ".ansi_color(26), ct.to_string().ansi_color(202));
-    println!("{}{}", "Recommanded parallelism type (for encrypting) : ".ansi_color(26), pt.to_string().ansi_color(202));
+    println!("{}{}", "Shown extension : ".ansi_color(245), extension.ansi_color(252));
+    println!("{}{}", "Real extension : ".ansi_color(245), mime_extension.ansi_color(81));
+    println!("{}{}", "Recommanded compression type (for encrypting) : ".ansi_color(245), ct.to_string().ansi_color(81));
+    println!("{}{}", "Recommanded parallelism type (for encrypting) : ".ansi_color(245), pt.to_string().ansi_color(81));
 
     Ok(())
 }
 
 fn display_encrypted_file(name: &str, directory: &str, size: usize, version: u8, ct: &CompressionType, pt: &ParallelismType, keytype: &KeyType, nonce: &[u8; 24]) {
     println!();
-    println!("{}", "Inspection Report".ansi_color(27)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
+    println!("{}", "Inspection Report".ansi_color(39)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
     println!();
-    println!("{}{}", "Type : ".ansi_color(26), "File encrypted with Enkryptit!".ansi_color(202));
-    println!("{}{}", "Version : ".ansi_color(26), version.to_string().ansi_color(202));
-    println!("{}{}", "Name : ".ansi_color(26), name.ansi_color(202));
-    println!("{}{}", "Directory : ".ansi_color(26), directory.ansi_color(202));
-    println!("{}{}", "Size : ".ansi_color(26), size.to_string().ansi_color(202));
-    println!("{}{}", "Compression type : ".ansi_color(26), ct.to_string().ansi_color(202));
-    println!("{}{}", "Recommanded parallelism type (for decrypting) : ".ansi_color(26), pt.to_string().ansi_color(202));
-    println!("{}{}", "Key Type : ".ansi_color(26), keytype.to_string().ansi_color(202));
-    println!("{}{}", "Nonce : ".ansi_color(26), nonce.encode_hex::<String>().to_string().ansi_color(202));
+    println!("{}{}", "Type : ".ansi_color(245), "File encrypted with Enkryptit!".ansi_color(46));
+    println!("{}{}", "Version : ".ansi_color(245), version.to_string().ansi_color(81));
+    println!("{}{}", "Name : ".ansi_color(245), name.ansi_color(252));
+    println!("{}{}", "Directory : ".ansi_color(245), directory.ansi_color(252));
+    println!("{}{}{}", "Size : ".ansi_color(245), to_kb(size).to_string().ansi_color(252), " KiB".ansi_color(245));
+    println!("{}{}", "Compression type : ".ansi_color(245), ct.to_string().ansi_color(81));
+    println!("{}{}", "Recommanded parallelism type (for decrypting) : ".ansi_color(245), pt.to_string().ansi_color(81));
+    println!("{}{}", "Key Type : ".ansi_color(245), keytype.to_string().ansi_color(81));
+    println!("{}{}", "Nonce : ".ansi_color(245), nonce.encode_hex::<String>().to_string().ansi_color(81));
 }
 
 fn display_encrypted_archive(name: &str, directory: &str, size: usize, version: u8, entries_number: u64, keytype: &KeyType) {
     println!();
-    println!("{}", "Inspection Report".ansi_color(27)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
+    println!("{}", "Inspection Report".ansi_color(39)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
     println!();
-    println!("{}{}", "Type : ".ansi_color(26), "Folder (Archive) encrypted with Enkryptit!".ansi_color(202));
-    println!("{}{}", "Version : ".ansi_color(26), version.to_string().ansi_color(202));
-    println!("{}{}", "Name : ".ansi_color(26), name.ansi_color(202));
-    println!("{}{}", "Directory : ".ansi_color(26), directory.ansi_color(202));
-    println!("{}{}", "Size : ".ansi_color(26), size.to_string().ansi_color(202));
-    println!("{}{}", "Entries number : ".ansi_color(26), entries_number.to_string().ansi_color(202));
-    println!("{}{}", "Key Type : ".ansi_color(26), keytype.to_string().ansi_color(202));
+    println!("{}{}", "Type : ".ansi_color(245), "Folder (Archive) encrypted with Enkryptit!".ansi_color(46));
+    println!("{}{}", "Version : ".ansi_color(245), version.to_string().ansi_color(81));
+    println!("{}{}", "Name : ".ansi_color(245), name.ansi_color(252));
+    println!("{}{}", "Directory : ".ansi_color(245), directory.ansi_color(252));
+    println!("{}{}{}", "Size : ".ansi_color(245), to_kb(size).to_string().ansi_color(252), " KiB".ansi_color(245));
+    println!("{}{}", "Entries number : ".ansi_color(245), entries_number.to_string().ansi_color(81));
+    println!("{}{}", "Key Type : ".ansi_color(245), keytype.to_string().ansi_color(81));
 }
 
 fn display_plaintext_folder(name: &str, directory: &str, size: usize, permissions: Option<u32>) -> Result<(), EnkryptitError> {
     println!();
-    println!("{}", "Inspection Report".ansi_color(27)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
+    println!("{}", "Inspection Report".ansi_color(39)); // A blue (see https://github.com/fidian/ansi for ansi color informations)
     println!();
-    println!("{}{}", "Type : ".ansi_color(26), "Plaintext File (Not encrypted with Enkryptit!)".ansi_color(202));
-    println!("{}{}", "Name : ".ansi_color(26), name.ansi_color(202));
-    println!("{}{}", "Directory : ".ansi_color(26), directory.ansi_color(202));
-    println!("{}{}", "Size : ".ansi_color(26), size.to_string().ansi_color(202));
+    println!("{}{}", "Type : ".ansi_color(245), "Plaintext File (Not encrypted with Enkryptit!)".ansi_color(214));
+    println!("{}{}", "Name : ".ansi_color(245), name.ansi_color(252));
+    println!("{}{}", "Directory : ".ansi_color(245), directory.ansi_color(252));
+    println!("{}{}{}", "Size : ".ansi_color(245), to_kb(size).to_string().ansi_color(252), " KiB".ansi_color(245));
 
     if permissions.is_some() {
         let fullperms =  FullPermission::new(permissions.unwrap())?;
-        println!("{}{}", "Permissions : ".ansi_color(26), fullperms.to_string().ansi_color(202));    
+        println!("{}{}", "Permissions : ".ansi_color(245), fullperms.to_string().ansi_color(252));    
     }
 
     Ok(())
+}
+
+fn to_kb(size: usize) -> f32 {
+    size as f32 /  1024.0
 }
