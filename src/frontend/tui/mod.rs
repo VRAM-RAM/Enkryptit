@@ -44,7 +44,7 @@ pub fn launch_ui(input: &impl TuiInput) {
 
     loop {
         let choices = vec![
-            "Encrypt/Decrypt file/folder",
+            "Browse",
             "Parameters",
             "Help",
             "Browse",

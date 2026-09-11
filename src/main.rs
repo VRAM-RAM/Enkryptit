@@ -16,6 +16,8 @@ pub mod parallelism;
 mod parameters;
 mod treatment;
 mod types;
+mod diagnostic;
+
 use crate::frontend::cli::treatment::treat_object_with_path;
 
 /// The version of `Enkryptit!`

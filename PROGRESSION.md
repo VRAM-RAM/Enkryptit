@@ -453,7 +453,29 @@ Next things to do :
 - Wire **inspection** to the *TUI* (and refactor a little the TUI)
 - Cleanup `diplay()` for *InspectionReport* (raw ansi colors to constants (`const LABEL: u8 = ...`)) 
 - Cleanup & Polish (no more *eprintln!()*, logging system, smooth skipping, `--json` mode...)
-- Ergonomic add-ons (`eck verify <path>`, `eck inspect <path>`, `eck recover <path>`)
+- Ergonomic add-ons (`eck verify <path>`, `eck recover <path>`)
+- Doc restructure (README + /doc, and later *mkdocs* maybe)
+- cargo clippy / fuzzy testing
+- benchmarks
+
+---
+
+## DAY-15 Created `src/diagnostic` directory that will contain all the code for *reports*, *errors & errors rendering* and *logging* ; Modified frontend
+
+- Created `src/diagnostic`
+- Created a new `Report` struct that uses `comfy-table` to render a clean table.
+- Created `ReportArgument`, `EnkryptitStyle` and the display for the `Report`
+- Implemented the usage of `Report` in the `display()` method of `InspectionReport` 
+- Modified **Frontend** (Now, we only have `Browse` instead of `Encrypt/Decrypt` & `Browse`. Also, `Browse` now redirects to `launch_treatment()` where the user chooses what to to with the file (*Encryption/Decryption* or *Inspection* for now))
+\
+\
+Everything works, except tests (*error: could not compile `eck` (test "eck_tests") due to 6 previous errors*). This is perfectly normal since I removed direct encryption/decryption in `EnkryptitTuiAction`.
+\
+\
+Next things to do :
+- fix tests and add new ones
+- Cleanup & Polish (no more *eprintln!()*, logging system, smooth skipping, `--json` mode...) in `diagnostic/`, using `comfy-table` and `tracing`
+- Ergonomic add-ons (`eck verify <path>`, `eck recover <path>`)
 - Doc restructure (README + /doc, and later *mkdocs* maybe)
 - cargo clippy / fuzzy testing
 - benchmarks

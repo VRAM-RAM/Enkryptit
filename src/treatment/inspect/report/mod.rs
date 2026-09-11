@@ -1,6 +1,7 @@
 use crate::types::{CompressionType, KeyType, ParallelismType, Version};
 mod display;
 
+
 pub enum InspectionReport {
     PlaintextFile {
         name: String,

@@ -2,7 +2,6 @@ use crate::errors::EnkryptitError;
 use crate::frontend::tui::input::TuiInput;
 use crate::frontend::tui::{
     browse::launch_browser, help::show_help, parameters::launch_params,
-    treatment::handle_object_treatment,
 };
 
 /// Abstraction for Tui's actions
@@ -22,7 +21,6 @@ use crate::frontend::tui::{
 /// In fact, the content of the enum isn't used here. It is only used in `/tests/`. That's why we need to keep it.
 #[allow(dead_code)]
 pub enum EnkryptitTuiAction {
-    EncryptObject,
     LaunchParams,
     ShowHelp,
     Browse,
@@ -32,7 +30,6 @@ impl EnkryptitTuiAction {
     #[allow(dead_code)]
     pub fn execute(&self, input: &impl TuiInput) -> Result<(), EnkryptitError> {
         match self {
-            Self::EncryptObject => handle_object_treatment(input),
             Self::LaunchParams => launch_params(input),
             Self::ShowHelp => {
                 show_help();
@@ -44,10 +41,9 @@ impl EnkryptitTuiAction {
 
     pub fn from_str(value: &str) -> Option<Self> {
         match value {
-            "Encrypt/Decrypt file/folder" => Some(Self::EncryptObject),
+            "Browse" => Some(Self::Browse),
             "Parameters" => Some(Self::LaunchParams),
             "Help" => Some(Self::ShowHelp),
-            "Browse" => Some(Self::Browse),
             _ => None,
         }
     }

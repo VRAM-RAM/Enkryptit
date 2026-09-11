@@ -1,50 +1,70 @@
 use crate::context::EnkryptitContext;
 use crate::errors::EnkryptitError;
-use crate::frontend::Output;
+use crate::frontend::{Output};
 use crate::frontend::tui::input::TuiInput;
 use crate::log_error;
 use crate::parameters::params::load_params;
 use crate::success;
+use crate::treatment::inspect::inspect_object;
 use crate::treatment::object_treatment::treat_object;
 use crate::types::Interface;
+use colored::Colorize;
+use crate::frontend::treat_output::treat_output;
 
-/// Private helper for encrypting an object.
-/// Asks the user for the path through the given `input`, then treats the object.
-pub fn handle_object_treatment(input: &impl TuiInput) -> Result<(), EnkryptitError> {
-    handle_object_treatment_with_password(input, None)
+/// Launch the treatment UI
+pub fn launch_treatment(input: &impl TuiInput, objects: Vec<String>, password: Option<String>) -> Result<(), EnkryptitError> {
+    println!("\n{}", "Browser Panel".cyan().bold());
+
+    loop {
+        let choices = vec![
+            "Encrypt/Decrypt",
+            "Inspect",
+            "Go Back",
+        ];
+
+        match input.select("What do you want to do?", &choices) {
+            Ok(choice) if choice == "Encrypt/Decrypt" => treat_objects_encryption(&objects, &password)?,
+            Ok(choice) if choice == "Inspect" => treat_objects_inspection(&objects)?,
+            Ok(choice) if choice == "Go Back" => break,
+            Err(_) => {
+                log_error!("Selection cancelled");
+                continue;
+            }
+            _ => continue,
+        }
+    }
+
+    Ok(())
 }
 
-/// Same as `handle_object_treatment`, but lets the caller supply a password so the
-/// interactive password prompt can be bypassed (used by tests).
-pub fn handle_object_treatment_with_password(
-    input: &impl TuiInput,
-    password: Option<String>,
-) -> Result<(), EnkryptitError> {
-    let path = match input.text(
-        "Enter file path:",
-        "Path to the file/folder to encrypt/decrypt",
-    ) {
-        Ok(path) => path,
-        Err(_) => {
-            log_error!("Selection cancelled");
-            return Ok(());
-        }
-    };
-
+/// Treatment loop over a list of chosen object paths.
+fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>) -> Result<(), EnkryptitError> {
     let parameters = load_params()?;
 
-    let mut context = EnkryptitContext::new(Interface::Tui, password, parameters.compression, parameters.parallelism);
+    let mut context = EnkryptitContext::new(Interface::Tui, password.clone(), parameters.compression, parameters.parallelism);
 
-    match treat_object(&parameters, &path, &mut context)? {
-        Output::Success { message } => {
-            success!(message);
-            Ok(())
+    for path_str in objects {
+        match treat_object(&parameters, path_str, &mut context)? {
+            Output::Success { message } => {
+                success!(message);
+            }
+            Output::Error { error } => {
+                log_error!(error)
+            }
+            Output::CorruptedFile => {
+                log_error!("File is corrupted or doesn't exist");
+            }
+            Output::InspectionReport(report) => report.display()?
         }
-        Output::Error { error } => Err(error),
-        Output::CorruptedFile => {
-            log_error!("File is corrupted or doesn't exist");
-            Ok(())
-        }
-        Output::InspectionReport(report) => report.display()
     }
+    Ok(())
 }
+
+fn treat_objects_inspection(objects: &Vec<String>) -> Result<(), EnkryptitError> {
+    for path_str in objects {
+        treat_output(inspect_object(path_str)?);
+    }
+
+    Ok(())
+}
+

@@ -11,7 +11,6 @@ use eck::frontend::tui::browse::{
 };
 use eck::frontend::tui::launch_ui;
 use eck::frontend::tui::parameters::launch_params;
-use eck::frontend::tui::treatment::handle_object_treatment_with_password;
 
 use crate::mocks::helpers::{TestConfigGuard, encrypted_path_for};
 use crate::mocks::tui_input::MockTuiInput;
