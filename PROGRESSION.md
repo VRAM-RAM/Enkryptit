@@ -469,6 +469,68 @@ Next things to do :
 - Modified **Frontend** (Now, we only have `Browse` instead of `Encrypt/Decrypt` & `Browse`. Also, `Browse` now redirects to `launch_treatment()` where the user chooses what to to with the file (*Encryption/Decryption* or *Inspection* for now))
 \
 \
+Concretely:
+\
+\
+**Before :**
+```txt
+Inspection Report
+
+Type : Folder (Archive) encrypted with Enkryptit!
+Version : 3
+Name : saves.encky
+Directory : /Users/vram/Downloads
+Size : 3346.58 KiB
+Entries number : 9
+Key Type : hashed password, with the following salt : f0730000c8daf8de752f9fc10526bed5
+```
+\
+\
+**After :**
+```txt
+┌───────────────────┬─────────────────────────────────────────────────────────────────────────────┐
+│ Inspection Report ┆                                                                             │
+╞═══════════════════╪═════════════════════════════════════════════════════════════════════════════╡
+│ Type              ┆ Folder (Archive) encrypted with Enkryptit!                                  │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ Version           ┆ 3                                                                           │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ Name              ┆ saves.encky                                                                 │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ Directory         ┆ /Users/vram/Downloads                                                       │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ Size              ┆ 3346.58 KiB                                                                 │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ Entries number    ┆ 9                                                                           │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ Key Type          ┆ hashed password, with the following salt : f0730000c8daf8de752f9fc10526bed5 │
+└───────────────────┴─────────────────────────────────────────────────────────────────────────────┘
+```
+\
+\
+And in the code, conceptually:
+\
+\
+**Before :**
+```rust
+println!("Inspection Report");
+println!();
+println!("{}{}", ...);
+println!("{}{}", ...);
+println!("{}{}", ...);
+```
+\
+\
+**After :**
+```rust
+let mut report = Report::new(...)
+                    .field(...)
+                    .field(...)
+                    ...
+                    .display()
+```
+\
+\
 Everything works, except tests (*error: could not compile `eck` (test "eck_tests") due to 6 previous errors*). This is perfectly normal since I removed direct encryption/decryption in `EnkryptitTuiAction`.
 \
 \
