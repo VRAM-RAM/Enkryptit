@@ -547,3 +547,9 @@ Next things to do :
 ## DAY-16 Updated TUI tests
 
 - Modified `tui_flow.rs` and `tui_tests.rs` that now use directly `treat_object_encryption()`
+- Fixed an issue with rfd `0.17.2`, decreased to `0.16.0` : [rfd and hyprland + NixOS issue](https://github.com/VRAM-RAM/Enkryptit/issues/1)
+
+Test results :
+```bash
+test result: ok. 191 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.11s
+```
