@@ -38,7 +38,7 @@ pub fn launch_treatment(input: &impl TuiInput, objects: Vec<String>, password: O
 }
 
 /// Treatment loop over a list of chosen object paths.
-fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>) -> Result<(), EnkryptitError> {
+pub fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>) -> Result<(), EnkryptitError> {
     let parameters = load_params()?;
 
     let mut context = EnkryptitContext::new(Interface::Tui, password.clone(), parameters.compression, parameters.parallelism);
@@ -60,7 +60,7 @@ fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>) ->
     Ok(())
 }
 
-fn treat_objects_inspection(objects: &Vec<String>) -> Result<(), EnkryptitError> {
+pub fn treat_objects_inspection(objects: &Vec<String>) -> Result<(), EnkryptitError> {
     for path_str in objects {
         treat_output(inspect_object(path_str)?);
     }

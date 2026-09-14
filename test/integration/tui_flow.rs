@@ -27,6 +27,7 @@ fn guard_password() -> TestConfigGuard {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use eck::frontend::tui::treatment::treat_objects_encryption;
     use tempfile::{NamedTempFile, tempdir};
 
     /// Params menu logic
@@ -110,7 +111,10 @@ mod tests {
         let original = NamedTempFile::new().unwrap();
         fs::write(&original, b"browse me").unwrap();
 
-        let mut input = MockTuiInput::new().with_files(vec![original.path().to_str().unwrap()]);
+        let mut input = MockTuiInput::new()
+            .with_files(vec![original.path().to_str().unwrap()])
+            .with_select("Encrypt/Decrypt")
+            .with_select("Go Back");
 
         browse_files(&mut input, Some("pwd".into())).unwrap();
 
@@ -119,6 +123,7 @@ mod tests {
             "chosen file should have been encrypted"
         );
         assert_eq!(input.pending_files(), 0);
+        assert_eq!(input.pending_selects(), 0);
     }
 
     #[test]
@@ -127,7 +132,10 @@ mod tests {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("inside.txt"), b"nested").unwrap();
 
-        let mut input = MockTuiInput::new().with_folders(vec![dir.path().to_str().unwrap()]);
+        let mut input = MockTuiInput::new()
+            .with_folders(vec![dir.path().to_str().unwrap()])
+            .with_select("Encrypt/Decrypt")
+            .with_select("Go Back");
 
         browse_folders(&mut input, Some("pwd".into())).unwrap();
 
@@ -135,6 +143,7 @@ mod tests {
         let archive = format!("{}.encky", dir.path().display());
         assert!(std::path::Path::new(&archive).exists());
         assert_eq!(input.pending_folders(), 0);
+        assert_eq!(input.pending_selects(), 0);
     }
 
     #[test]
@@ -147,7 +156,9 @@ mod tests {
 
         let mut input = MockTuiInput::new()
             .with_files(vec![file.path().to_str().unwrap()])
-            .with_folders(vec![dir.path().to_str().unwrap()]);
+            .with_folders(vec![dir.path().to_str().unwrap()])
+            .with_select("Encrypt/Decrypt")
+            .with_select("Go Back");
 
         browse_files_then_folders(&mut input, Some("pwd".into())).unwrap();
 
@@ -160,6 +171,7 @@ mod tests {
             0,
             "folders pick should be consumed"
         );
+        assert_eq!(input.pending_selects(), 0, "treatment menu should be drained");
     }
 
     #[test]
@@ -170,11 +182,14 @@ mod tests {
 
         let mut input = MockTuiInput::new()
             .with_files(vec![file.path().to_str().unwrap()])
-            .with_folders(vec![]);
+            .with_folders(vec![])
+            .with_select("Encrypt/Decrypt")
+            .with_select("Go Back");
 
         browse_files_then_folders(&mut input, Some("pwd".into())).unwrap();
 
         assert!(encrypted_path_for(file.path()).exists());
+        assert_eq!(input.pending_selects(), 0);
     }
 
     #[test]
@@ -186,6 +201,68 @@ mod tests {
     }
 
     /// TUI treatment path + roundtrips
+
+    #[test]
+    fn browse_then_inspect_prints_report() {
+        let _guard = guard_password();
+        let original = NamedTempFile::new().unwrap();
+        fs::write(&original, b"inspect me").unwrap();
+
+        let mut input = MockTuiInput::new()
+            .with_files(vec![original.path().to_str().unwrap()])
+            .with_select("Inspect")
+            .with_select("Go Back");
+
+        browse_files(&mut input, None).unwrap();
+
+        assert_eq!(input.pending_files(), 0, "file pick should be consumed");
+        assert_eq!(input.pending_selects(), 0, "treatment menu should be drained");
+        assert!(
+            !encrypted_path_for(original.path()).exists(),
+            "inspection must not encrypt the object"
+        );
+    }
+
+    #[test]
+    fn browse_then_inspect_encrypted_archive() {
+        let _guard = guard_password();
+        let original = NamedTempFile::new().unwrap();
+        fs::write(&original, b"inspect the archive").unwrap();
+
+        let mut encrypt_input = MockTuiInput::new()
+            .with_files(vec![original.path().to_str().unwrap()])
+            .with_select("Encrypt/Decrypt")
+            .with_select("Go Back");
+        browse_files(&mut encrypt_input, Some("pwd".into())).unwrap();
+        let encrypted = encrypted_path_for(original.path());
+        assert!(encrypted.exists(), "setup: file should be encrypted first");
+
+        let mut inspect_input = MockTuiInput::new()
+            .with_files(vec![encrypted.to_str().unwrap()])
+            .with_select("Inspect")
+            .with_select("Go Back");
+        browse_files(&mut inspect_input, None).unwrap();
+
+        assert_eq!(inspect_input.pending_files(), 0);
+        assert_eq!(inspect_input.pending_selects(), 0);
+    }
+
+    #[test]
+    fn launch_treatment_go_back_does_not_encrypt() {
+        let _guard = guard_password();
+        let original = NamedTempFile::new().unwrap();
+        fs::write(&original, b"no treatment").unwrap();
+
+        let mut input = MockTuiInput::new()
+            .with_files(vec![original.path().to_str().unwrap()])
+            .with_select("Go Back");
+
+        browse_files(&mut input, Some("pwd".into())).unwrap();
+
+        assert!(!encrypted_path_for(original.path()).exists());
+        assert_eq!(input.pending_files(), 0);
+        assert_eq!(input.pending_selects(), 0);
+    }
 
     #[test]
     fn tui_treatment_encrypts_then_decrypts_real_file() {
@@ -200,15 +277,23 @@ mod tests {
             .unwrap()
             .to_string();
 
-        // Encrypt
-        let mut enc = MockTuiInput::new().with_text(&plain);
-        handle_object_treatment_with_password(&mut enc, Some("pwd".into())).unwrap();
+        // Encrypt: browse chooses the file, then the treatment menu runs it.
+        let mut enc = MockTuiInput::new()
+            .with_files(vec![plain.as_str()])
+            .with_select("Encrypt/Decrypt")
+            .with_select("Go Back");
+        browse_files(&mut enc, Some("pwd".into())).unwrap();
         assert!(std::path::Path::new(&encrypted).exists());
-        assert_eq!(enc.pending_texts(), 0);
+        assert_eq!(enc.pending_files(), 0);
+        assert_eq!(enc.pending_selects(), 0, "treatment menu should be drained");
 
         // Decrypt back into the plain path (strips the .encky suffix)
-        let mut dec = MockTuiInput::new().with_text(&encrypted);
-        handle_object_treatment_with_password(&mut dec, Some("pwd".into())).unwrap();
+        let mut dec = MockTuiInput::new()
+            .with_files(vec![encrypted.as_str()])
+            .with_select("Encrypt/Decrypt")
+            .with_select("Go Back");
+        browse_files(&mut dec, Some("pwd".into())).unwrap();
+        assert_eq!(dec.pending_selects(), 0);
 
         let restored = fs::read(original.path()).unwrap();
         assert_eq!(restored, content);
@@ -217,8 +302,7 @@ mod tests {
     #[test]
     fn tui_treatment_roundtrip_across_compressions() {
         for comp in ["Zstd", "Lz4", "Xz", "NoComp"] {
-            let guard =
-                TestConfigGuard::with_parallelism("PassWord", comp, serde_json::json!("Single"));
+            let guard = TestConfigGuard::with_parallelism("PassWord", comp, serde_json::json!("Single"));
 
             let dir = tempdir().unwrap();
             let plain = dir.path().join("data.bin");
@@ -228,13 +312,12 @@ mod tests {
 
             let plain_s = plain.to_str().unwrap().to_string();
             let enc_s = encrypted.to_str().unwrap().to_string();
+            let password = Some("pwd".into());
 
-            let mut enc = MockTuiInput::new().with_text(&plain_s);
-            handle_object_treatment_with_password(&mut enc, Some("pwd".into())).unwrap();
+            treat_objects_encryption(&vec![plain_s], &password).unwrap();
             assert!(encrypted.exists(), "encrypt with {comp}");
 
-            let mut dec = MockTuiInput::new().with_text(&enc_s);
-            handle_object_treatment_with_password(&mut dec, Some("pwd".into())).unwrap();
+            treat_objects_encryption(&vec![enc_s], &password).unwrap();
             assert_eq!(fs::read(&plain).unwrap(), b"compression aware content");
             drop(guard);
         }
@@ -263,5 +346,35 @@ mod tests {
 
         launch_ui(&mut input);
         assert_eq!(input.pending_selects(), 0);
+    }
+
+    #[test]
+    fn launch_ui_browse_then_inspect() {
+        let _guard = guard_password();
+        let original = NamedTempFile::new().unwrap();
+        fs::write(&original, b"full ui flow").unwrap();
+        let path = original.path().to_str().unwrap().to_string();
+
+        // Browse -> Browse Files -> pick -> Inspect exercises the whole menu
+        // stack through `launch_ui`. Encryption is not reachable here because
+        // `launch_browser` passes `password: None` down to the treatment menu
+        // (encryption with a Password key would open a headless `/dev/tty`
+        // prompt); it is covered directly in `tui_treatment_encrypts_then_decrypts_real_file`.
+        let mut input = MockTuiInput::new()
+            .with_select("Browse")
+            .with_select("Browse Files")
+            .with_files(vec![path.as_str()])
+            .with_select("Inspect")
+            .with_select("Go Back")
+            .with_select("Back to main menu")
+            .with_select("Exit");
+
+        launch_ui(&mut input);
+
+        assert!(
+            !encrypted_path_for(original.path()).exists(),
+            "inspection must not encrypt the object"
+        );
+        assert_eq!(input.pending_selects(), 0, "whole menu stack should drain");
     }
 }

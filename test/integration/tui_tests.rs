@@ -2,6 +2,8 @@
 //!
 //! Doesn't directly test the TUI itself, but tests the highest level possible
 //! (`EnkryptitTuiAction`) using a `MockTuiInput` so no real terminal is needed.
+//! Object treatment (encrypt/decrypt/inspect) is not reachable from the action
+//! enum anymore: it happens inside `launch_treatment` (see `tui_flow.rs`).
 
 #[cfg(test)]
 mod tests {
@@ -10,12 +12,7 @@ mod tests {
 
     #[test]
     fn test_from_str_conversion_tui_action() {
-        let values = [
-            "Encrypt/Decrypt file/folder",
-            "Parameters",
-            "Help",
-            "Browse",
-        ];
+        let values = ["Parameters", "Help", "Browse"];
 
         for value in values {
             if EnkryptitTuiAction::from_str(value).is_none() {
@@ -30,7 +27,6 @@ mod tests {
     #[test]
     fn from_str_maps_all_actions() {
         let cases = [
-            ("Encrypt/Decrypt file/folder", "EncryptObject"),
             ("Parameters", "LaunchParams"),
             ("Help", "ShowHelp"),
             ("Browse", "Browse"),
@@ -42,8 +38,7 @@ mod tests {
             assert!(action.is_some(), "Expected action for {input}");
 
             match (expected, action.unwrap()) {
-                ("EncryptObject", EnkryptitTuiAction::EncryptObject)
-                | ("LaunchParams", EnkryptitTuiAction::LaunchParams)
+                ("LaunchParams", EnkryptitTuiAction::LaunchParams)
                 | ("ShowHelp", EnkryptitTuiAction::ShowHelp)
                 | ("Browse", EnkryptitTuiAction::Browse) => {}
                 _ => panic!("Wrong action for {input}"),
@@ -56,6 +51,9 @@ mod tests {
         assert!(EnkryptitTuiAction::from_str("NotAnAction").is_none());
         assert!(EnkryptitTuiAction::from_str("").is_none());
         assert!(EnkryptitTuiAction::from_str("Exit").is_none());
+        // The old direct-encryption action was removed in the DAY-15 frontend.
+        assert!(EnkryptitTuiAction::from_str("Encrypt/Decrypt file/folder").is_none());
+        assert!(EnkryptitTuiAction::from_str("EncryptObject").is_none());
     }
 
     #[test]
@@ -70,13 +68,17 @@ mod tests {
     }
 
     #[test]
-    fn encrypt_object_action_routes_to_treatment_text_prompt() {
-        // EncryptObject prompts for a path first. With no queued response the
-        // prompt errors, which is handled gracefully (returns Ok).
-        let action = EnkryptitTuiAction::EncryptObject;
-        let mut input = MockTuiInput::new();
+    fn launch_params_action_routes_to_params_menu() {
+        // LaunchParams enters its own loop, so queue a "Back to main menu" to exit.
+        let action = EnkryptitTuiAction::LaunchParams;
+        let mut input = MockTuiInput::new().with_select("Back to main menu");
 
         assert!(action.execute(&mut input).is_ok());
+        assert_eq!(
+            input.pending_selects(),
+            0,
+            "params menu should consume the menu choice"
+        );
     }
 
     #[test]

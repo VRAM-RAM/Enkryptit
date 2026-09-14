@@ -543,3 +543,7 @@ Next things to do :
 - benchmarks
 
 ---
+
+## DAY-16 Updated TUI tests
+
+- Modified `tui_flow.rs` and `tui_tests.rs` that now use directly `treat_object_encryption()`
