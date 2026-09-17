@@ -1,4 +1,5 @@
 pub mod argument;
+pub mod style;
 
 use comfy_table::{Table};
 use comfy_table::{

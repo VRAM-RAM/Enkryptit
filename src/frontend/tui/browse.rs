@@ -1,7 +1,7 @@
+use crate::diagnostic::EnkryptitOutput;
 use crate::errors::EnkryptitError;
 use crate::frontend::tui::input::TuiInput;
 use crate::frontend::tui::treatment::launch_treatment;
-use crate::log_error;
 use colored::*;
 
 /// Browse UI
@@ -26,7 +26,7 @@ pub fn launch_browser(input: &impl TuiInput) -> Result<(), EnkryptitError> {
             }
             Ok(choice) if choice == "Back to main menu" => break,
             Err(_) => {
-                log_error!("Selection cancelled");
+                EnkryptitOutput::info("Selection cancelled").display();
                 continue;
             }
             _ => continue,
@@ -41,7 +41,7 @@ pub fn browse_files(input: &impl TuiInput, password: Option<String>) -> Result<(
     let objects = input.pick_files("Choose file(s)");
 
     if objects.is_empty() {
-        log_error!("You didn't choose any file !");
+        EnkryptitOutput::warning("You didn't choose any file!").display();
         return Ok(());
     }
 
@@ -56,7 +56,7 @@ pub fn browse_folders(
     let folders = input.pick_folders("Choose folder(s)");
 
     if folders.is_empty() {
-        log_error!("You didn't choose any folder !");
+        EnkryptitOutput::warning("You didn't choose any folder!").display();
         return Ok(());
     }
 
@@ -78,7 +78,7 @@ pub fn browse_files_then_folders(
     objects.extend(files);
 
     if objects.is_empty() {
-        log_error!("You didn't choose any file or folder !");
+        EnkryptitOutput::warning("You didn't choose any file or folder!").display();
         return Ok(());
     }
 

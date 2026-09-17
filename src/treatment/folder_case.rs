@@ -1,7 +1,6 @@
 use crate::context::EnkryptitContext;
+use crate::diagnostic::EnkryptitOutput;
 use crate::encryption::folder_encryption::{decrypt_folder, encrypt_folder};
-use crate::errors::EnkryptitError;
-use crate::frontend::Output;
 use crate::types::KeyType::{self};
 
 /// Public helper for encrypting a folder. (Converts Ok<>/EnkryptitError to Output).
@@ -9,7 +8,7 @@ pub fn encrypt_folder_case(
     path: &str,
     context: &mut EnkryptitContext,
     key_type: &KeyType,
-) -> Result<Output, EnkryptitError> {
+) -> EnkryptitOutput {
     // We resolve the path by suppressing the suffix '/', because if we don't do that, the ` encrypt_folder()`
     // function would write 'path/to/my/folder/.encky' instead of 'path/to/my/folder.encky'
     let path = match path.strip_suffix("/") {
@@ -18,10 +17,8 @@ pub fn encrypt_folder_case(
     };
 
     match encrypt_folder(path, context, key_type) {
-        Ok(path) => Ok(Output::Success {
-            message: format!("folder was encrypted at {} !", path),
-        }),
-        Err(e) => Ok(Output::Error { error: e }),
+        Ok(path) => EnkryptitOutput::success(format!("Folder was encrypted at {}", path)),
+        Err(e) => e.into(),
     }
 }
 
@@ -32,11 +29,9 @@ pub fn decrypt_folder_case(
     metadatas_bytes: Vec<u8>,
     payload_offset: u64,
     version: u8,
-) -> Result<Output, EnkryptitError> {
+) -> EnkryptitOutput {
     match decrypt_folder(path, &metadatas_bytes, payload_offset, version, context) {
-        Ok(path) => Ok(Output::Success {
-            message: format!("folder was decrypted at {} !", path),
-        }),
-        Err(e) => Ok(Output::Error { error: e }),
+        Ok(path) => EnkryptitOutput::success(format!("Folder was decrypted at {}", path)),
+        Err(e) => e.into(),
     }
 }

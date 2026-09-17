@@ -1,34 +1,43 @@
 use std::{fs::{metadata},  path::Path};
 
 
-use crate::{errors::EnkryptitError, treatment::inspect::InspectionReport};
+use crate::{treatment::inspect::InspectionReport};
 
-pub fn inspect_plain_folder(path: &str) -> Result<InspectionReport, EnkryptitError> {
+pub fn inspect_plain_folder(path: &str) -> InspectionReport {
     let pathstd = Path::new(path);
 
-    let metadata = metadata(path)?;
-    let perms: Option<u32> = {
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            Some(metadata.permissions().mode())
+    let mut size = None;
+    let mut permissions = None;
+
+    match metadata(path) {
+        Ok(m) => {
+            size = Some(m.len());
+            permissions = {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    Some(m.permissions().mode())
+                }
+
+                #[cfg(not(unix))]
+                {
+                    None // No permissions on Windows
+                } 
+            };
         }
 
-        #[cfg(not(unix))]
-        {
-            None // No permissions on Windows
-        } 
-    };
+        Err(e) => tracing::warn!("{}", e)
+    }
 
     let name = match pathstd.file_name() {
-        Some(p) => p.to_string_lossy(),
-        None => return Err(EnkryptitError::PathIsIncorrect(path.to_string()))
+        Some(p) => Some(p.to_string_lossy().to_string()),
+        None => None
     };
 
     let directory = match pathstd.parent() {
-        Some(p) => p,
-        None => return Err(EnkryptitError::PathIsIncorrect(path.to_string()))
+        Some(p) => Some(p.to_string_lossy().to_string()),
+        None => None
     };
-    
-    Ok(InspectionReport::Folder { name: name.to_string() , directory: directory.to_string_lossy().to_string(), size: metadata.len() as usize, permissions: perms})
+
+    InspectionReport::Folder { name, directory, size, permissions }
 }

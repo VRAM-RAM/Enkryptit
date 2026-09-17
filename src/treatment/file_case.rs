@@ -1,7 +1,6 @@
 use crate::context::EnkryptitContext;
 use crate::encryption::file_encryption::{decrypt_file, encrypt_file};
-use crate::errors::EnkryptitError;
-use crate::frontend::Output;
+use crate::diagnostic::EnkryptitOutput;
 use crate::types::KeyType::{self};
 
 /// Public helper for encrypting a file (Converts Ok<>/EnkryptitError to Output)
@@ -9,12 +8,10 @@ pub fn encrypt_file_case(
     path: &str,
     context: &mut EnkryptitContext,
     key_type: &KeyType,
-) -> Result<Output, EnkryptitError> {
+) -> EnkryptitOutput {
     match encrypt_file(path, key_type, context) {
-        Ok(path) => Ok(Output::Success {
-            message: format!("file was encrypted at {} !", &path).to_string(),
-        }),
-        Err(e) => return Ok(Output::Error { error: e }),
+        Ok(path) => EnkryptitOutput::success(format!("File was encrypted at {}", path)),
+        Err(e) => e.into(),
     }
 }
 
@@ -24,11 +21,9 @@ pub fn decrypt_file_case(
     meta: Vec<u8>,
     context: &mut EnkryptitContext,
     payload_offset: u64,
-) -> Result<Output, EnkryptitError> {
+) -> EnkryptitOutput {
     match decrypt_file(path, &meta, payload_offset, context) {
-        Ok(path) => Ok(Output::Success {
-            message: format!("file was decrypted at {} !", &path).to_string(),
-        }),
-        Err(e) => return Ok(Output::Error { error: e }),
+        Ok(path) => EnkryptitOutput::success(format!("File was decrypted at {}", path)),
+        Err(e) => e.into(),
     }
 }

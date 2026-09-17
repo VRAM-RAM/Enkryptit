@@ -11,6 +11,16 @@ pub mod parameters;
 pub mod treatment;
 pub mod types;
 pub mod diagnostic;
+pub mod directory;
 
 use crate::types::Version;
-pub const VERSION: Version = 2;
+
+/// The version of `Enkryptit!`
+/// Enkryptit versions are separated between :
+/// - Nightly versions
+/// - Stable versions
+/// \
+/// This constant is only for `Nightly` version.
+/// \
+/// So, for example, if you download **Enkryptit!** v0.1.4, it is the 4th nightly version of 1st stable version.
+pub const VERSION: Version = 3;

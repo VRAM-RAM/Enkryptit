@@ -1,58 +1,78 @@
-use std::fs::File;
-use std::path::Path;
+use std::{fs::{metadata},  path::Path};
 use infer::get_from_path;
 
-use crate::{context::{compression::infer_compression, parallelism::infer_parallelism}, errors::EnkryptitError, treatment::inspect::InspectionReport};
+use crate::{context::{compression::infer_compression, parallelism::infer_parallelism}, treatment::inspect::InspectionReport};
 
-pub fn inspect_plain_file(path: &str) -> Result<InspectionReport, EnkryptitError> {
+pub fn inspect_plain_file(path: &str) -> InspectionReport {
     let pathstd = Path::new(path);
-    let file = File::open(path)?;
 
-    let type_ = get_from_path(path)?;
+    let mut size = None;
+    let mut permissions = None;
+    let mut extension = None;
+    let mut mime_extension = None;
+    let mut parallelism = None;
 
-    let metadata = file.metadata()?;
-
-    let extension = match type_.is_some() {
-        true => type_.unwrap().extension(),
-        false => {
-            match pathstd.extension() {
-                Some(ext) => &ext.to_string_lossy(),
-                None => "No extension found."
+    match get_from_path(path) {
+        Ok(type_) => {
+            match type_ {
+                Some(t) => {
+                    extension = Some(t.extension().to_string());
+                    mime_extension = Some(t.mime_type().to_string());
+                }
+                None => {
+                    match pathstd.extension() {
+                        Some(ext) => extension = Some(ext.to_string_lossy().to_string()),
+                        None => ()
+                    }
+                }
             }
         }
-    };
 
-    let perms: Option<u32> = {
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            Some(metadata.permissions().mode())
+        Err(e) => tracing::warn!("{}", e)
+    }
+
+    match metadata(path) {
+        Ok(m) => {
+            size = Some(m.len());
+            permissions = {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    Some(m.permissions().mode())
+                }
+
+                #[cfg(not(unix))]
+                {
+                    None // No permissions on Windows
+                } 
+            };
+            
+            match infer_parallelism(m.len() as u64) {
+                Ok(p) => parallelism = Some(p),
+                Err(e) => tracing::warn!("{}", e),
+            }
         }
+        Err(e) => tracing::warn!("{}", e)
+    }
 
-        #[cfg(not(unix))]
-        {
-            None // No permissions on Windows
-        } 
-    };
-
-    let mime = match type_.is_some() {
-        true => type_.unwrap().mime_type().to_string(),
-        false => "No mime type found".to_string(),
+    let compression = match infer_compression(path) {
+        Ok(c) => Some(c),
+        Err(e) => {
+            tracing::warn!("{}", e);
+            None
+        }
     };
 
     let name = match pathstd.file_name() {
-        Some(p) => p.to_string_lossy(),
-        None => return Err(EnkryptitError::PathIsIncorrect(path.to_string()))
+        Some(p) => Some(p.to_string_lossy().to_string()),
+        None => None
     };
 
     let directory = match pathstd.parent() {
-        Some(p) => p,
-        None => return Err(EnkryptitError::PathIsIncorrect(path.to_string()))
+        Some(p) => Some(p.to_string_lossy().to_string()),
+        None => None
     };
 
     
-    let compression = infer_compression(path)?;
-    let parallelism = infer_parallelism(metadata.len())?;
-
-    Ok(InspectionReport::PlaintextFile { name: name.to_string(), directory: directory.to_string_lossy().to_string(), size: metadata.len() as usize, permissions: perms, extension: extension.to_string(), mime_extension: mime, predicted_compression_type: compression, predicted_parallelism_type: parallelism })
+    InspectionReport::PlaintextFile { name, directory, size, permissions, extension, mime_extension, predicted_compression_type: compression, predicted_parallelism_type: parallelism }
 }

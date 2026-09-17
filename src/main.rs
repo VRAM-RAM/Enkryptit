@@ -1,22 +1,23 @@
 use crate::{
-    frontend::{
+    diagnostic::logging::EnkryptitLogger, frontend::{
         cli::{inspection::inspect_one_or_more_objects, params_helpers::{show_params, update_params}, treatment::treat_objects_with_multiple_paths}, treat_output::treat_output, tui::{input::RealTuiInput, launch_ui},
     }, types::Version,
 };
 use clap::{Parser, Subcommand};
 mod compression;
-pub mod context;
+mod context;
 mod conversions;
 mod encryption;
 mod errors;
 mod frontend;
-pub mod key;
+mod key;
 mod metadatas;
-pub mod parallelism;
+mod parallelism;
 mod parameters;
 mod treatment;
 mod types;
 mod diagnostic;
+mod directory;
 
 use crate::frontend::cli::treatment::treat_object_with_path;
 
@@ -97,6 +98,10 @@ enum Commands {
 
 fn main() {
     let cli: Cli = Cli::parse();
+
+    if let Err(e) = EnkryptitLogger::init() {
+        eprintln!("Error while launching the logger... so we can't cleanly log this error : {}", e);
+    }
 
     match cli.command {
         Some(Commands::Ui) => {

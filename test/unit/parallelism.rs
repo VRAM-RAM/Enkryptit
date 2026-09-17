@@ -41,7 +41,7 @@ impl EnkryptitExecutable for FailingJob {
     type Output = ();
 
     fn execute(self) -> Result<Self::Output, EnkryptitError> {
-        Err(EnkryptitError::Encryption)
+        Err(EnkryptitError::Break)
     }
 }
 

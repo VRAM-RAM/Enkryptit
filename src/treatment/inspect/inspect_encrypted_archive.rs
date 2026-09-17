@@ -1,23 +1,53 @@
 use std::{fs::{metadata},  path::Path};
 use postcard::from_bytes;
 
-use crate::{errors::EnkryptitError, metadatas::FolderMetadata, treatment::inspect::InspectionReport};
+use crate::{metadatas::FolderMetadata, treatment::inspect::InspectionReport};
 
-pub fn inspect_encrypted_archive(path: &str, meta: &[u8], version: u8) -> Result<InspectionReport, EnkryptitError> {
+pub fn inspect_encrypted_archive(path: &str, meta: &[u8], version: u8) -> InspectionReport {
     let pathstd = Path::new(path);
-    let metadata = metadata(path)?;
 
-    let folder_meta: FolderMetadata = from_bytes(meta)?;
+    let metadata = match metadata(path) {
+        Ok(m) => Some(m),
+        Err(e) => {
+            tracing::warn!("{}", e);
+            None
+        }
+    };
+
+    let folder_meta: Option<FolderMetadata> = match from_bytes(meta) {
+        Ok(fm) => Some(fm),
+        Err(e) => {
+            tracing::warn!("{}", e);
+            None
+        }
+    };
 
     let name = match pathstd.file_name() {
-        Some(p) => p.to_string_lossy(),
-        None => return Err(EnkryptitError::PathIsIncorrect(path.to_string()))
+        Some(p) => Some(p.to_string_lossy().to_string()),
+        None => None
     };
 
     let directory = match pathstd.parent() {
-        Some(p) => p,
-        None => return Err(EnkryptitError::PathIsIncorrect(path.to_string()))
+        Some(p) => Some(p.to_string_lossy().to_string()),
+        None => None
     };
 
-    Ok(InspectionReport::EncryptedArchive { name: name.to_string(), directory: directory.to_string_lossy().to_string(), size: metadata.len() as usize, version, entries_number: folder_meta.entries.len() as u64, keytype: folder_meta.key_type })
+    let size = match metadata.is_some() {
+        true => Some(metadata.unwrap().len()),
+        false => None
+    };
+    
+    let mut entries_number = None;
+    let mut keytype = None;
+    
+    match folder_meta.is_some() {
+        true => {
+            let meta = folder_meta.unwrap();
+            entries_number = Some(meta.entries.len() as u64);
+            keytype = Some(meta.key_type)
+        }
+        false => ()
+    }
+
+    InspectionReport::EncryptedArchive { name, directory, size, version, entries_number, keytype }
 }

@@ -1,0 +1,51 @@
+use crate::{diagnostic::{output::kind::EnkryptitOutputKind}, errors::EnkryptitError};
+
+pub mod kind;
+pub mod display;
+
+pub struct EnkryptitOutput {
+    kind: EnkryptitOutputKind,
+    msg: String,
+}
+
+impl EnkryptitOutput {
+    pub fn new(kind: EnkryptitOutputKind, msg: impl Into<String>) -> Self {
+        Self { kind, msg: msg.into() }
+    }
+
+    pub fn phantom() -> Self {
+        Self { kind: EnkryptitOutputKind::Phantom, msg: String::new() }
+    }
+
+    pub fn success(msg: impl Into<String>) -> Self {
+        Self { kind: EnkryptitOutputKind::Success, msg: msg.into() }
+    }
+
+    pub fn info(msg: impl Into<String>) -> Self {
+        Self { kind: EnkryptitOutputKind::Info, msg: msg.into() }
+    }
+
+    pub fn warning(msg: impl Into<String>) -> Self {
+        Self { kind: EnkryptitOutputKind::Warning, msg: msg.into() }
+    }
+
+    pub fn error(msg: impl Into<String>, error: EnkryptitError) -> Self {
+        Self { kind: EnkryptitOutputKind::Error { error, location: None, help: None }, msg: msg.into() }
+    }
+
+    /// Attach a location hint (e.g. the operation/step that failed).
+    pub fn with_location(mut self, location: impl Into<String>) -> Self {
+        if let EnkryptitOutputKind::Error { location: slot, .. } = &mut self.kind {
+            *slot = Some(location.into());
+        }
+        self
+    }
+
+    /// Attach a remediation hint for the user.
+    pub fn with_help(mut self, help: impl Into<String>) -> Self {
+        if let EnkryptitOutputKind::Error { help: slot, .. } = &mut self.kind {
+            *slot = Some(help.into());
+        }
+        self
+    }
+}

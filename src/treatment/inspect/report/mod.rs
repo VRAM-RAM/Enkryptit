@@ -4,40 +4,40 @@ mod display;
 
 pub enum InspectionReport {
     PlaintextFile {
-        name: String,
-        directory: String,
-        size: usize,
+        name: Option<String>,
+        directory: Option<String>,
+        size: Option<u64>,
         permissions: Option<u32>,
-        extension: String,
-        mime_extension: String,
-        predicted_compression_type: CompressionType,
-        predicted_parallelism_type: ParallelismType,
+        extension: Option<String>,
+        mime_extension: Option<String>,
+        predicted_compression_type: Option<CompressionType>,
+        predicted_parallelism_type: Option<ParallelismType>,
     },
 
     Folder {
-        name: String,
-        directory: String,
-        size: usize,
+        name: Option<String>,
+        directory: Option<String>,
+        size: Option<u64>,
         permissions: Option<u32>,
     },
 
     EncryptedFile {
-        name: String,
-        directory: String,
-        size: usize,
+        name: Option<String>,
+        directory: Option<String>,
+        size: Option<u64>,
         version: Version,
-        compression_type: CompressionType,
-        predicted_parallelism_type: ParallelismType,
-        keytype: KeyType,
-        nonce: [u8; 24],
+        compression_type: Option<CompressionType>,
+        predicted_parallelism_type: Option<ParallelismType>,
+        keytype: Option<KeyType>,
+        nonce: Option<[u8; 24]>,
     },
 
     EncryptedArchive {
-        name: String,
-        directory: String,
-        size: usize,
+        name: Option<String>,
+        directory: Option<String>,
+        size: Option<u64>,
         version: Version,
-        entries_number: u64,
-        keytype: KeyType
+        entries_number: Option<u64>,
+        keytype: Option<KeyType>
     }
 }

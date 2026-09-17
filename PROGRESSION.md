@@ -544,12 +544,41 @@ Next things to do :
 
 ---
 
-## DAY-16 Updated TUI tests
+## DAY-16 Updated TUI tests, huge frontend and error / outputs handling refactorization
 
 - Modified `tui_flow.rs` and `tui_tests.rs` that now use directly `treat_object_encryption()`
-- Fixed an issue with rfd `0.17.2`, decreased to `0.16.0` : [rfd and hyprland + NixOS issue](https://github.com/VRAM-RAM/Enkryptit/issues/1)
+- Fixed an issue with rfd `0.17.2` (read the issue for more infos) : [rfd and hyprland + NixOS issue](https://github.com/VRAM-RAM/Enkryptit/issues/1)
+- Created `src/directory.rs` that contains two helpers that return the project's config directory & config path
+- Added an `EnkryptitLogger` structure that initializes `tracing` logging, and allows the program to write logs in `config_dir/log.txt` 
+- Call of `EnkryptitLogger::init()` in `main()`
+- Added `Option<T>` in **InspectionReport** so that it doesn't fail on error and just return an empty field (for name for example)
+- Modified `display()` implementation for **InspectionReport** : it now checks if at least one field isn't empty. If not, it displays an error, and if yes, it displays the report.
+- Updated `inspect_encrypted_archive()`, `inspect_plain_file()`, `inspect_plain_folder()` and `inspect_encrypted_file()` to match the new **InspectionReport** format.
+- Added `tracing::warn!(...)` in some functions to log backend informations (in `log.txt`) for advanced users
+
+- Frontend refactorization :
+    - Suppressed `Output`
+    - Created `EnkryptitOutput`, a new structure that handles *successes*, *errors*, *warnings* and *infos*.
+        - Created `EnkryptitOutputKind`, an enum for `EnkryptitOutput`s 
+        - Implemented `display()` method for `EnkryptitOutput` that uses `miette` for *errors* and *warnings*, creates a **badge** with borders for *successes*, and a simple *info* displaying.
+    - Wired all the frontend : **TUI** & **CLI** with the new architecture.
+    - Modified `object_treatment()`, `en/decrypt_file_case()` and `en/decrypt_folder_case()` to adapt to the new **EnkryptitOutput**
+    - Modified `read_file()` function from `treatment/` : it now returns an **EnkryptitOutput** and maps the intern *EnkryptitError*s
+
+> [!NOTE]
+> This Day wasn't the most significative for Enkryptit!'s backend, but took me a long time (especially to wire everything).
 
 Test results :
 ```bash
-test result: ok. 191 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.11s
+test result: FAILED. 189 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.00s
 ```
+\
+\
+Next things to do :
+- In priority :
+    - update tests and add new ones
+    - update the rust doc
+- Ergonomic add-ons (`eck verify <path>`, `eck recover <path>`)
+- Doc restructure (README + /doc, and later *mkdocs* maybe)
+- cargo clippy / fuzzy testing
+- benchmarks

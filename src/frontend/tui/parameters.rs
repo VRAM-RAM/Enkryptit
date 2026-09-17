@@ -1,9 +1,8 @@
+use crate::diagnostic::EnkryptitOutput;
 use crate::errors::EnkryptitError;
 use crate::frontend::cli::show_params;
 use crate::frontend::tui::input::TuiInput;
-use crate::log_error;
 use crate::parameters::params::{EnkryptitParams, load_params, save_params};
-use crate::success;
 use crate::types::CompressionType::{self, Lz4, NoComp, Xz};
 use crate::types::KeyParams::{File, Os, PassWord};
 use crate::types::ParallelismType;
@@ -31,14 +30,15 @@ pub fn launch_params(input: &impl TuiInput) -> Result<(), EnkryptitError> {
             Ok(choice) if choice == "Show current parameters" => show_current_params()?,
             Ok(choice) if choice == "Back to main menu" => break,
             Err(_) => {
-                log_error!("Selection cancelled");
+                EnkryptitOutput::info("Selection cancelled").display();
                 continue;
             }
             _ => continue,
         }
     }
 
-    success!("Parameters updated successfully!");
+    EnkryptitOutput::success("Parameters updated !").display();
+
     Ok(())
 }
 
@@ -68,7 +68,8 @@ fn change_compression(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let params = EnkryptitParams::new(old_params.key_params, compression, old_params.parallelism);
     save_params(&params)?;
 
-    success!(format!("Compression changed to {:?}", compression));
+    EnkryptitOutput::success(format!("Compression changed to {:?}", compression)).display();
+
     Ok(())
 }
 
@@ -90,7 +91,8 @@ fn change_key_type(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let params = EnkryptitParams::new(kt.clone(), old_params.compression, old_params.parallelism);
     save_params(&params)?;
 
-    success!(format!("Key type changed to {:?}", kt));
+    EnkryptitOutput::success(format!("Key type changed to {:?}", kt)).display();
+
     Ok(())
 }
 
@@ -112,14 +114,15 @@ fn change_parallelism(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let params = EnkryptitParams::new(old_params.key_params, old_params.compression, pt.clone());
     save_params(&params)?;
 
-    success!(format!("Key type changed to {:?}", pt));
+    EnkryptitOutput::success(format!("Parallelism type changed to {:?}", pt)).display();
+
     Ok(())
 }
 
 /// Private helper for choosing number of threads
 fn choose_threads(input: &impl TuiInput) -> Result<u8, EnkryptitError> {
     let choosed =
-        input.custom_counter("Enter the number of threads you want (recommend : 4-8) :")?;
+        input.custom_counter("Enter the number of threads you want (recommended : 4-16) :")?;
 
     Ok(choosed)
 }

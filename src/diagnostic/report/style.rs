@@ -9,6 +9,7 @@ pub enum EnkryptitStyle {
     Orange,
     Accent,
     Warning,
+    Error,
 }
 
 impl EnkryptitStyle {
@@ -19,7 +20,9 @@ impl EnkryptitStyle {
             &Self::Label => Color::Grey,
             &Self::Orange => Color::AnsiValue(214),
             &Self::Value => Color::White,
-            &Self::Warning => Color::DarkRed
+            &Self::Warning => Color::Red,
+            &Self::Error => Color::DarkRed,
+
         }
     }
 
@@ -28,7 +31,7 @@ impl EnkryptitStyle {
             &Self::Accent => Attribute::Bold,
             &Self::Label => Attribute::Bold,
             &Self::Warning => Attribute::Bold,
-            &Self::Orange => Attribute::Italic,
+            &Self::Error => Attribute::Italic,
             _ => Attribute::NoUnderline
         }
     }

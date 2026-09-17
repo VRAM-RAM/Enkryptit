@@ -1,6 +1,6 @@
 use crate::context::EnkryptitContext;
+use crate::diagnostic::EnkryptitOutput;
 use crate::errors::EnkryptitError;
-use crate::frontend::Output;
 use crate::metadatas::{ArchiveHeader, MAGIC};
 use crate::parameters::params::EnkryptitParams;
 use crate::treatment::file_case::{decrypt_file_case, encrypt_file_case};
@@ -34,10 +34,10 @@ pub fn treat_object(
     parameters: &EnkryptitParams,
     path: &str,
     context: &mut EnkryptitContext,
-) -> Result<Output, EnkryptitError> {
+) -> EnkryptitOutput {
     let keytype = parameters.key_params.to_type();
 
-    if Path::new(&path).is_dir() {
+    if Path::new(path).is_dir() {
         return encrypt_folder_case(path, context, &keytype);
     }
 
@@ -57,7 +57,7 @@ pub fn treat_object(
 
         Ok(ParsedFile::Plain) => encrypt_file_case(path, context, &keytype),
 
-        Err(_) => Ok(Output::CorruptedFile),
+        Err(e) => e, 
     }
 }
 
@@ -70,9 +70,23 @@ pub fn treat_object(
 /// - Compare the Magic number
 /// - Reads the metadata (two different ways : at the beginning of the file if the version is 1, at the end if the version is 2)
 /// - Returns the ParsedFile result
-pub fn read_file(path: &str) -> Result<ParsedFile, EnkryptitError> {
-    let file = File::open(path)?;
-    let file_len = file.metadata()?.len();
+pub fn read_file(path: &str) -> Result<ParsedFile, EnkryptitOutput> {
+    let file = match File::open(path) {
+        Ok(f) => f,
+        Err(e) => {
+            let err: EnkryptitError = e.into();
+            return Err(err.into())
+        }
+    };
+
+    let file_len = match file.metadata() {
+        Ok(m) => m.len(),
+        Err(e) => {
+            let err: EnkryptitError = e.into();
+            return Err(err.into())
+        }
+    };
+
     let mut reader = BufReader::new(file);
 
     // Try to read the header length
@@ -107,17 +121,34 @@ pub fn read_file(path: &str) -> Result<ParsedFile, EnkryptitError> {
     if archive_header.is_folder_archive && archive_header.version >= 2 {
         // v2 folder archive: metadata is at the end of the file
         if file_len < meta_len as u64 {
-            return Err(EnkryptitError::CorruptedFile);
+            return Err(
+                EnkryptitOutput::error("Error while reading & parsing the file.", EnkryptitError::CorruptedFile)
+                    .with_help("File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.")
+                    .with_location("object_treatment.rs::read_file()")
+            );
         }
         let meta_start = file_len - meta_len as u64;
-        reader.seek(SeekFrom::Start(meta_start))?;
+
+        if let Err(e) = reader.seek(SeekFrom::Start(meta_start)) {
+            let err: EnkryptitError = e.into();
+            return Err(err.into())
+        }
+
         if reader.read_exact(&mut meta).is_err() {
-            return Err(EnkryptitError::CorruptedFile);
+            return Err(
+                EnkryptitOutput::error("Error while reading & parsing the file.", EnkryptitError::CorruptedFile)
+                    .with_help("File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.")
+                    .with_location("object_treatment.rs::read_file()")
+            );
         }
     } else {
         // v1 or single-file: metadata is right after header
         if reader.read_exact(&mut meta).is_err() {
-            return Err(EnkryptitError::CorruptedFile);
+            return Err(
+                EnkryptitOutput::error("Error while reading & parsing the file.", EnkryptitError::CorruptedFile)
+                    .with_help("File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.")
+                    .with_location("object_treatment.rs::read_file()")
+            );
         }
     }
 

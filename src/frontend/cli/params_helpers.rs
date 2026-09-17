@@ -1,4 +1,4 @@
-use crate::log_error;
+use crate::diagnostic::EnkryptitOutput;
 use crate::parameters::params::{load_params, save_params};
 use crate::types::CompressionType;
 use crate::types::KeyParams;
@@ -85,7 +85,7 @@ pub fn update_params(
                     "none" | "no" | "4" => params.compression = CompressionType::NoComp,
                     "auto" | "a" | "5" => params.compression = CompressionType::Auto,
                     other => {
-                        log_error!(format!("Unknown compression: {}", other));
+                        EnkryptitOutput::warning(format!("Unknown compression: {}", other)).display();
                         std::process::exit(1);
                     }
                 }
@@ -97,7 +97,7 @@ pub fn update_params(
                     "os" | "2" => params.key_params = KeyParams::Os,
                     "file" | "3" => params.key_params = KeyParams::File,
                     other => {
-                        log_error!(format!("Unknown key type: {}", other));
+                        EnkryptitOutput::warning(format!("Unknown Key Type: {}", other)).display();
                         std::process::exit(1);
                     }
                 }
@@ -107,7 +107,7 @@ pub fn update_params(
                 match parse_parallelism(&p) {
                     Ok(par) => params.parallelism = par,
                     Err(msg) => {
-                        log_error!(msg);
+                        EnkryptitOutput::warning(msg).display();
                         std::process::exit(1);
                     }
                 }
@@ -116,13 +116,16 @@ pub fn update_params(
             match save_params(&params) {
                 Ok(_) => println!("\n Params were changed ! \n"),
                 Err(e) => {
-                    log_error!(format!("Failed to save: {}", e));
+                    EnkryptitOutput::error("Failed to save parameters.", e)
+                        .with_location("cli::params_helpers::update_params()")
+                        .display();
+
                     std::process::exit(1);
                 }
             }
         }
         Err(e) => {
-            log_error!(e);
+            Into::<EnkryptitOutput>::into(e).display();
             std::process::exit(1);
         }
     }

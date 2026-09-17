@@ -1,4 +1,4 @@
-use crate::diagnostic::style::EnkryptitStyle;
+use crate::diagnostic::report::style::EnkryptitStyle;
 
 pub struct ReportArgument {
     pub value: String,

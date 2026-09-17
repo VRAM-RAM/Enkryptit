@@ -20,16 +20,18 @@ inquire = "0.9.4"
 keyring = "2.0"
 libc = "0.2.186"
 lz4_flex = "0.13.1"
+miette = { version = "7.6.0", features = ["fancy"] }
 oxiarc-core = "0.3.0"
 postcard = { version = "1", features = ["alloc"] }
 rand = "0.8"
-rfd = "0.16.0"
+rfd = "0.17.2"
 rpassword = "7.5.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.150"
 sysinfo = "0.39.6"
 thiserror = "2.0.18"
 tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["fmt", "env-filter"]}
 walkdir = "2.5.0"
 xz2 = "0.1.7"
 zeroize = "1.8.2"

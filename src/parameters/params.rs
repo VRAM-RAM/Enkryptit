@@ -1,9 +1,9 @@
+use crate::directory::{project_dir_path};
 use crate::errors::EnkryptitError;
 use crate::types::{
     CompressionType::{self},
     KeyParams, ParallelismType,
 };
-use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -49,10 +49,7 @@ fn config_path() -> Result<PathBuf, EnkryptitError> {
     }
 
     // Default: use system config directory
-    let dirs =
-        ProjectDirs::from("com", "olruix", "Enkryptit").ok_or(EnkryptitError::ConfigError)?;
-
-    let mut path = dirs.config_dir().to_path_buf();
+    let mut path = project_dir_path()?;
 
     std::fs::create_dir_all(&path)?;
 
@@ -92,11 +89,7 @@ pub fn load_params() -> Result<EnkryptitParams, EnkryptitError> {
     match serde_json::from_str(&content) {
         Ok(params) => Ok(params),
         Err(e) => {
-            eprintln!(
-                "[WARN] Config file {} is corrupted ({}), falling back to default parameters.",
-                path.display(),
-                e
-            );
+            tracing::warn!("Config file {} is corrupted ({}), falling back to default parameters.", path.display(), e);
             let backup_path = path.with_extension("json.bak");
             let _ = std::fs::rename(&path, &backup_path);
 

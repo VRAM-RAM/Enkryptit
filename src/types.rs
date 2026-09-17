@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 use hex::{ToHex};
 
@@ -43,18 +44,31 @@ impl KeyParams {
     }
 }
 
-impl ToString for KeyType {
-    fn to_string(&self) -> String {
+impl KeyType {
+    /// Human-readable description of the key type. Single source of truth used
+    /// by both `Display` and the `String` conversion.
+    pub fn description(&self) -> String {
         match self {
             Self::FromFile => "from file".to_string(),
             Self::FromOS => "from os keyring".to_string(),
-            Self::None => "no keytype used (should not happen if the file is encrypted".to_string(),
+            Self::None => "no keytype used (should not happen if the file is encrypted)".to_string(),
             Self::Password => "password".to_string(),
             Self::Pwd256(salt) => format!("hashed password, with the following salt : {}", salt.encode_hex::<String>()),
         }
     }
 }
 
+impl From<KeyType> for String {
+    fn from(value: KeyType) -> Self {
+        value.description()
+    }
+}
+
+impl Display for KeyType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.description())
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 /// CompressionType enum. Contains :
@@ -71,8 +85,10 @@ pub enum CompressionType {
     Auto,
 }
 
-impl ToString for CompressionType {
-    fn to_string(&self) -> String {
+impl CompressionType {
+    /// Description of the compression type. Single source of
+    /// truth used by both `Display` and the `String` conversion.
+    pub fn description(&self) -> String {
         match self {
             Self::Auto => "Automatic".to_string(),
             Self::Lz4 => "Lz4 (fastest)".to_string(),
@@ -80,6 +96,18 @@ impl ToString for CompressionType {
             Self::NoComp => "No compression".to_string(),
             Self::Zstd => "Zstd (Balanced)".to_string()
         }
+    }
+}
+
+impl From<CompressionType> for String {
+    fn from(value: CompressionType) -> Self {
+        value.description()
+    }
+}
+
+impl Display for CompressionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.description())
     }
 }
 
@@ -105,12 +133,26 @@ pub enum ParallelismType {
     Single,
 }
 
-impl ToString for ParallelismType {
-    fn to_string(&self) -> String {
+impl ParallelismType {
+    /// Description of the parallelism type. Single source of
+    /// truth used by both `Display` and the `String` conversion.
+    pub fn description(&self) -> String {
         match self {
             Self::Auto => "Automatic".to_string(),
             Self::MultiThread(n) => format!("MultiThreading with {} threads", n),
             Self::Single => "SingleThread".to_string()
         }
+    }
+}
+
+impl From<ParallelismType> for String {
+    fn from(value: ParallelismType) -> Self {
+        value.description()
+    }
+}
+
+impl Display for ParallelismType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.description())
     }
 }

@@ -7,7 +7,7 @@ pub fn resolve_key_from_file(mode: Mode, path: &str) -> Result<[u8; 32], Enkrypt
         Ok(key) => Ok(key),
         Err(_) => match mode {
             Mode::Encrypting => generate_key_and_write_file(path),
-            Mode::Decrypting => Err(EnkryptitError::KeyNotFound),
+            Mode::Decrypting => Err(EnkryptitError::KeyNotFoundInFile),
         },
     }
 }
@@ -17,7 +17,7 @@ pub fn resolve_key_from_os(mode: Mode, path: &str) -> Result<[u8; 32], Enkryptit
         Ok(key) => Ok(key),
         Err(_) => match mode {
             Mode::Encrypting => generate_key_and_store_in_os(path),
-            Mode::Decrypting => Err(EnkryptitError::KeyNotFound),
+            Mode::Decrypting => Err(EnkryptitError::KeyNotFoundInOs),
         },
     }
 }

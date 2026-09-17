@@ -23,21 +23,6 @@ macro_rules! print_params_help {
 }
 
 #[macro_export]
-/// Macro that prints a success
-macro_rules! success {
-    ($succes: expr) => {
-        println!("Success : {}", $succes)
-    };
-}
-
-#[macro_export]
-macro_rules! log_error {
-    ($msg:expr) => {
-        eprintln!("[ERROR] {}", $msg)
-    };
-}
-
-#[macro_export]
 macro_rules! exit {
     () => {
         println!("\n \n Exiting... \n \n")
