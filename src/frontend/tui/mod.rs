@@ -8,24 +8,9 @@ pub mod treatment;
 use self::action::EnkryptitTuiAction;
 use self::input::TuiInput;
 use crate::VERSION;
+use crate::diagnostic::EnkryptitOutput;
 use colored::*;
 
-// Macros with colors
-
-/// Success macro helper
-#[allow(unused)] // It is not unused, but... Rust Analyser thinks that
-macro_rules! success {
-    ($message:expr) => {
-        println!("\n[OK] {}", $message.to_string().green());
-    };
-}
-
-/// Log macro helper
-macro_rules! log_error {
-    ($msg:expr) => {
-        eprintln!("\n[ERROR] {}", $msg.to_string().red())
-    };
-}
 
 /// Show Params macro helper
 #[allow(unused)] // It is not unused, but... Rust Analyser thinks that
@@ -40,14 +25,13 @@ macro_rules! show_params {
 /// Public function that launches the TUI
 pub fn launch_ui(input: &impl TuiInput) {
     println!("\n{}", "Enkryptit".cyan().bold());
-    println!("   Fast & Secure File Encryption Manager v0.0.{}", VERSION);
+    println!("   Fast & Simple File Encryption Manager v0.0.{}", VERSION);
 
     loop {
         let choices = vec![
             "Browse",
             "Parameters",
             "Help",
-            "Browse",
             "Exit",
         ];
 
@@ -60,13 +44,13 @@ pub fn launch_ui(input: &impl TuiInput) {
             Ok(value) => {
                 if let Some(action) = EnkryptitTuiAction::from_str(&value) {
                     if let Err(e) = action.execute(input) {
-                        log_error!(e);
+                        e.to_output().display();
                     }
                 }
             }
 
             Err(_) => {
-                log_error!("Selection cancelled");
+                EnkryptitOutput::info("Selection cancelled").display();
                 continue;
             }
         }
