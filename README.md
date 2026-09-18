@@ -64,7 +64,7 @@ These are the available commands:
 | **Change parallelism**                | `eck params -p <type>`           | Changes the parallelism mode. Available: `single`, `multi`, or `multi:<threads>`.      |
 | **Inspect**                           | `eck inspect <path>`             | Inspects a file or archive without encrypting or decrypting it.                        |
 
-> [!INFO]
+> [!TIP]
 > `eck <path>` and `eck inspect <path>` support multiple paths:
 >
 > `eck <path1> <path2>`

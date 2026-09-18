@@ -34,7 +34,10 @@ pub fn launch_treatment(input: &impl TuiInput, objects: Vec<String>, password: O
     Ok(())
 }
 
-/// Treatment loop over a list of chosen object paths.
+/// Treatment loop over a list of chosen object paths. 
+/// \
+/// It loads the parameters calling [`load_params`], creates the [`EnkryptitContext`], and then iterate over all the `objects`, 
+/// calling [`treat_object`], and displaying the [`EnkryptitOutput`]s.
 pub fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>) -> Result<(), EnkryptitError> {
     let parameters = load_params()?;
 
@@ -46,6 +49,7 @@ pub fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>
     Ok(())
 }
 
+/// Iterates over the objects, inspect each of one calling [`inspect_object`] and displays the [`EnkryptitOutput`]s.
 pub fn treat_objects_inspection(objects: &Vec<String>) {
     for path_str in objects {
         inspect_object(path_str).display();

@@ -36,6 +36,10 @@ fn stderr_of(assertion: &Assert) -> String {
     String::from_utf8_lossy(&assertion.get_output().stderr).into_owned()
 }
 
+fn stdout_of(assertion: &Assert) -> String {
+    String::from_utf8_lossy(&assertion.get_output().stdout).into_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -203,9 +207,9 @@ mod tests {
 
         let wrong = run_cli_decrypt(encrypted_path.as_ref(), Some("wrong-pass")).unwrap();
 
-        // Failure is reported on stderr (exit code stays 0 by design)
-        let stderr = stderr_of(&wrong);
-        assert!(stderr.contains("[ERROR]"), "stderr: {stderr}");
+        // Failure is reported as a miette diagnostic on stdout (exit code stays 0 by design)
+        let stdout = stdout_of(&wrong);
+        assert!(stdout.contains("crypto::encryption_decryption_failed"), "stdout: {stdout}");
 
         // The archive must be left untouched and no plaintext restored
         assert!(encrypted_path.exists());
@@ -239,9 +243,9 @@ mod tests {
 
         let result = run_cli_decrypt(encrypted_path.as_ref(), Some("tamper-test")).unwrap();
 
-        let stderr = stderr_of(&result);
+        let stdout = stdout_of(&result);
         assert!(
-            !stderr.is_empty(),
+            stdout.contains("crypto::encryption_decryption_failed"),
             "tampering must produce an error message"
         );
 

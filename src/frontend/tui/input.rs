@@ -13,7 +13,7 @@ pub trait TuiInput {
     /// Show a single-choice menu and return the selected label.
     fn select(&self, message: &str, choices: &[&str]) -> Result<String, EnkryptitError>;
 
-    /// Prompt for free-form text (used for the treatment path).
+    /// Prompt for free-form text (unused for now).
     fn text(&self, message: &str, help_message: &str) -> Result<String, EnkryptitError>;
 
     /// Prompt for a numeric counter (used for the number of threads).

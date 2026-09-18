@@ -3,7 +3,7 @@ use miette::{GraphicalReportHandler};
 use crate::diagnostic::DOC_URL;
 use crate::diagnostic::output::diagnostic::{render_error, theme};
 use crate::diagnostic::output::Snippet;
-
+use miette::MietteDiagnostic;
 use crate::{
     diagnostic::{
         output::kind::{EnkryptitOutputKind},
@@ -13,6 +13,13 @@ use crate::{
 };
 
 impl EnkryptitOutput {
+    /// Matches the [`EnkryptitOutputKind`] that contains the output, and calls the corresponding `display` function.
+    /// \
+    /// - `Info` => [`display_info()`]
+    /// - `Phantom` => None
+    /// - `Error` => [`display_error()`]
+    /// - `Success` => [`display_success()`]
+    /// - `Warning` => [`display_warning()`]
     pub fn display(self) {
         match self.kind {
             EnkryptitOutputKind::Info => display_info(&self.msg),
@@ -29,6 +36,7 @@ impl EnkryptitOutput {
     }
 }
 
+/// Displays an error, calling [`render_error()`] and logging it using [`tracing::error!`].
 pub fn display_error(
     msg: &str,
     error: &EnkryptitError,
@@ -41,8 +49,9 @@ pub fn display_error(
     println!("{}", render_error(msg, error, location, help, snippet));
 }
 
+/// Displays a warning, using [`MietteDiagnostic`] and displaying it using a custo handler with **Enkryptit!**'s theme defined in [`theme()`].
 fn display_warning(msg: &str) {
-    let report = miette::MietteDiagnostic::new(msg)
+    let report = MietteDiagnostic::new(msg)
         .with_url(DOC_URL)
         .with_severity(miette::Severity::Warning);
 
@@ -59,10 +68,19 @@ fn display_warning(msg: &str) {
     println!("{}", output);
 }
 
+/// The Width of the success box. Later, we could make it flexible.
 const SUCCESS_BOX_WIDTH: usize = 60;
+
 const SUCCESS_BOX_PADDING: usize = 2;
 const SUCCESS_BADGE_WIDTH: usize = 3;
 
+/// Displays a success. Its current flow is :
+/// - Logs the **success** calling [`tracing::info`]
+/// - Prepares the lines of text calling [`wrap_text()`] and using the constants
+/// - Creates the horizontal bar of `-` (for both top and bottom)
+/// - Prints the top (`╭`+ horizontal bar + `╮`) in green
+/// - Prints and format the lines, adding the badge and the sides `|`
+/// - Pirints the bottom (`╰` + horizontal bar + `╯`)
 fn display_success(msg: &str) {
     tracing::info!("Success : {}", msg);
 
@@ -97,6 +115,7 @@ fn display_success(msg: &str) {
     println!("{}", format!("╰{horizontal}╯").green());
 }
 
+/// Displays and logs an information calling [`tracing::info!`] and using a simple [`println!`] with cyan color.
 fn display_info(msg: &str) {
     tracing::info!("{}", msg);
     println!("\n{} {}", "[INFO]".cyan().bold(), msg);

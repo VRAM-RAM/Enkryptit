@@ -611,3 +611,10 @@ Next things to do :
 - Doc restructure (README + /doc, and later *mkdocs* maybe)
 - cargo clippy / fuzzy testing
 - benchmarks
+
+---
+
+## DAY-17 Updated tests - beginned the website
+
+- Updated tests (replaced the `stderr` with `stdout` essentially)
+- Progressed on **RustDoc**
