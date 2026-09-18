@@ -1,5 +1,5 @@
 use crate::{
-    diagnostic::logging::EnkryptitLogger, frontend::{
+    diagnostic::{logging::EnkryptitLogger, output::snippet::Snippet, EnkryptitOutput}, frontend::{
         cli::{inspection::inspect_one_or_more_objects, params_helpers::{show_params, update_params}, treatment::treat_objects_with_multiple_paths}, treat_output::treat_output, tui::{input::RealTuiInput, launch_ui},
     }, types::Version,
 };
@@ -143,7 +143,10 @@ fn main() {
                 0 => launch_ui(&RealTuiInput),
                 1 => match treat_object_with_path(&path[0], cli.password) {
                     Ok(output) => treat_output(output),
-                    Err(e) => eprintln!("[ERROR] {}", e),
+                    Err(e) => {
+                        let err: EnkryptitOutput = e.into();
+                        treat_output(err.with_snippet(Snippet::cli_invocation("eck", &path[0])));
+                    }
                 },
                 _ => match treat_objects_with_multiple_paths(&path, cli.password) {
                     Ok(()) => (),

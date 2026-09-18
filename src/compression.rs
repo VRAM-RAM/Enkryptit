@@ -14,6 +14,13 @@ use zstd::bulk::decompress_to_buffer as zstddecompress;
 /// ```text
 /// fn compress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError>;
 /// ```
+/// \
+/// When compressing, it **matches** the [`CompressionType`] :
+/// - Auto : `unreachable`
+/// - Zstd : `compress_with_zstd`
+/// - Lz4 : `compress_with_lz4`
+/// - Xz : `compress_with_xz`
+/// - NoComp : clears the buffer and returns
 pub trait EnkryptitCompress {
     fn compress(
         &self,

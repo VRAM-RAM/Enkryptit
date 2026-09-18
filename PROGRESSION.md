@@ -547,36 +547,65 @@ Next things to do :
 ## DAY-16 Updated TUI tests, huge frontend and error / outputs handling refactorization
 
 - Modified `tui_flow.rs` and `tui_tests.rs` that now use directly `treat_object_encryption()`
+- Progress on **RustDoc** 
 - Fixed an issue with rfd `0.17.2` (read the issue for more infos) : [rfd and hyprland + NixOS issue](https://github.com/VRAM-RAM/Enkryptit/issues/1)
 - Created `src/directory.rs` that contains two helpers that return the project's config directory & config path
-- Added an `EnkryptitLogger` structure that initializes `tracing` logging, and allows the program to write logs in `config_dir/log.txt` 
+- Added an `EnkryptitLogger` structure that initializes `tracing` logging, allows the program to write logs in `config_dir/log.txt`, and rolls daily.
 - Call of `EnkryptitLogger::init()` in `main()`
 - Added `Option<T>` in **InspectionReport** so that it doesn't fail on error and just return an empty field (for name for example)
 - Modified `display()` implementation for **InspectionReport** : it now checks if at least one field isn't empty. If not, it displays an error, and if yes, it displays the report.
 - Updated `inspect_encrypted_archive()`, `inspect_plain_file()`, `inspect_plain_folder()` and `inspect_encrypted_file()` to match the new **InspectionReport** format.
 - Added `tracing::warn!(...)` in some functions to log backend informations (in `log.txt`) for advanced users
-
+- Splitted `type.rs` in `type/` (to make navigating in the code easier).
 - Frontend refactorization :
     - Suppressed `Output`
     - Created `EnkryptitOutput`, a new structure that handles *successes*, *errors*, *warnings* and *infos*.
         - Created `EnkryptitOutputKind`, an enum for `EnkryptitOutput`s 
         - Implemented `display()` method for `EnkryptitOutput` that uses `miette` for *errors* and *warnings*, creates a **badge** with borders for *successes*, and a simple *info* displaying.
+    - Created `Snippet` : A context to draw a miette source frame around an error.
+    - Created `EnkryptitDiagnostic` : A **diagnostic** structure that implements `miette::Diagnostic` and allows use to render arrows around the offending token when `Snippet` is provided.
     - Wired all the frontend : **TUI** & **CLI** with the new architecture.
     - Modified `object_treatment()`, `en/decrypt_file_case()` and `en/decrypt_folder_case()` to adapt to the new **EnkryptitOutput**
     - Modified `read_file()` function from `treatment/` : it now returns an **EnkryptitOutput** and maps the intern *EnkryptitError*s
 
 > [!NOTE]
-> This Day wasn't the most significative for Enkryptit!'s backend, but took me a long time (especially to wire everything).
+> This Day wasn't the most significative for Enkryptit!'s backend, but was really significative for frontend, and took me a long time (especially to wire everything).
 
+**New Success message:**
+```txt
+╭──────────────────────────────────────────────────────────╮
+│  ✔  File was encrypted at                                │
+│     /home/vram/Downloads/secret.zip.encky                │
+╰──────────────────────────────────────────────────────────╯
+```
+\
+\
+**New Error message:**
+```txt
+io::misc_io_error (link)
+
+  ✖ io error: No such file or directory (os error 2)
+   ╭─[eck:1:5]
+ 1 │ eck this_directory_is_absurd
+   ·     ────────────┬───────────
+   ·                 ╰── I/O
+   ╰────
+  help: Check that the path exists and that you have the required permissions.
+```
+\
+\
+New tests:
+- `/unit/error_display.rs` : Error display & formatting tests
+- `/unit/types.rs` : Regression tests for the `Display`/`String` conversions of the enum types.
 Test results :
 ```bash
-test result: FAILED. 189 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.00s
+test result: FAILED. 199 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.53s
 ```
 \
 \
 Next things to do :
 - In priority :
-    - update tests and add new ones
+    - update tests
     - update the rust doc
 - Ergonomic add-ons (`eck verify <path>`, `eck recover <path>`)
 - Doc restructure (README + /doc, and later *mkdocs* maybe)

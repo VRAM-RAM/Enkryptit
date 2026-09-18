@@ -117,9 +117,6 @@ pub enum EnkryptitError {
 
     #[error("Corrupted File")]
     CorruptedFile,
-
-    #[error("Thread panicked")]
-    ThreadPanicked,
 }
 
 impl EnkryptitError {
@@ -223,7 +220,7 @@ impl EnkryptitError {
             Self::ConfigError => Some("configuration".to_string()),
             Self::HomeNotFound => Some("project directory".to_string()),
             Self::FilePermissionsParsingError(_) => Some("fmodeparser".to_string()),
-            Self::SendError | Self::ReceiveError(_) | Self::ThreadPanicked => Some("parallelism".to_string()),
+            Self::SendError | Self::ReceiveError(_) => Some("parallelism".to_string()),
             Self::InvalidWorkerCount => Some("parallelism setup".to_string()),
             Self::TuiError(_) => Some("TUI".to_string()),
             Self::UnknownAction(_) => Some("command dispatch".to_string()),
@@ -238,6 +235,7 @@ impl EnkryptitError {
             EnkryptitOutputKind::Error {
                 location: self.location(),
                 help: self.help(),
+                snippet: None,
                 error: self,
             },
             msg,
@@ -253,6 +251,7 @@ impl From<EnkryptitError> for EnkryptitOutput {
             EnkryptitOutputKind::Error {
                 location: error.location(),
                 help: error.help(),
+                snippet: None,
                 error,
             },
             msg,

@@ -1,22 +1,23 @@
-use std::fs::OpenOptions;
 use tracing_subscriber::EnvFilter;
-
+use tracing_appender::{non_blocking::WorkerGuard, rolling};
 use crate::{directory::project_dir_path, errors::EnkryptitError};
 
-pub struct EnkryptitLogger;
+#[allow(unused)]
+/// A structure that stores the [`WorkerGuard`] for logging, and that initializes the `tracing` logging.
+pub struct EnkryptitLogger(WorkerGuard);
 
 impl EnkryptitLogger {
-    pub fn init() -> Result<(), EnkryptitError> {
-        let mut path = project_dir_path()?;
-        path.push("log.txt");
+    /// Initializes the `tracing` logger. 
+    pub fn init() -> Result<Self, EnkryptitError> {
+        let file = rolling::daily(
+            project_dir_path()?,
+            "log.txt",
+        );
 
-        let file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)?;
+        let (writer, _guard) = tracing_appender::non_blocking(file);
         
         tracing_subscriber::fmt()
-            .with_writer(file)
+            .with_writer(writer)
             .with_ansi(false)
             .with_target(false)
             .with_thread_ids(true)
@@ -29,6 +30,6 @@ impl EnkryptitLogger {
             )
             .init();
 
-        Ok(())
+        Ok(Self(_guard))
     }
 }

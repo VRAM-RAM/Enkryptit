@@ -4,7 +4,9 @@
 
 pub mod compression;
 pub mod encryption_primitives;
+pub mod error_display;
 pub mod file;
 pub mod folder_entries;
 pub mod metadatas;
 pub mod parallelism;
+pub mod types;

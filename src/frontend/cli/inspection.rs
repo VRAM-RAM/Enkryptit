@@ -1,5 +1,5 @@
 use crate::treatment::inspect::inspect_object;
-
+use crate::diagnostic::output::snippet::Snippet;
 
 /// Helper for inspecting one or many paths.
 /// \
@@ -9,7 +9,9 @@ pub fn inspect_one_or_more_objects(
 ) -> () {
     // We iterate over the paths
     for path in paths {
-        inspect_object(path).display();
+        inspect_object(path)
+            .with_snippet(Snippet::cli_invocation("eck inspect", path))
+            .display();
     }
 }
 

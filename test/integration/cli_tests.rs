@@ -633,4 +633,35 @@ mod tests {
         let restored = fs::read(temp_file.path()).unwrap();
         assert_eq!(restored, content);
     }
+
+    // --- miette source-frame display tests ---
+
+    #[test]
+    fn cli_inspect_missing_path_draws_source_frame() {
+        let missing = "/definitely/missing/path.encky";
+        let output = eck_cmd(&["inspect", missing])
+            .output()
+            .expect("Failed to execute eck inspect");
+
+        assert!(output.status.success(), "inspect must exit cleanly");
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains(missing), "path must appear in source line: {stdout}");
+        assert!(stdout.contains("╰──"), "curved pointer must appear: {stdout}");
+        assert!(stdout.contains("help:"), "help footer must appear: {stdout}");
+    }
+
+    #[test]
+    fn cli_default_command_missing_path_draws_source_frame() {
+        let _guard = TestConfigGuard::new("PassWord", "Zstd");
+        let missing = "/definitely/missing/path.encky";
+        let output = eck_cmd(&[missing])
+            .output()
+            .expect("Failed to execute eck <path>");
+
+        assert!(output.status.success(), "missing path must not hard-fail");
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains(missing), "path must appear in source line: {stdout}");
+        assert!(stdout.contains("╰──"), "curved pointer must appear: {stdout}");
+        assert!(stdout.contains("help:"), "help footer must appear: {stdout}");
+    }
 }

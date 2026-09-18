@@ -72,7 +72,7 @@ mod tests {
         assert!(std::path::Path::new(&archive_path).exists());
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
-        assert_eq!(version, 2);
+        assert_eq!(version, 3);
         let folder_meta: FolderMetadata = from_bytes(&meta_bytes).unwrap();
         assert_eq!(folder_meta.entries.len(), 1);
         assert_eq!(folder_meta.entries[0].relative_path, "hello.txt");

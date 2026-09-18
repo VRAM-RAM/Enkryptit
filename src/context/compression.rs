@@ -5,6 +5,10 @@ use crate::errors::EnkryptitError;
 use infer::get_from_path;
 use crate::context::{LOW_BOUNDARY, MID_INFERIOR_BOUNDARY, MID_SUPERIOR_BOUNDARY, SUPERIOR_BOUNDARY};
 
+/// Given the **path** of a file, it infers the [`CompressionType`] to use.
+/// Its flow is :
+/// - Opens the file, gets its **size** and compute a [`CompressionHint`] using [`CompressionHint::compute()`].
+/// - **Matches** successively the *hint* and the *size* of the file and returns the corresponding [`CompressionType`]
 pub fn infer_compression(path: &str) -> Result<CompressionType, EnkryptitError> {
     let file = File::open(path)?;
     let len = file.metadata()?.len();
@@ -39,15 +43,27 @@ pub fn infer_compression(path: &str) -> Result<CompressionType, EnkryptitError> 
     })
 }
 
-
+/// An **hint** computed in function of the `mime` type of the file.
+/// \
+/// Used during [`CompressionType`] inference.
 enum CompressionHint {
+    /// The file is **really** compressible (all files with `text/` mime types)
     HighlyCompressible,
+
+    /// The file is compressible
     Compressible,
+
+    /// The file is already compressed
     AlreadyCompressed,
+
+    /// We don't know :
+    /// - Or the mime type isn't treated
+    /// - Or no mime type was found
     Unknown,
 }
 
 impl CompressionHint {
+    /// Computes the [`CompressionHint`] for the compression of a file, basing on its `mime` type.
     pub fn compute(kind: Option<Type>) -> Self {
         match kind {
             Some(type_) => {

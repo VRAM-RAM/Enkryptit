@@ -1,7 +1,11 @@
-use crate::{diagnostic::{output::kind::EnkryptitOutputKind}, errors::EnkryptitError};
+use crate::{diagnostic::{output::kind::{EnkryptitOutputKind}}, errors::EnkryptitError};
+use crate::diagnostic::output::snippet::Snippet;
 
+pub mod snippet;
 pub mod kind;
+pub mod diagnostic;
 pub mod display;
+
 
 pub struct EnkryptitOutput {
     kind: EnkryptitOutputKind,
@@ -30,7 +34,7 @@ impl EnkryptitOutput {
     }
 
     pub fn error(msg: impl Into<String>, error: EnkryptitError) -> Self {
-        Self { kind: EnkryptitOutputKind::Error { error, location: None, help: None }, msg: msg.into() }
+        Self { kind: EnkryptitOutputKind::Error { error, location: None, help: None, snippet: None }, msg: msg.into() }
     }
 
     /// Attach a location hint (e.g. the operation/step that failed).
@@ -45,6 +49,15 @@ impl EnkryptitOutput {
     pub fn with_help(mut self, help: impl Into<String>) -> Self {
         if let EnkryptitOutputKind::Error { help: slot, .. } = &mut self.kind {
             *slot = Some(help.into());
+        }
+        self
+    }
+
+    /// Attach a source snippet used to draw a miette code frame pointing at
+    /// the offending token. Only meaningful for error outputs.
+    pub fn with_snippet(mut self, snippet: Snippet) -> Self {
+        if let EnkryptitOutputKind::Error { snippet: slot, .. } = &mut self.kind {
+            *slot = Some(snippet);
         }
         self
     }

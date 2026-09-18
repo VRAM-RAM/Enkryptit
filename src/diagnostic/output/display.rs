@@ -1,64 +1,59 @@
 use colored::Colorize;
-use miette::MietteDiagnostic;
-use miette::GraphicalReportHandler;
-use crate::{diagnostic::{EnkryptitOutput, output::kind::EnkryptitOutputKind}, errors::EnkryptitError};
+use miette::{GraphicalReportHandler};
+use crate::diagnostic::DOC_URL;
+use crate::diagnostic::output::diagnostic::{render_error, theme};
+use crate::diagnostic::output::Snippet;
+
+use crate::{
+    diagnostic::{
+        output::kind::{EnkryptitOutputKind},
+        EnkryptitOutput,
+    },
+    errors::EnkryptitError,
+};
 
 impl EnkryptitOutput {
     pub fn display(self) {
         match self.kind {
             EnkryptitOutputKind::Info => display_info(&self.msg),
             EnkryptitOutputKind::Phantom => (),
-            EnkryptitOutputKind::Error { error, location, help} => display_error(&self.msg, &error, &location, &help),
+            EnkryptitOutputKind::Error {
+                error,
+                location,
+                help,
+                snippet,
+            } => display_error(&self.msg, &error, &location, &help, &snippet),
             EnkryptitOutputKind::Success => display_success(&self.msg),
             EnkryptitOutputKind::Warning => display_warning(&self.msg),
         };
-
     }
 }
 
-
-pub fn display_error(msg: &str, error: &EnkryptitError, location: &Option<String>, help: &Option<String>) {
-    let mut report = MietteDiagnostic::new(msg)
-        .with_code(error.code())
-        .with_url("https://github.com/VRAM-RAM/Enkryptit/tree/dev/doc")
-        .with_severity(miette::Severity::Error);
-
-    match (location, help) {
-        (Some(location), Some(help)) => {
-            report = report.with_help(format!("{help} (at {location})"));
-        }
-        (Some(location), None) => {
-            report = report.with_help(format!("Error occurred at {location}"));
-        }
-        (None, Some(help)) => {
-            report = report.with_help(help);
-        }
-        (None, None) => {}
-    }
-
-    let handler = GraphicalReportHandler::new();
-
-    let mut output = String::new();
-
-    handler.render_report(&mut output, &report).expect("rendering a miette report into String shouldn't fail");
-
+pub fn display_error(
+    msg: &str,
+    error: &EnkryptitError,
+    location: &Option<String>,
+    help: &Option<String>,
+    snippet: &Option<Snippet>,
+) {
     tracing::error!("{}", error);
 
-    println!("{}", output);
+    println!("{}", render_error(msg, error, location, help, snippet));
 }
 
 fn display_warning(msg: &str) {
-    let report = MietteDiagnostic::new(msg)
-        .with_url("https://github.com/VRAM-RAM/Enkryptit/tree/dev/doc")
+    let report = miette::MietteDiagnostic::new(msg)
+        .with_url(DOC_URL)
         .with_severity(miette::Severity::Warning);
 
-    let handler = GraphicalReportHandler::new();
-
+    let handler = GraphicalReportHandler::new_themed(theme());
 
     let mut output = String::new();
 
-    handler.render_report(&mut output, &report).expect("rendering a miette report into String shouldn't fail");
-        
+    handler
+        .render_report(&mut output, &report)
+        .expect("rendering a miette report into String shouldn't fail");
+
     tracing::warn!("{}", msg);
 
     println!("{}", output);

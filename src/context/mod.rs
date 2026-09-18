@@ -16,7 +16,10 @@ pub const SUPERIOR_BOUNDARY: u64 = 5 << 30;            // 5 GiB
 
 /// The Context, passed trough the program.
 /// \
-/// For now, only used to resolve, if needed, the password for encryption / decryption
+/// Used for resolving :
+/// - The password (during encryption / decryption)
+/// - The compression type
+/// - The parallelism type
 pub struct EnkryptitContext {
     /// The Interface currently used :
     /// \
@@ -38,6 +41,11 @@ pub struct EnkryptitContext {
 }
 
 impl EnkryptitContext {
+    /// Returns an [`EnkryptitContext`] with the given values. 
+    /// \
+    /// **password** is an `Option<String>` because the user may not have provided any password. In that case, the context is created with `password : None` and the password is resolved later.
+    /// \
+    /// **compression_type** and **parallelism** can have the value `Auto`. In that case, they are resolved by the context later.
     pub fn new(interface: Interface, password: Option<String>, compression_type: CompressionType, parallelism: ParallelismType) -> Self {
         Self {
             interface,
@@ -47,6 +55,15 @@ impl EnkryptitContext {
         }
     }
 
+    /// Resolves the password and returns a `&Zeroizing<String>` (if `Ok<>`) that contains the password.
+    /// \
+    /// Its current flow is :
+    /// - If password was not resolved (the stored `password` value is `None`) : 
+    ///     - If the user is in `Cli` : it prompts the `enter_password` text, read user's input and stores the resolved password in `password`.
+    ///     - If the user is using the `Tui` : it gets the password using [`rpassword::prompt_password`] and stores the resolved password in `password`.
+    /// - Then, it returns the value that `password` contains (unwrapping it)
+    /// 
+    /// It is safe because the password is **always** resolved before unwrapping.
     pub fn resolve_password(&mut self) -> Result<&Zeroizing<String>, EnkryptitError> {
         if self.password.is_none() {
             let pwd = match self.interface {
@@ -67,6 +84,10 @@ impl EnkryptitContext {
         Ok(self.password.as_ref().unwrap())
     }
 
+    /// Returns the `CompressionType` (if `Ok<>`).
+    /// \
+    /// - If the stored value of `compression_type` is [`CompressionType::Auto`], it infers the compression calling [`infer_compression()`].
+    /// - Else, it returns the stored `CompressionType`
     pub fn resolve_compression(
         &self,
         path: &str,
@@ -77,6 +98,9 @@ impl EnkryptitContext {
         }
     }
 
+    /// Returns the `ParallelismType` (if `Ok<>`) with the path of the file as `argument`.
+    /// \
+    /// It opens the file and reads its **size** before calling [`EnkryptitContext::resolve_parallelism_with_size()`].
     pub fn resolve_parallelism(
         &self,
         path: &str,
@@ -86,6 +110,10 @@ impl EnkryptitContext {
         self.resolve_parallelism_with_size(len)
     }
 
+    /// Returns the `ParallelismType` (if `Ok<>`) with the size of the file as `argument`.
+    /// \
+    /// - If the stored value of `parallelism` is [`ParallelismType::Auto`], it infers the parallelism type calling [`infer_parallelism()`].
+    /// - Else, it returns the stored `ParallelismType`
     pub fn resolve_parallelism_with_size(
         &self,
         size: u64
