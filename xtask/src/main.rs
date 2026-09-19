@@ -23,10 +23,6 @@ fn main() {
             run_cargo(&["test", "--test=eck_tests"]);
         }
 
-        "fuzz" => {
-            run_cargo(&["test", "--test=eck_fuzz"]);
-        }
-
         "fmt" => {
             run_cargo(&["fmt"]);
         }
@@ -34,6 +30,10 @@ fn main() {
         "help" | "--help" | "-h" => {
             print_help();
         }
+
+        "doc" | "rustdoc" | "rsdoc" => {
+            run_cargo(&["doc", "--open" , "--document-private-items"]);
+        } 
         _ => {
             eprintln!("Unknown task: {task}");
             print_help();
@@ -56,10 +56,9 @@ BUILD COMMANDS:
 
 TEST:
   test                   Run workspace tests
-  fuzz                   Run fuzzy testing                                   
-                                                        
+                                                                
 OTHER:
-  fmt                    Format code                                                        
+  fmt                    Format code                                                           
                                                         "
     );
 }

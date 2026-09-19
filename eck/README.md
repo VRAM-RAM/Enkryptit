@@ -73,6 +73,21 @@ src/
 
 ## Commands
 
+In the **WorkSpace**, you have access to the following commands :
+
+
+| Command                               | Syntax                           | Description                                                                            |
+| ------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------- |
+| **Build**                 | `cargo xtask build [--release]`                     | Builds `eck` binary.                          |
+| **Install** | `cargo xtask install`       | Installs `eck`                              |
+| **Test**                          | `cargo xtask test`               | Launches unit and integration tests                                   |
+| **Format code**                | `cargo xtask fmt`           | Formats the code |
+| **Help**                   | `cargo xtask help`           | Prints the help                 |
+
+
+## Tests
+
+Please refer to the [test readme](./test/README.md).
 
 ## License
 

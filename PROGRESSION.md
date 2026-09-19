@@ -623,7 +623,6 @@ Next things to do :
 - Suppressed `/doc` (will be replaced by the **website**)
 - Created `/dev` instead, that contains `audit.md` (the audit result)
 - Updated dependencies
-- Added **fuzzy** testing
 - Created `cargo xtask` and `eck`. Enkryptit! is now a workspace.
 - Updated **Inspection** reports, which are now much more compacts :
 ```txt

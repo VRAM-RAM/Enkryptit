@@ -177,7 +177,7 @@ eck inspect /home/user/my_secret.txt
 
 **Enkryptit!** contains :
 - Its binary, in `eck/`
-- `cargo xtask` for launching tests, fuzzy testing and rustdoc
+- `cargo xtask` for launching tests and rustdoc
 
 You can follow the development in [**PROGRESSION.md**](./PROGRESSION.md).
 

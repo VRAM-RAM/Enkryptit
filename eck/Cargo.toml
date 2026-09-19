@@ -39,7 +39,6 @@ zeroize = "1.8.2"
 zstd = "0.13.3"
 
 [dev-dependencies]
-proptest = "1"
 tempfile = "3"
 assert_cmd = "2"
 predicates = "3"
@@ -49,20 +48,3 @@ ctor = "0.2"
 name = "eck_tests"
 path = "test/mod.rs"
 harness = true
-
-[[test]]
-name = "eck_fuzz"
-path = "fuzz/mod.rs"
-harness = true
-
-[profile.test]
-opt-level = 1
-
-[profile.release]
-opt-level = 3
-lto = "fat"
-codegen-units = 1
-panic = "abort"
-strip = "symbols"
-debug = false
-incremental = false
