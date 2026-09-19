@@ -624,7 +624,7 @@ Next things to do :
 - Created `/dev` instead, that contains `audit.md` (the audit result)
 - Updated dependencies
 - Created `cargo xtask` and `eck`. Enkryptit! is now a workspace.
-- `cargo flamegraph` on a basic Enkryptit! usage (inspection + encryption of 3.5 GiB file with `Auto` compression and parallelism). The **graph** is available at `/dev/flamegraph.svg`.
+- `cargo flamegraph` on an intense Enkryptit! usage (inspection + encryption of 13.5 GiB file with `Multithreading(48)` and `NoComp`). The **graph** is available at [`/dev/flamegraph-intense_usage-release.svg`](./dev/flamegraph-intense-usage-release.svg).
 - Updated **Inspection** reports, which are now much more compacts :
 ```txt
 ┌───────────────────┬─────────────────────────────────────────────────────────────────────────────┐
