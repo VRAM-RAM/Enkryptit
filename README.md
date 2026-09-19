@@ -33,13 +33,13 @@
 # Clone the repository
 git clone https://github.com/VRAM-RAM/Enkryptit
 
-cd Enkryptit
+cd Enkryptit/
 
 # Build
-cargo build --release
+cargo xtask build --release
 
-# Install
-cargo install --path .
+# Or Install
+cargo xtask install
 ```
 
 > [!NOTE]
@@ -174,6 +174,10 @@ eck inspect /home/user/my_secret.txt
 **In short:** Enkryptit combines **strong authenticated encryption, flexible key management, efficient large-file processing, automatic compression and parallelism, and a usable CLI/TUI** in one native Rust application.
 
 ## Development
+
+**Enkryptit!** contains :
+- Its binary, in `eck/`
+- `cargo xtask` for launching tests, fuzzy testing and rustdoc
 
 You can follow the development in [**PROGRESSION.md**](./PROGRESSION.md).
 

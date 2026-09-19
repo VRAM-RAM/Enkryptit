@@ -1,0 +1,15 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+
+[dev-dependencies]
+
+
+[profile.test]
+opt-level = 1
+
+[profile.release]
+opt-level = 1

@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(auto(&dir, "blob.bin", UNKNOWN), CompressionType::NoComp);
     }
 
-    // --- Size-based ramp for the *Compressible* hint (raw WAV) ---
+    // --- Size-based ramp for the Compressible hint (raw WAV) ---
     const LOW: u64 = 50 << 20;          // 50 MiB
     const MID_INF: u64 = 250 << 20;     // 250 MiB
     const MID_SUP: u64 = 1 << 30;       // 1 GiB

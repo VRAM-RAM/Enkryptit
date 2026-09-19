@@ -623,7 +623,8 @@ Next things to do :
 - Suppressed `/doc` (will be replaced by the **website**)
 - Created `/dev` instead, that contains `audit.md` (the audit result)
 - Updated dependencies
-- Added **fuzzy** testing (`cargo fuzz`)
+- Added **fuzzy** testing
+- Created `cargo xtask` and `eck`. Enkryptit! is now a workspace.
 - Updated **Inspection** reports, which are now much more compacts :
 ```txt
 ┌───────────────────┬─────────────────────────────────────────────────────────────────────────────┐
@@ -648,5 +649,5 @@ test result: ok. 201 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fi
 \
 Next things to do :
 - Doc restructure (*mkdocs* maybe)
-- fuzzy testing
+- finish fuzzy testing
 - benchmarks

@@ -1,7 +1,13 @@
 # Rust :
 /target
+Cargo.lock
 /supply-chain
 
+# eck (Enkryptit!) :
+/eck/target
+
+# xtask :
+/xtask/target
 
 # MacOS :
 .DS_Store
