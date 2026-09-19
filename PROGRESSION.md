@@ -623,10 +623,20 @@ Next things to do :
 - Suppressed `/doc` (will be replaced by the **website**)
 - Created `/dev` instead, that contains `audit.md` (the audit result)
 - Updated dependencies
-
-
-\
-It is normal.
+- Updated **Inspection** reports, which are now much more compacts :
+```txt
+┌───────────────────┬─────────────────────────────────────────────────────────────────────────────┐
+│ Inspection Report ┆                                                                             │
+╞═══════════════════╪═════════════════════════════════════════════════════════════════════════════╡
+│ Type              ┆ Folder (Archive) encrypted with Enkryptit!                                  │
+│ Version           ┆ 3                                                                           │
+│ Name              ┆ saves.encky                                                                 │
+│ Directory         ┆ /Users/axel/Downloads                                                       │
+│ Size              ┆ 3346 KiB                                                                    │
+│ Entries number    ┆ 9                                                                           │
+│ Key Type          ┆ hashed password, with the following salt : f0730000c8daf8de752f9fc10526bed5 │
+└───────────────────┴─────────────────────────────────────────────────────────────────────────────┘
+```
 \
 \
 Test results:
