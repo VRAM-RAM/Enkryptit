@@ -9,5 +9,10 @@ Cargo.lock
 # xtask :
 /xtask/target
 
+# eck fuzz (cargo-fuzz) :
+/eck/fuzz/target
+/eck/fuzz/corpus
+/eck/fuzz/artifacts
+
 # MacOS :
 .DS_Store

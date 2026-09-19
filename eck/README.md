@@ -81,6 +81,7 @@ In the **WorkSpace**, you have access to the following commands :
 | **Build**                 | `cargo xtask build [--release]`                     | Builds `eck` binary.                          |
 | **Install** | `cargo xtask install`       | Installs `eck`                              |
 | **Test**                          | `cargo xtask test`               | Launches unit and integration tests                                   |
+| **Fuzz**                          | `cargo xtask fuzz <target> [flags]` | Launches libFuzzer fuzz targets (nightly toolchain required)       |
 | **Format code**                | `cargo xtask fmt`           | Formats the code |
 | **Help**                   | `cargo xtask help`           | Prints the help                 |
 
@@ -88,6 +89,28 @@ In the **WorkSpace**, you have access to the following commands :
 ## Tests
 
 Please refer to the [test readme](./test/README.md).
+
+## Fuzzing
+
+Fuzzing is done with [**cargo-fuzz**](https://github.com/rust-fuzz/cargo-fuzz) / libFuzzer, in a standalone crate
+([`fuzz/`](./fuzz), excluded from the workspace so it never slows down regular builds or `cargo xtask test`).
+
+> Requires a **nightly** toolchain (pinned in [`fuzz/rust-toolchain.toml`](./fuzz/rust-toolchain.toml))
+> and the `cargo-fuzz` binary installed (`cargo install cargo-fuzz`).
+
+Fuzz targets live in [`fuzz/fuzz_targets/`](./fuzz/fuzz_targets):
+
+- `decompress` — crash-safety for arbitrary bytes across all compression codecs
+- `compress_roundtrip` — compress then decompress must return the exact input
+- `metadata` — postcard deserialization of metadata structures must never panic
+
+Run one (unlimited until Ctrl-C), or bound it for a quick smoke run:
+
+```sh
+cargo xtask fuzz decompress
+cargo xtask fuzz decompress -- -runs=1000
+cargo xtask fuzz              # list available targets
+```
 
 ## License
 

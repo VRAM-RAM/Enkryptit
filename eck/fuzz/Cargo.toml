@@ -1,0 +1,42 @@
+[package]
+name = "eck-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+
+[dependencies]
+eck = { path = ".." }
+libfuzzer-sys = "0.4"
+postcard = "1"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[[bin]]
+name = "decompress"
+path = "fuzz_targets/decompress.rs"
+test = false
+bench = false
+doc = false
+
+[[bin]]
+name = "compress_roundtrip"
+path = "fuzz_targets/compress_roundtrip.rs"
+test = false
+bench = false
+doc = false
+
+[[bin]]
+name = "metadata"
+path = "fuzz_targets/metadata.rs"
+test = false
+bench = false
+doc = false
