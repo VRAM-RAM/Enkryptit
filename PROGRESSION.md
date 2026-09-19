@@ -623,6 +623,7 @@ Next things to do :
 - Suppressed `/doc` (will be replaced by the **website**)
 - Created `/dev` instead, that contains `audit.md` (the audit result)
 - Updated dependencies
+- Created fuzzy testing for compression and metadata.
 - Created `cargo xtask` and `eck`. Enkryptit! is now a workspace.
 - `cargo flamegraph` on an intense Enkryptit! usage (inspection + encryption of 13.5 GiB file with `Multithreading(48)` and `NoComp`). The **graph** is available at [`/dev/flamegraph-intense_usage-release.svg`](./dev/flamegraph-intense-usage-release.svg).
 - Updated **Inspection** reports, which are now much more compacts :
