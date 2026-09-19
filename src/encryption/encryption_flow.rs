@@ -58,8 +58,9 @@ pub fn encrypt_stream<R: Read, W: Write>(
 
         // We update the processed total
         total_processed += n as u64;
-        if progress_bar.is_some() {
-            progress_bar.as_ref().unwrap().update(total_processed);
+
+        if let Some(pb) = &progress_bar {
+            pb.update(total_processed);
         }
 
         buffer = next_buffer;
@@ -70,8 +71,8 @@ pub fn encrypt_stream<R: Read, W: Write>(
     writer.write_all(b"ENK1END")?;
     bytes_written += 7;
 
-    if progress_bar.is_some() {
-        progress_bar.unwrap().finish();
+    if let Some(pb) = &progress_bar {
+        pb.finish();
     }
 
     Ok(bytes_written)
@@ -146,8 +147,8 @@ pub fn decrypt_stream<R: Read, W: Write>(
 
         total_processed += len as u64;
 
-        if progress_bar.is_some() {
-            progress_bar.as_ref().unwrap().update(total_processed);
+        if let Some(pb) = &progress_bar {
+            pb.update(total_processed);
         }
 
         writer.write_all(&output)?;
@@ -155,8 +156,8 @@ pub fn decrypt_stream<R: Read, W: Write>(
     }
 
     // We should add a new kind of error, something like `EndMagicNumberNotFound`, with a warning : file may have been alterated.
-    if progress_bar.is_some() {
-        progress_bar.unwrap().finish();
+    if let Some(pb) = &progress_bar {
+        pb.finish();
     }
 
     Ok(bytes_consumed)

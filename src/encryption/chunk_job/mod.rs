@@ -25,7 +25,6 @@ pub fn submit_encrypt_chunk(pool: &EnkryptitPool<EncryptChunkJob>, index: u64, d
 
     // And submit it to the pool
     pool.submit(EnkryptitJob {
-        index,
         task: job
     })?;
 
@@ -45,7 +44,6 @@ pub fn submit_decrypt_chunk(pool: &EnkryptitPool<DecryptChunkJob>, index: u64, d
 
     // We submit the job to the pool
     pool.submit(EnkryptitJob {
-        index,
         task: job
     })?;
 

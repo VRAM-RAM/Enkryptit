@@ -74,5 +74,5 @@ pub fn load_key_from_file(filename: &str) -> Result<[u8; 32], EnkryptitError> {
 
     let key = std::fs::read(path)?;
 
-    Ok(convert_key(hex::decode(key)?)?)
+    convert_key(hex::decode(key)?)
 }

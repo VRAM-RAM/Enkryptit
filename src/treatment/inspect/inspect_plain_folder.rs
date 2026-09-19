@@ -29,15 +29,9 @@ pub fn inspect_plain_folder(path: &str) -> InspectionReport {
         Err(e) => tracing::warn!("{}", e)
     }
 
-    let name = match pathstd.file_name() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let name = pathstd.file_name().map(|p| p.to_string_lossy().to_string());
 
-    let directory = match pathstd.parent() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let directory = pathstd.parent().map(|p| p.to_string_lossy().to_string());
 
     InspectionReport::Folder { name, directory, size, permissions }
 }

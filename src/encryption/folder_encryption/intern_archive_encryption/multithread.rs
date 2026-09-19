@@ -15,7 +15,11 @@ use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 use std::io::Write;
 use crate::encryption::file_encryption::multithread::write_batch_plain;
 
+#[allow(clippy::too_many_arguments)]
 /// Encrypt a single file into the archive stream with unique nonce per file, using multithreading
+/// 
+/// The arguments are intentionally kept separate because each represents
+/// an independent part of the archive/encryption operation.
 pub fn encrypt_multithreading_file_into_archive(
     folder_path: &str,
     relative_path: &str,
@@ -61,7 +65,7 @@ pub fn encrypt_multithreading_file_into_archive(
 
         // If we submitted as many jobs as we have workers, we receive and write the results.
         if submitted >= num_threads {
-            receive_results(&mut results, &pool, num_threads)?;
+            receive_results(&mut results, pool, num_threads)?;
 
             bytes_written += write_batch(&mut results, &mut archive)?;
 
@@ -76,7 +80,7 @@ pub fn encrypt_multithreading_file_into_archive(
 
     // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
     if submitted > 0 {
-        receive_results(&mut results, &pool, submitted)?;
+        receive_results(&mut results, pool, submitted)?;
         bytes_written += write_batch(&mut results, &mut archive)?;
     }
 
@@ -87,7 +91,11 @@ pub fn encrypt_multithreading_file_into_archive(
     Ok(bytes_written)
 }
 
+#[allow(clippy::too_many_arguments)]
 /// Decrypt a single file from the archive stream using its unique nonce  
+/// 
+/// The arguments are intentionally kept separate because each represents
+/// an independent part of the archive/decryption operation.
 pub fn decrypt_multithreading_file_from_archive(
     archive_path: &str,
     folder_path: &str,
@@ -174,7 +182,7 @@ pub fn decrypt_multithreading_file_from_archive(
 
         // If we submitted as jobs as we have workers, we receive and write the results.
         if submitted >= num_threads {
-            receive_results(&mut results, &pool, num_threads)?;
+            receive_results(&mut results, pool, num_threads)?;
 
             bytes_written += write_batch_plain(&mut results, &mut writer)?;
 
@@ -191,7 +199,7 @@ pub fn decrypt_multithreading_file_from_archive(
 
     // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
     if submitted > 0 {
-        receive_results(&mut results, &pool, submitted)?;
+        receive_results(&mut results, pool, submitted)?;
         bytes_written += write_batch_plain(&mut results, &mut writer)?;
     }
 

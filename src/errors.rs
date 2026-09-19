@@ -6,9 +6,11 @@ use thiserror::Error;
 use crate::diagnostic::EnkryptitOutput;
 use crate::diagnostic::output::kind::EnkryptitOutputKind;
 
-
+#[allow(dead_code)]
 #[derive(Debug, Error)]
 /// Enum for all the errors of **Enkryptit**. Also implements `From<>` other error types.
+/// \
+/// Some `EnkryptitError`s are unused by the binary, but used by the tests. That's why `dead_code` is allowed.
 pub enum EnkryptitError {
     #[error("operation interrupted")]
     Break,
@@ -121,45 +123,45 @@ pub enum EnkryptitError {
 
 impl EnkryptitError {
     pub fn code(&self) -> String {
-        match self {
+        match *self {
             // Cryptographic error codes
-            &Self::Argon2Error => "crypto::argon2error".to_string(),
-            &Self::EncryptionError(_) => "crypto::encryption_decryption_failed".to_string(),
-            &Self::InvalidKeyLength => "crypto::invalid_key_length".to_string(),
-            &Self::InvalidKeyType(..) => "crypto::invalid_key_type".to_string(),
-            &Self::KeyDerivationError(_) => "crypto::key_derivation_failed".to_string(),
-            &Self::KeyNotFoundInFile => "crypto::key_not_found_in_file".to_string(),
-            &Self::KeyNotFoundInOs => "crypto::key_not_found_in_os".to_string(),
-            &Self::KeyringError(_) => "crypto::error_with_os_keyring".to_string(),
+            Self::Argon2Error => "crypto::argon2error".to_string(),
+            Self::EncryptionError(_) => "crypto::encryption_decryption_failed".to_string(),
+            Self::InvalidKeyLength => "crypto::invalid_key_length".to_string(),
+            Self::InvalidKeyType(..) => "crypto::invalid_key_type".to_string(),
+            Self::KeyDerivationError(_) => "crypto::key_derivation_failed".to_string(),
+            Self::KeyNotFoundInFile => "crypto::key_not_found_in_file".to_string(),
+            Self::KeyNotFoundInOs => "crypto::key_not_found_in_os".to_string(),
+            Self::KeyringError(_) => "crypto::error_with_os_keyring".to_string(),
 
             // Compression-related error codes
-            &Self::Lz4CompressionError(_) => "comp::lz4_comp_failed".to_string(),
-            &Self::ZstdError(_) => "comp::zstd_comp_failed".to_string(),
+            Self::Lz4CompressionError(_) => "comp::lz4_comp_failed".to_string(),
+            Self::ZstdError(_) => "comp::zstd_comp_failed".to_string(),
 
             // Ui error codes
-            &Self::CommandNotFound => "ui::command_not_found".to_string(),
-            &Self::TuiError(_) => "ui:tui_error".to_string(),
+            Self::CommandNotFound => "ui::command_not_found".to_string(),
+            Self::TuiError(_) => "ui:tui_error".to_string(),
 
             // Enkryptit! format error codes
-            &Self::CorruptedFile => "format::corrupted_file".to_string(),
-            &Self::DirectoryIsFolder => "format::directory_is_folder".to_string(),
-            &Self::FailedToReadMetadata(_) => "format::metadata_reading_failed".to_string(),
+            Self::CorruptedFile => "format::corrupted_file".to_string(),
+            Self::DirectoryIsFolder => "format::directory_is_folder".to_string(),
+            Self::FailedToReadMetadata(_) => "format::metadata_reading_failed".to_string(),
 
             // Io error codes
-            &Self::UnexpectedEof => "io::unexpected_eof".to_string(),
-            &Self::HomeNotFound => "io::home_directory_not_found".to_string(),
-            &Self::IoError(_) => "io::misc_io_error".to_string(),
-            &Self::PathIsIncorrect(_) => "io::incorrect_path".to_string(),
-            &Self::SpecificFileError(_) => "io::file_not_found".to_string(),
-            &Self::FileError => "io::file_not_found".to_string(),
-            &Self::FileIsASymLink => "io::file_is_a_symlink".to_string(),
-            &Self::FilePermissionsParsingError(_) => "io::permissions_reading_failed".to_string(),
+            Self::UnexpectedEof => "io::unexpected_eof".to_string(),
+            Self::HomeNotFound => "io::home_directory_not_found".to_string(),
+            Self::IoError(_) => "io::misc_io_error".to_string(),
+            Self::PathIsIncorrect(_) => "io::incorrect_path".to_string(),
+            Self::SpecificFileError(_) => "io::file_not_found".to_string(),
+            Self::FileError => "io::file_not_found".to_string(),
+            Self::FileIsASymLink => "io::file_is_a_symlink".to_string(),
+            Self::FilePermissionsParsingError(_) => "io::permissions_reading_failed".to_string(),
 
             // Miscellaneous errors
-            &Self::InspectionError => "misc::inspection_failed".to_string(),
-            &Self::HexError(_) => "misc::hex_decoding_failed".to_string(),
-            &Self::ConfigError => "misc::config_directory_error".to_string(),
-            &Self::Break => "misc::break".to_string(),
+            Self::InspectionError => "misc::inspection_failed".to_string(),
+            Self::HexError(_) => "misc::hex_decoding_failed".to_string(),
+            Self::ConfigError => "misc::config_directory_error".to_string(),
+            Self::Break => "misc::break".to_string(),
             _ => "none".to_string(),
         }
     }
@@ -229,7 +231,7 @@ impl EnkryptitError {
         }
     }
 
-    pub fn to_output(self) -> EnkryptitOutput {
+    pub fn into_output(self) -> EnkryptitOutput {
         let msg = self.to_string();
         EnkryptitOutput::new(
             EnkryptitOutputKind::Error {

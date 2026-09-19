@@ -20,9 +20,8 @@ pub fn inspect_plain_file(path: &str) -> InspectionReport {
                     mime_extension = Some(t.mime_type().to_string());
                 }
                 None => {
-                    match pathstd.extension() {
-                        Some(ext) => extension = Some(ext.to_string_lossy().to_string()),
-                        None => ()
+                    if let Some(ext) = pathstd.extension() {
+                        extension = Some(ext.to_string_lossy().to_string())
                     }
                 }
             }
@@ -47,7 +46,7 @@ pub fn inspect_plain_file(path: &str) -> InspectionReport {
                 } 
             };
             
-            match infer_parallelism(m.len() as u64) {
+            match infer_parallelism(m.len()) {
                 Ok(p) => parallelism = Some(p),
                 Err(e) => tracing::warn!("{}", e),
             }
@@ -63,16 +62,9 @@ pub fn inspect_plain_file(path: &str) -> InspectionReport {
         }
     };
 
-    let name = match pathstd.file_name() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let name = pathstd.file_name().map(|p| p.to_string_lossy().to_string());
 
-    let directory = match pathstd.parent() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let directory = pathstd.parent().map(|p| p.to_string_lossy().to_string());
 
-    
     InspectionReport::PlaintextFile { name, directory, size, permissions, extension, mime_extension, predicted_compression_type: compression, predicted_parallelism_type: parallelism }
 }

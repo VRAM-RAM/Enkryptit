@@ -38,7 +38,7 @@ pub fn treat_entry_encryption(pool: &mut Option<EnkryptitPool<EncryptChunkJob>>,
                 archive_path
             )?,
             ParallelismType::MultiThread(num_threads) => {
-                if pool.as_ref().map_or(true, |pool| pool.size() != num_threads as usize) {
+                if pool.as_ref().is_none_or(|pool| pool.size() != num_threads as usize) {
                     *pool = Some(EnkryptitPool::new(num_threads as usize)?);
                 }
 
@@ -91,7 +91,7 @@ pub fn treat_entry_decryption(pool: &mut Option<EnkryptitPool<DecryptChunkJob>>,
                 offset,
             ),
             ParallelismType::MultiThread(num_threads) => {
-                if pool.as_ref().map_or(true, |pool| pool.size() != num_threads as usize) {
+                if pool.as_ref().is_none_or(|pool| pool.size() != num_threads as usize) {
                     *pool = Some(EnkryptitPool::new(num_threads as usize)?);
                 }
 

@@ -32,10 +32,6 @@ fn run_cli_decrypt(
     run_cli_encrypt(path, password)
 }
 
-fn stderr_of(assertion: &Assert) -> String {
-    String::from_utf8_lossy(&assertion.get_output().stderr).into_owned()
-}
-
 fn stdout_of(assertion: &Assert) -> String {
     String::from_utf8_lossy(&assertion.get_output().stdout).into_owned()
 }

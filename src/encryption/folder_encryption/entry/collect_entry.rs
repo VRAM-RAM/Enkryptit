@@ -38,6 +38,6 @@ pub fn collect_entry(dir_entry: &DirEntry, folder_path: &str) -> Result<(String,
 
         }
 
-        Err(e) => return Err(EnkryptitError::StripPrefixError(e))
+        Err(e) => Err(EnkryptitError::StripPrefixError(e))
     }
 }

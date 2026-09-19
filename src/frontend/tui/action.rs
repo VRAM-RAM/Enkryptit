@@ -39,7 +39,7 @@ impl EnkryptitTuiAction {
         }
     }
 
-    pub fn from_str(value: &str) -> Option<Self> {
+    pub fn from_string(value: &str) -> Option<Self> {
         match value {
             "Browse" => Some(Self::Browse),
             "Parameters" => Some(Self::LaunchParams),

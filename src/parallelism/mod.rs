@@ -7,13 +7,14 @@ pub mod pool;
 pub mod worker;
 
 pub struct EnkryptitJob<T: EnkryptitExecutable> {
-    pub index: u64,
     pub task: T,
 }
 
 impl<T: EnkryptitExecutable> EnkryptitJob<T> {
-    pub fn new(index: u64, task: T) -> Self {
-        Self { index, task }
+    #[allow(dead_code)]
+    /// Returns an [`EnkryptitJob`]. Unused in the binary, but used in tests.
+    pub fn new(task: T) -> Self {
+        Self { task }
     }
 
     pub fn execute(self) -> Result<T::Output, EnkryptitError> {

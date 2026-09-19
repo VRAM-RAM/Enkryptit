@@ -16,6 +16,7 @@ impl InspectionReport {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn display_plaintext_file(name: Option<String>, directory: Option<String>, size: Option<u64>, permissions: Option<u32>, extension: Option<String>, mime_extension: Option<String>, ct: Option<CompressionType>, pt: Option<ParallelismType>) {
     // If everything is `None`, then we return that an error occured.
     if name.is_none() 
@@ -36,14 +37,14 @@ fn display_plaintext_file(name: Option<String>, directory: Option<String>, size:
         .field(ReportArgument::label("Directory"), ReportArgument::value(format_option(directory)))
         .field(ReportArgument::label("Size"), ReportArgument::value_in_kib(format_option_to_kb(size)));
 
-    if permissions.is_some() {
-        match FullPermission::new(permissions.unwrap()) {
+    if let Some(perm) = permissions {
+        match FullPermission::new(perm) {
             Ok(fp) => {
                 report = report.field(ReportArgument::label("Permissions"), ReportArgument::value(fp.to_string()));    
             },
             Err(e) => {
                 let err: EnkryptitError = e.into();
-                err.to_output().display();
+                err.into_output().display();
             }
         };
     }
@@ -56,6 +57,7 @@ fn display_plaintext_file(name: Option<String>, directory: Option<String>, size:
 
 }
 
+#[allow(clippy::too_many_arguments)]
 fn display_encrypted_file(name: Option<String>, directory: Option<String>, size: Option<u64>, version: u8, ct: Option<CompressionType>, pt: Option<ParallelismType>, keytype: Option<KeyType>, nonce: Option<[u8; 24]>) {
     
     // If everything is `None`, then we return that an error occured.
@@ -126,14 +128,14 @@ fn display_plaintext_folder(name: Option<String>, directory: Option<String>, siz
         .field(ReportArgument::label("Directory"), ReportArgument::value(format_option(directory)))
         .field(ReportArgument::label("Size"), ReportArgument::value_in_kib(format_option_to_kb(size)));
 
-    if permissions.is_some() {
-        match FullPermission::new(permissions.unwrap()) {
+    if let Some(perm) = permissions {
+        match FullPermission::new(perm) {
             Ok(fp) => {
                 report = report.field(ReportArgument::label("Permissions"), ReportArgument::value(fp.to_string()));    
             },
             Err(e) => {
                 let err: EnkryptitError = e.into();
-                err.to_output().display();
+                err.into_output().display();
             }
         };
     }

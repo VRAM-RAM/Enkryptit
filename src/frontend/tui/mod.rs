@@ -42,10 +42,9 @@ pub fn launch_ui(input: &impl TuiInput) {
             }
 
             Ok(value) => {
-                if let Some(action) = EnkryptitTuiAction::from_str(&value) {
-                    if let Err(e) = action.execute(input) {
-                        e.to_output().display();
-                    }
+                if let Some(action) = EnkryptitTuiAction::from_string(&value) 
+                    && let Err(e) = action.execute(input) {
+                        e.into_output().display();
                 }
             }
 

@@ -51,8 +51,7 @@ mod tests {
 
     #[test]
     fn enkryptit_job_executes_its_task() {
-        let job = EnkryptitJob::new(3, EchoJob { value: 42 });
-        assert_eq!(job.index, 3);
+        let job = EnkryptitJob::new(EchoJob { value: 42 });
         assert_eq!(job.execute().unwrap(), 42);
     }
 
@@ -69,7 +68,7 @@ mod tests {
     fn pool_returns_all_outputs_with_four_workers() {
         let pool = EnkryptitPool::<EchoJob>::new(4).unwrap();
         for i in 0..20u64 {
-            pool.submit(EnkryptitJob::new(i, EchoJob { value: i }))
+            pool.submit(EnkryptitJob::new(EchoJob { value: i }))
                 .unwrap();
         }
 
@@ -85,7 +84,7 @@ mod tests {
     fn pool_returns_all_outputs_with_single_worker() {
         let pool = EnkryptitPool::<EchoJob>::new(1).unwrap();
         for i in 0..5u64 {
-            pool.submit(EnkryptitJob::new(i, EchoJob { value: i }))
+            pool.submit(EnkryptitJob::new(EchoJob { value: i }))
                 .unwrap();
         }
 
@@ -103,7 +102,7 @@ mod tests {
         // and every result must still be received.
         let pool = EnkryptitPool::<EchoJob>::new(2).unwrap();
         for i in 0..50u64 {
-            pool.submit(EnkryptitJob::new(i, EchoJob { value: i }))
+            pool.submit(EnkryptitJob::new(EchoJob { value: i }))
                 .unwrap();
         }
 
@@ -119,7 +118,7 @@ mod tests {
     fn pool_propagates_execution_errors() {
         let pool = EnkryptitPool::<FailingJob>::new(2).unwrap();
         for _ in 0..3 {
-            pool.submit(EnkryptitJob::new(0, FailingJob)).unwrap();
+            pool.submit(EnkryptitJob::new(FailingJob)).unwrap();
         }
 
         for _ in 0..3 {
@@ -210,7 +209,7 @@ mod tests {
     // used by the pool is object-safe and usable from the crate root.
     #[test]
     fn executable_trait_is_usable() {
-        let job = EnkryptitJob::new(7, EchoJob { value: 7 });
+        let job = EnkryptitJob::new(EchoJob { value: 7 });
         let output: u64 = job.task.execute().unwrap();
         assert_eq!(output, 7);
     }

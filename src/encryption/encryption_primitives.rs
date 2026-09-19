@@ -17,7 +17,7 @@ pub fn encrypt_chunk(
     cipher: &XChaCha20Poly1305,
     step: u64,
 ) -> Result<(), EnkryptitError> {
-    let new_nonce = derive_nonce(&nonce, step);
+    let new_nonce = derive_nonce(nonce, step);
     cipher.encrypt_in_place(XNonce::from_slice(&new_nonce), b"", data)?;
     Ok(())
 }
@@ -44,7 +44,7 @@ pub fn decrypt_chunk(
     nonce: &[u8; 24],
     step: u64,
 ) -> Result<(), EnkryptitError> {
-    let new_nonce = derive_nonce(&nonce, step);
+    let new_nonce = derive_nonce(nonce, step);
     cipher.decrypt_in_place(XNonce::from_slice(&new_nonce), b"", data)?;
     Ok(())
 }

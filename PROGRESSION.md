@@ -618,3 +618,24 @@ Next things to do :
 
 - Updated tests (replaced the `stderr` with `stdout` essentially)
 - Progressed on **RustDoc**
+- Fixed warnings and made the code slightly better (calling `cargo clippy` for report)
+- Audited dependencies using `cargo audit` (see results in [/dev/audit.md](./dev/audit.md))
+- Suppressed `/doc` (will be replaced by the **website**)
+- Created `/dev` instead, that contains `audit.md` (the audit result)
+- Updated dependencies
+
+
+\
+It is normal.
+\
+\
+Test results:
+```bash
+test result: ok. 201 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.04s
+```
+\
+\
+Next things to do :
+- Doc restructure (*mkdocs* maybe)
+- fuzzy testing
+- benchmarks

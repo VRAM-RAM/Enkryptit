@@ -4,8 +4,6 @@ use crate::frontend::tui::input::TuiInput;
 use crate::frontend::tui::treatment::launch_treatment;
 use colored::*;
 
-/// Browse UI
-
 /// Launch the browsing UI
 pub fn launch_browser(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     println!("\n{}", "Browser Panel".cyan().bold());

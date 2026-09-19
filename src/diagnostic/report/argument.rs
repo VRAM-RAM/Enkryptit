@@ -21,6 +21,7 @@ impl ReportArgument {
         Self { value: value.into(), style: EnkryptitStyle::Label }
     }
 
+    #[allow(dead_code)]
     /// Returns a [`ReportArgument`] of the given value and of style [`EnkryptitStyle::Warning`] 
     pub fn warning(value: impl Into<String>) -> Self {
         Self { value: value.into(), style: EnkryptitStyle::Warning }

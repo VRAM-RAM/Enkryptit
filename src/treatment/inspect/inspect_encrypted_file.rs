@@ -25,8 +25,8 @@ pub fn inspect_encrypted_file(path: &str, meta: &[u8], version: u8) -> Inspectio
 
     match metadata(path) {
         Ok(metadata) => {
-            size = Some(metadata.len() as u64);
-            match infer_parallelism(metadata.len() as u64) {
+            size = Some(metadata.len());
+            match infer_parallelism(metadata.len()) {
                 Ok(p) => parallelism = Some(p),
                 Err(e) => tracing::warn!("{}", e),
             }
@@ -34,15 +34,9 @@ pub fn inspect_encrypted_file(path: &str, meta: &[u8], version: u8) -> Inspectio
         Err(e) => tracing::warn!("{}", e)
     };
 
-    let name = match pathstd.file_name() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let name = pathstd.file_name().map(|p| p.to_string_lossy().to_string());
 
-    let directory = match pathstd.parent() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let directory = pathstd.parent().map(|p| p.to_string_lossy().to_string());
 
     InspectionReport::EncryptedFile { name, directory, size, version, compression_type: compression, predicted_parallelism_type: parallelism, keytype, nonce }
 }

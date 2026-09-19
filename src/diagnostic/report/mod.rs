@@ -3,7 +3,7 @@ pub mod style;
 
 use comfy_table::{Table};
 use comfy_table::{
-    presets::UTF8_FULL,
+    presets::UTF8_FULL_CONDENSED,
     Cell, ContentArrangement,
 };
 
@@ -17,7 +17,7 @@ pub struct Report {
 
 impl Report {
     pub fn new(title: ReportArgument) -> Self {
-        Self { title: title, fields: vec![] }
+        Self { title, fields: vec![] }
     }
 
     pub fn field(mut self, name: ReportArgument, value: ReportArgument) -> Self {
@@ -29,7 +29,7 @@ impl Report {
         let mut table = Table::new();
 
         table
-            .load_style(UTF8_FULL)
+            .load_style(UTF8_FULL_CONDENSED)
             .set_content_arrangement(ContentArrangement::Dynamic);
 
         table.set_header(vec![

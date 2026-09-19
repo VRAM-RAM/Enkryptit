@@ -15,7 +15,7 @@ mod tests {
         let values = ["Parameters", "Help", "Browse"];
 
         for value in values {
-            if EnkryptitTuiAction::from_str(value).is_none() {
+            if EnkryptitTuiAction::from_string(value).is_none() {
                 panic!(
                     "All EnkryptitActions should be converted correctly. This one fails : {}",
                     value
@@ -33,7 +33,7 @@ mod tests {
         ];
 
         for (input, expected) in cases {
-            let action = EnkryptitTuiAction::from_str(input);
+            let action = EnkryptitTuiAction::from_string(input);
 
             assert!(action.is_some(), "Expected action for {input}");
 
@@ -48,12 +48,12 @@ mod tests {
 
     #[test]
     fn from_str_rejects_unknown_action() {
-        assert!(EnkryptitTuiAction::from_str("NotAnAction").is_none());
-        assert!(EnkryptitTuiAction::from_str("").is_none());
-        assert!(EnkryptitTuiAction::from_str("Exit").is_none());
+        assert!(EnkryptitTuiAction::from_string("NotAnAction").is_none());
+        assert!(EnkryptitTuiAction::from_string("").is_none());
+        assert!(EnkryptitTuiAction::from_string("Exit").is_none());
         // The old direct-encryption action was removed in the DAY-15 frontend.
-        assert!(EnkryptitTuiAction::from_str("Encrypt/Decrypt file/folder").is_none());
-        assert!(EnkryptitTuiAction::from_str("EncryptObject").is_none());
+        assert!(EnkryptitTuiAction::from_string("Encrypt/Decrypt file/folder").is_none());
+        assert!(EnkryptitTuiAction::from_string("EncryptObject").is_none());
     }
 
     #[test]

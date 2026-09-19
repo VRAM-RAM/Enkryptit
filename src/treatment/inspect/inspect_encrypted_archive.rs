@@ -22,15 +22,9 @@ pub fn inspect_encrypted_archive(path: &str, meta: &[u8], version: u8) -> Inspec
         }
     };
 
-    let name = match pathstd.file_name() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let name = pathstd.file_name().map(|p| p.to_string_lossy().to_string());
 
-    let directory = match pathstd.parent() {
-        Some(p) => Some(p.to_string_lossy().to_string()),
-        None => None
-    };
+    let directory = pathstd.parent().map(|p| p.to_string_lossy().to_string());
 
     let size = match metadata.is_some() {
         true => Some(metadata.unwrap().len()),
@@ -40,13 +34,11 @@ pub fn inspect_encrypted_archive(path: &str, meta: &[u8], version: u8) -> Inspec
     let mut entries_number = None;
     let mut keytype = None;
     
-    match folder_meta.is_some() {
-        true => {
-            let meta = folder_meta.unwrap();
-            entries_number = Some(meta.entries.len() as u64);
-            keytype = Some(meta.key_type)
-        }
-        false => ()
+    if folder_meta.is_some() {
+        let meta = folder_meta.unwrap();
+        entries_number = Some(meta.entries.len() as u64);
+        keytype = Some(meta.key_type)
+
     }
 
     InspectionReport::EncryptedArchive { name, directory, size, version, entries_number, keytype }

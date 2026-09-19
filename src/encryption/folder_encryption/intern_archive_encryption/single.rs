@@ -40,7 +40,11 @@ pub fn encrypt_single_file_into_archive(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 /// Decrypt a single file from the archive stream using its unique nonce  
+/// 
+/// The arguments are intentionally kept separate because each represents
+/// an independent part of the archive/decryption operation.
 pub fn decrypt_single_file_from_archive(
     archive_path: &str,
     folder_path: &str,

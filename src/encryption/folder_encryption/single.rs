@@ -24,7 +24,7 @@ pub fn decrypt_folder_single(archive_path: &str, dest_folder: &str, entries: &Ve
     let pb = GradientProgressBar::with_total_steps(entries.len() as u64, "Decrypting archive...");
 
     for entry in entries {
-        treat_entry_decryption(&mut pool, version, dest_folder, &entry, context, archive_path, &key, payload_offset)?;
+        treat_entry_decryption(&mut pool, version, dest_folder, entry, context, archive_path, &key, payload_offset)?;
         pb.inc(1);
     }
 

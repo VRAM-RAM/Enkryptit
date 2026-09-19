@@ -2,6 +2,7 @@ use crate::errors::EnkryptitError;
 use inquire::ui::RenderConfig;
 use inquire::{CustomType, Select, Text};
 
+#[allow(dead_code)]
 /// Abstraction over the interactive TUI inputs.
 ///
 /// The real UI is driven by `inquire` prompts and `rfd` native file dialogs,

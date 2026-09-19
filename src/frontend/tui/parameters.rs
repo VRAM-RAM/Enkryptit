@@ -8,8 +8,6 @@ use crate::types::KeyParams::{File, Os, PassWord};
 use crate::types::ParallelismType;
 use colored::*;
 
-/// Parameters UI
-
 /// Launch the params UI
 pub fn launch_params(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     println!("\n{}", "Parameters Panel".cyan().bold());
@@ -111,7 +109,7 @@ fn change_parallelism(input: &impl TuiInput) -> Result<(), EnkryptitError> {
         _ => ParallelismType::Single,
     };
 
-    let params = EnkryptitParams::new(old_params.key_params, old_params.compression, pt.clone());
+    let params = EnkryptitParams::new(old_params.key_params, old_params.compression, pt);
     save_params(&params)?;
 
     EnkryptitOutput::success(format!("Parallelism type changed to {:?}", pt)).display();

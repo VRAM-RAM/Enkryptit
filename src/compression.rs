@@ -54,7 +54,7 @@ impl EnkryptitCompress for Vec<u8> {
     }
 }
 
-impl<'a> EnkryptitCompress for &'a [u8] {
+impl EnkryptitCompress for [u8] {
     fn compress(
         &self,
         output: &mut Vec<u8>,
@@ -84,7 +84,7 @@ impl EnkryptitDecompress for Vec<u8> {
     }
 }
 
-impl<'a> EnkryptitDecompress for &'a [u8] {
+impl EnkryptitDecompress for [u8] {
     fn decompress(
         &self,
         output: &mut Vec<u8>,
@@ -181,7 +181,7 @@ fn compress_with_zstd(input: &[u8], output: &mut Vec<u8>) -> Result<(), Enkrypti
 
         match zstdcompress(input, output, 6) {
             Ok(size) => {
-                output.truncate(size as usize);
+                output.truncate(size);
                 return Ok(());
             }
             Err(_) => {
@@ -191,7 +191,7 @@ fn compress_with_zstd(input: &[u8], output: &mut Vec<u8>) -> Result<(), Enkrypti
                     // Give up after reasonable attempts
                     output.resize(current_size, 0);
                     let size = zstdcompress(input, output, 6)?;
-                    output.truncate(size as usize);
+                    output.truncate(size);
                     return Ok(());
                 }
             }
@@ -201,7 +201,7 @@ fn compress_with_zstd(input: &[u8], output: &mut Vec<u8>) -> Result<(), Enkrypti
     // Final attempt with very large buffer if all else fails
     output.resize(CHUNK_SIZE * 8, 0);
     let size = zstdcompress(input, output, 6)?;
-    output.truncate(size as usize);
+    output.truncate(size);
     Ok(())
 }
 
@@ -218,7 +218,7 @@ fn decompress_with_zstd(input: &[u8], output: &mut Vec<u8>) -> Result<(), Enkryp
 
         match zstddecompress(input, output) {
             Ok(size) => {
-                output.truncate(size as usize);
+                output.truncate(size);
                 return Ok(());
             }
             Err(_) => {
@@ -228,7 +228,7 @@ fn decompress_with_zstd(input: &[u8], output: &mut Vec<u8>) -> Result<(), Enkryp
                     // Give up after reasonable attempts
                     output.resize(current_size, 0);
                     let size = zstddecompress(input, output)?;
-                    output.truncate(size as usize);
+                    output.truncate(size);
                     return Ok(());
                 }
             }
@@ -238,7 +238,7 @@ fn decompress_with_zstd(input: &[u8], output: &mut Vec<u8>) -> Result<(), Enkryp
     // Final attempt with very large buffer if all else fails
     output.resize(CHUNK_SIZE * 8, 0);
     let size = zstddecompress(input, output)?;
-    output.truncate(size as usize);
+    output.truncate(size);
     Ok(())
 }
 

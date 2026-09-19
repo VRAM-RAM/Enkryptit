@@ -56,7 +56,7 @@ impl ArchiveHeader {
             magic: MAGIC,
             version: VERSION,
             is_folder_archive,
-            meta_len: meta_len, // Will be set after serialization
+            meta_len, // Will be set after serialization
         }
     }
 

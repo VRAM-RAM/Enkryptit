@@ -19,9 +19,9 @@ impl KeyParams {
     /// Converts a [`KeyParams`] into a [`KeyType`]
     pub fn to_type(&self) -> KeyType {
         match self {
-            &Self::File => KeyType::FromFile,
-            &Self::Os => KeyType::FromOS,
-            &Self::PassWord => KeyType::Password,
+            Self::File => KeyType::FromFile,
+            Self::Os => KeyType::FromOS,
+            Self::PassWord => KeyType::Password,
         }
     }
 }
