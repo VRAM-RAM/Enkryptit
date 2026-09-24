@@ -1,6 +1,5 @@
 # Rust :
 /target
-Cargo.lock
 /supply-chain
 
 # eck (Enkryptit!) :
@@ -16,3 +15,6 @@ Cargo.lock
 
 # MacOS :
 .DS_Store
+
+# My personal checklist
+TODO.md
