@@ -1,0 +1,171 @@
+use crate::{
+    diagnostic::{EnkryptitOutput, logging::EnkryptitLogger, output::snippet::Snippet},
+    frontend::{
+        cli::{
+            inspection::inspect_one_or_more_objects,
+            params_helpers::{show_params, update_params},
+            treatment::treat_objects_with_multiple_paths,
+        },
+        tui::{input::RealTuiInput, launch_ui},
+    },
+    types::Version,
+};
+use clap::{Parser, Subcommand};
+mod compression;
+mod context;
+mod conversions;
+mod diagnostic;
+mod directory;
+mod encryption;
+mod errors;
+mod frontend;
+mod key;
+mod metadatas;
+mod parallelism;
+mod parameters;
+mod treatment;
+mod types;
+
+use crate::frontend::cli::treatment::treat_object_with_path;
+
+/// The version of `Enkryptit!`
+/// Enkryptit versions are separated between :
+/// - Nightly versions
+/// - Stable versions
+///
+/// This constant is only for `Nightly` version.
+///
+/// So, for example, if you download **Enkryptit!** v0.1.4, it is the 4th nightly version of 1st stable version.
+pub const VERSION: Version = 4;
+
+#[derive(Parser)]
+#[command(name = "eck")]
+#[command(author = "Olruix")]
+#[command(version = "0.0.3")]
+#[command(about = "Fast & Secure File Encryption Manager")]
+/// The `Cli` structure for **Enkryptit!** cli-tool
+/// \
+/// Contains :
+/// \
+/// - The command
+/// - The path (for encrypting/decrypting a file or folder)
+/// - The password (for encrypting/decrypting a file or folder w/ password)
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+
+    /// Chemin(s) vers le fichier ou dossier
+    #[arg(value_name = "PATH")]
+    path: Vec<String>,
+
+    /// Mot de passe (optionnel)
+    #[arg(short = 'p', long = "password")]
+    password: Option<String>,
+}
+
+#[derive(Subcommand)]
+/// All the commands available :
+/// Ui --> open the UI
+/// Inspect --> Inspect one / many files
+/// Params / Parameters
+/// |-> no arg : show current parameters
+/// |-> compression + <ALGO> : change compression algorithm
+/// |-> key type + <KEY_TYPE> : change key type
+enum Commands {
+    Ui,
+    Inspect {
+        #[arg(value_name = "PATHS")]
+        paths: Vec<String>,
+    },
+    Params {
+        /// Change compression algorithm
+        #[arg(short = 'c', long = "compression", value_name = "ALGO")]
+        compression: Option<String>,
+
+        /// Change key type
+        #[arg(short = 'k', long = "keytype", value_name = "TYPE")]
+        key_type: Option<String>,
+
+        /// Change parallelism type
+        #[arg(short = 'p', long = "parallelism", value_name = "PARA")]
+        parallelism: Option<String>,
+    },
+    Parameters {
+        #[arg(short = 'c', long = "compression", value_name = "ALGO")]
+        compression: Option<String>,
+
+        #[arg(long = "keytype", visible_alias = "kt", value_name = "TYPE")]
+        key_type: Option<String>,
+
+        /// Change parallelism type
+        #[arg(short = 'p', long = "parallelism", value_name = "PARA")]
+        parallelism: Option<String>,
+    },
+}
+
+fn main() {
+    let cli: Cli = Cli::parse();
+
+    if let Err(e) = EnkryptitLogger::init() {
+        EnkryptitOutput::error("Error while initializing the logger.", e)
+            .with_location("main.rs::main()")
+            .display();
+    }
+
+    match cli.command {
+        Some(Commands::Ui) => {
+            // If the command is `Ui`, we launch the ui.
+            launch_ui(&RealTuiInput);
+        }
+        Some(Commands::Params {
+            compression,
+            key_type,
+            parallelism,
+        }) => {
+            if compression.is_none() && key_type.is_none() && parallelism.is_none() {
+                // If we don't have any arg, we show the current parameters
+                show_params()
+            } else {
+                // Else, we update the parameters
+                update_params(compression, key_type, parallelism);
+            }
+        }
+        Some(Commands::Inspect { paths }) => {
+            inspect_one_or_more_objects(&paths);
+        }
+        Some(Commands::Parameters {
+            compression,
+            key_type,
+            parallelism,
+        }) => {
+            // Same we `Parameters`
+            if compression.is_none() && key_type.is_none() && parallelism.is_none() {
+                show_params()
+            } else {
+                update_params(compression, key_type, parallelism);
+            }
+        }
+        None => {
+            let path: Vec<String> = cli.path;
+            // If we have a path, we treat it using `treat_object_with_path()`
+            match path.len() {
+                0 => launch_ui(&RealTuiInput),
+                1 => match treat_object_with_path(&path[0], cli.password) {
+                    Ok(output) => output.display(),
+                    Err(e) => {
+                        e.into_output()
+                            .with_snippet(Snippet::cli_invocation("eck", &path[0]))
+                            .display();
+                    }
+                },
+                _ => match treat_objects_with_multiple_paths(&path, cli.password) {
+                    Ok(()) => (),
+                    Err(e) => e
+                        .into_output()
+                        .with_snippet(Snippet::cli_invocation("eck", &path[0]))
+                        .display(),
+                },
+            }
+        }
+    }
+}

@@ -1,0 +1,41 @@
+use crate::context::EnkryptitContext;
+use crate::diagnostic::EnkryptitOutput;
+use crate::diagnostic::output::snippet::Snippet;
+use crate::errors::EnkryptitError;
+use crate::parameters::params::load_params;
+use crate::treatment::object_treatment::treat_object;
+
+/// Helper for treating a path.
+/// First, we load the parameters, before converting the path from `&str` to `&Path`.
+/// Then, if the path doesn't exist, we return an error.
+/// If it exist, we continue, by getting the `key` and the `keytype`.
+/// Finally, we delegate the object treatment to `treat_object()`.
+pub fn treat_object_with_path(
+    path_str: &str,
+    cli_password: Option<String>,
+) -> Result<EnkryptitOutput, EnkryptitError> {
+    let parameters = load_params()?;
+    let mut context =
+        EnkryptitContext::new(cli_password, parameters.compression, parameters.parallelism);
+    Ok(treat_object(&parameters, path_str, &mut context)
+        .with_snippet(Snippet::cli_invocation("eck", path_str)))
+}
+
+/// Function that treat the objects, when the args contain many paths
+pub fn treat_objects_with_multiple_paths(
+    paths: &Vec<String>,
+    cli_password: Option<String>,
+) -> Result<(), EnkryptitError> {
+    // We load the parameters
+    let parameters = load_params()?;
+    // Create the global context
+    let mut context =
+        EnkryptitContext::new(cli_password, parameters.compression, parameters.parallelism);
+    // And iterate to treat every path
+    for path in paths {
+        treat_object(&parameters, path, &mut context)
+            .with_snippet(Snippet::cli_invocation("eck", path))
+            .display();
+    }
+    Ok(())
+}

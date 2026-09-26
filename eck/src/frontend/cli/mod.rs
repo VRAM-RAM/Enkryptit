@@ -1,0 +1,50 @@
+use crate::types::{CompressionType, KeyParams, ParallelismType};
+pub mod inspection;
+pub mod params_helpers;
+pub mod treatment;
+
+#[macro_export]
+/// Macro that prints the help
+macro_rules! print_help {
+    () => {
+      println!("\n Available commands : \n\n eck path/to/file   | To encrypt or decrypt a file \n params | To open parameters menu")
+    };
+}
+
+#[macro_export]
+/// Macro that prints the help for parameters
+macro_rules! print_params_help {
+    () => {
+      println!("\n Available commands : \n\n comp | To change compression type \n kt | To change key type \n switch | To switch Ui")
+    };
+}
+
+#[macro_export]
+macro_rules! exit {
+    () => {
+        println!("\n \n Exiting... \n \n")
+    };
+}
+
+#[macro_export]
+macro_rules! enter_password {
+    () => {
+        println!("\n Please enter a password for encrypting your file : \n")
+    };
+}
+
+#[macro_export]
+macro_rules! params_changed {
+    () => {
+        println!("\n Params were changed ! \n")
+    };
+}
+
+pub fn show_params(kt: &KeyParams, c: &CompressionType, p: &ParallelismType) {
+    println!();
+    println!(
+        "Actual parameters : \n KeyType : {:?} \n Compression : {:?} \n Parallelism Option : {:?}",
+        kt, c, p
+    );
+    println!();
+}

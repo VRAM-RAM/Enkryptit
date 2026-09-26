@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+    paths-ignore:
+      - "doc/**"
+      - "**.md"
+  pull_request:
+    branches: [dev, main]
+    paths-ignore:
+      - "doc/**"
+      - "**.md"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Static checks, tests, rustdoc, audit
+  checks:
+    name: fmt · clippy · test · doc · audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (all targets, warnings as errors)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Run tests (eck_tests harness)
+        run: cargo xtask test
+
+      - name: Build rustdoc (warnings as errors)
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: cargo audit (allowlist in audit.toml)
+        run: cargo audit
+
+  # Bounded fuzz smoke (blocking)
+  fuzz:
+    name: fuzz smoke (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [decompress, compress_roundtrip, metadata]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: eck/fuzz
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      - name: Fuzz smoke — ${{ matrix.target }}
+        run: cargo +nightly xtask fuzz ${{ matrix.target }} -- -max_total_time=60
+
+  # OS keyring roundtrip (macOS only)
+  keyring:
+    name: OS keyring roundtrip (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Keyring roundtrip (#[ignore]d test)
+        run: cargo test --test=eck_tests encrypt_decrypt_os_keytype_roundtrip -- --ignored

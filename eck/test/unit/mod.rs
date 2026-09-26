@@ -1,0 +1,13 @@
+//! Unit Tests - Core functionality verification
+//!
+//! Tests individual components in isolation without external dependencies
+
+pub mod compression;
+pub mod encryption_primitives;
+pub mod error_display;
+pub mod file;
+pub mod folder_entries;
+pub mod metadatas;
+pub mod parallelism;
+pub mod text;
+pub mod types;

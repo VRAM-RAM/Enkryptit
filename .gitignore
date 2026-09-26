@@ -1,5 +1,20 @@
 # Rust :
 /target
+/supply-chain
+
+# eck (Enkryptit!) :
+/eck/target
+
+# xtask :
+/xtask/target
+
+# eck fuzz (cargo-fuzz) :
+/eck/fuzz/target
+/eck/fuzz/corpus
+/eck/fuzz/artifacts
 
 # MacOS :
 .DS_Store
+
+# My personal checklist
+TODO.md

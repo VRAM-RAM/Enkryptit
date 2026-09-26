@@ -72,15 +72,17 @@ Contributors should be able to explain:
 
 For Enkryptit!, human review and security awareness take precedence over development speed.
 
-## Code Style
+## Code
 
 General expectations:
 
-* Follow idiomatic Rust practices.
+* Follow idiomatic Rust practices (`cargo fmt` and `cargo clippy`)
 * Prefer readable and maintainable code.
 * Avoid unnecessary complexity.
 * Add comments when the intent is not obvious.
+* Document your contribution with **RustDoc** comments.
 * Keep public APIs consistent and well documented.
+* Launch `cargo audit` before and after coding.
 
 Additional coding guidelines may be added as the project evolves.
 

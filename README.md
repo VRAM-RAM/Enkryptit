@@ -1,144 +1,217 @@
 # Enkryptit!
-\
-🔵 **Human-written**
-\
-\
-![Enkryptit](https://img.shields.io/badge/enkryptit-rust-orange?style=for-the-badge&logo=rust)
-![Version](https://img.shields.io/github/v/release/VRAM-RAM/enkryptit?style=for-the-badge)
-![License](https://img.shields.io/badge/license-CeCILL--B%20%2F%20Apache%202.0-blue?style=for-the-badge)
 
-**Enkryptit!** is a Rust-written cli-tool / interactive manager for file and folder encryption. 
+🔵 **Human-written**
+
+![Enkryptit](https://img.shields.io/badge/enkryptit-rust-orange?style=for-the-badge\&logo=rust) ![License](https://img.shields.io/badge/license-CeCILL--B%20%2F%20Apache%202.0-blue?style=for-the-badge)
+
+**Enkryptit! - A fast, simple file & folder encryption manager, written in Rust**
+
+
+<div align="center">
+  <img src="./assets/eck.gif" alt="Enkryptit! gif as example" width="65%">
+</div>
 
 > [!WARNING]
 > This project is currently a work in progress. It is **not audited** for production security.
+> Os' keyring usage is unstable for now.
+
+## Table of contents
+
+* [Quick Start](#quick-start)
+* [Usage & Commands](#usage--commands)
+  * [CLI Tool](#cli-tool)
+  * [TUI](#tui)
+  * [Examples](#examples)
+* [Why Enkryptit! ?](#why-enkryptit-)
+* [Documentation](#documentation)
+* [Development](#development)
+* [License](#license)
 
 ## Quick Start
 
 ### Prerequisites
 
-* **Rust:** `1.75+` is recommended.
-* A working native credential store (e.g., `libsecret` on Linux, native Keychain on macOS).
+* **Rust:** `1.85+` is recommended.
+* A working native credential store (e.g. `libsecret` on Linux, native Keychain on macOS).
 
-### Build and Launch
+### Using **cargo**
+
+If you have `cargo` installed on your system, run :
+```bash
+cargo install eck
+```
+
+### Building and Launching using the source code
 
 ```bash
 # Clone the repository
 git clone https://github.com/VRAM-RAM/Enkryptit
-cd Enkryptit
 
-#Build :
-cargo build --release
+cd Enkryptit/
 
-#Install in your current path :
-cargo install --path .
+# Build
+cargo xtask build --release
+
+# Or Install
+cargo xtask install
 ```
 
 > [!NOTE]
-> The compilation time may be long, since I activated an agressive release profile.
+> Compilation may take some time because Enkryptit uses an aggressive release profile.
 
 ## Usage & Commands
 
-Enkryptit! can be run by two ways :
+Enkryptit! can be used in two ways: as a CLI tool or as a TUI.
 
 ### CLI Tool
 
-First, Enkryptit! can be run as a CLI tool. This are available commands :
+These are the available commands:
 
+| Command                               | Syntax                           | Description                                                                            |
+| ------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------- |
+| **Encrypt / Decrypt**                 | `eck <path>`                     | Automatically encrypts plaintext or decrypts `.encky` files.                           |
+| **Encrypt / Decrypt with a password** | `eck <path> -p <password>`       | Encrypts or decrypts using the specified password.                                     |
+| **Open TUI**                          | `eck ui` or `eck`                | Opens the interactive TUI.                                                             |
+| **Show current parameters**           | `eck parameters` or `eck params` | Shows the current parameters.                                                          |
+| **Change compression**                | `eck params -c <type>`           | Changes the compression algorithm. Available: `zstd`, `lz4`, `xz`, `none`, and `auto`. |
+| **Change key type**                   | `eck params -k <type>`           | Changes the key type. Available: `os`, `file`, and `pwd` / `password`.                 |
+| **Change parallelism**                | `eck params -p <type>`           | Changes the parallelism mode. Available: `single`, `multi`, or `multi:<threads>`.      |
+| **Inspect**                           | `eck inspect <path>`             | Inspects a file or archive without encrypting or decrypting it.                        |
 
-| Command | Syntax | Description |
-| --- | --- | --- |
-| **Help** | `eck help` | Displays the available commands menu. |
-| **Encrypt / Decrypt** | `eck /path/to/file` | Toggles encryption or decryption for the specified file. |
-| **Encrypt / Decrypt with a password** | `eck /path/to/file -p mypassword` | Toggles encryption or decryption for the specified file, with a password. |
-| **Open TUI** | `eck ui` or `eck` | Opens the TUI |
-| **Show current params** | `eck parameters` or `eck params` | Shows current params |
-| **Change compression** | `eck params (or parameters) -c (or --compression) compressiontype` | Changes compression algorithm. Available : zstd, lz4 and xz  |
-| **Change key type** | `eck params (or parameters) -kt (or --keytype) keytype` | Changes key type. Available : os, file and pwd (or password) |
+> [!TIP]
+> `eck <path>` and `eck inspect <path>` support multiple paths:
+>
+> `eck <path1> <path2>`
+>
+> `eck inspect myfolder/*`
 
 ### TUI
 
-Enkryptit! can also be run as a TUI. It offers a more "friendly" interface. To open the TUI, run :
+Enkryptit! also provides an interactive terminal user interface.
+
+Launch it with:
 
 ```bash
 eck
 ```
-or
+
+or:
 
 ```bash
 eck ui
 ```
 
-You will see a menu, in which one you will be able to navigate :
-
+It will open :
 ```bash
 Enkryptit
-   Fast & Secure File Encryption Manager v1
+   Fast & Simple File Encryption Manager v0.0.3
 ? What do you want to do?  
-> Encrypt/Decrypt file
+> Browse
   Parameters
   Help
   Exit
 [↑↓ to move, enter to select, type to filter]
 ```
 
+The Tui allows you to directly **browse** your files / folders.
+
 ### Examples
 
-For example, if you want to encrypt a file named `secrets.txt` in `/home/user/secrets/`, you just have to run :
+Encrypt a file:
+
 ```bash
 eck /home/user/secrets/secrets.txt
 ```
-Then, to decrypt the encrypted file as `secrets.txt.encky`, you run barely the same command :
+
+This creates:
+
+```text
+secrets.txt.encky
+```
+
+To decrypt it:
 
 ```bash
 eck /home/user/secrets/secrets.txt.encky
 ```
 
-To encrypt a folder, you need to use the same `eck` command, but to specify a folder path :
+Encrypt a folder:
 
 ```bash
 eck /home/user/secrets/
 ```
 
-This will encrypt your folder and the files it contains inside a file named `secrets.encky`. To decrypt it, simply run :
+This creates:
+
+```text
+secrets.encky
+```
+
+To decrypt it:
 
 ```bash
 eck /home/user/secrets.encky
 ```
 
-## Cryptographic Stack
+Multiple files and folders can be processed at once:
 
-Enkryptit! relies on those primitives for its architecture:
+```bash
+eck /home/user/secrets/* /home/user/secret.txt /lib/secret.bin
+```
 
-* **Encryption:** `XChaCha20-Poly1305` — Symmetric authenticated encryption (AEAD) with a 192-bit nonce.
-* **Key Derivation:** `Argon2id` — The industry-standard password hashing algorithm, built to resist GPU/ASIC brute-force attacks.
-* **Key Storage:** `Keyring` — Securely delegates key management to your operating system's native credential store (Keychain, Secret Service, etc.).
-* **Data Serialization:** `Postcard` — A lightweight, efficient binary serialization format optimized for Rust.
+Inspect a file without decrypting it:
 
-## Change parameters
+```bash
+eck inspect /home/user/my_secret.txt
+```
 
-You have the ability to choose your compression, key type, encryption algorithm, Argon2id parameters with **Enkryptit!**. By default, the choosen parameters are :
+## Why Enkryptit! ?
 
-- Keytype : Password
-- Compression : Zstd
+* **Modern primitives** — XChaCha20-Poly1305 provides authenticated encryption, protecting encrypted data against unauthorized modification as well as unauthorized access.
 
-## RoadMap
+* **Flexible key management** — use a password, the OS keyring, or a dedicated key file depending on your workflow.
 
-Next steps would be :
+* **Built for large files** — chunked streaming encryption avoids requiring the entire file to be loaded into memory.
 
-- parallelization
-- benchmarks
-- Doc + Dev Doc
-- Make the interface more ergonomic (add a `Browse Files & Folders`, modify how metadata works...)
+* **Automatic performance optimization** — compression and parallelism can be infered automatically based on the file and its size.
+
+* **First-class folder encryption** - encrypt an entire directory into a single `.encky` archive while preserving its structure and Unix permissions.
+
+* **Security-conscious secret handling** — keys are memory-locked and zeroized when no longer needed.
+
+* **CLI + TUI** — use a fast, scriptable CLI or an interactive terminal interface without needing separate applications.
+
+* **Transparent inspection** — `eck inspect` can examine encrypted files and archives without decrypting their contents.
+
+* **Extensively tested** — 199+ tests cover cryptography, key handling, tamper detection, folder encryption, multithreading, CLI behavior, and TUI flows.
+
+**In short:** Enkryptit combines **strong authenticated encryption, flexible key management, efficient large-file processing, automatic compression and parallelism, and a usable CLI/TUI** in one native Rust application.
+
+## Documentation
+
+The full documentation lives in the [`doc/`](./doc/) folder:
+
+* **User guide** — bilingual English & French:
+  * [Installation](./doc/user-guide/en/installation.md) · [Command line](./doc/user-guide/en/cli.md) · [Terminal UI](./doc/user-guide/en/tui.md)
+  * [Errors & output](./doc/user-guide/en/errors.md) · [`.encky` format](./doc/user-guide/en/format.md)
+  * Français : [installation](./doc/user-guide/fr/installation.md), [ligne de commande](./doc/user-guide/fr/cli.md), [interface](./doc/user-guide/fr/tui.md), [erreurs](./doc/user-guide/fr/errors.md), [format](./doc/user-guide/fr/format.md)
+* **Developer guide** (English): [start here](./doc/dev/README.md) — architecture, modules, testing, fuzzing, security.
+
+## Development
+
+**Enkryptit!** contains :
+- Its binary, in `eck/`
+- `cargo xtask` for launching tests, fuzzing and rustdoc
+
+You can follow the development in [**PROGRESSION.md**](./PROGRESSION.md).
+
+You can also help the development by [**contributing**](CONTRIBUTING.md)!
 
 ## License
 
 This project is dual-licensed under:
 
-* **CeCILL-B License** (French law compliant, fully compatible with GNU GPL/Apache)
+* **CeCILL-B License** (French-law compliant)
 * **Apache License, Version 2.0**
 
-Choose the one that best fits your needs.
-
-## Contact
-
-* **Developer:** Olruix ([VRAM-RAM](https://github.com/VRAM-RAM))
+Choose the license that best fits your needs.
