@@ -6,6 +6,11 @@
 
 **Enkryptit! - A fast, simple file & folder encryption manager, written in Rust**
 
+
+<div align="center">
+  <img src="./assets/eck.gif" alt="Enkryptit! gif as example" width="65%">
+</div>
+
 > [!WARNING]
 > This project is currently a work in progress. It is **not audited** for production security.
 > Os' keyring usage is unstable for now.
