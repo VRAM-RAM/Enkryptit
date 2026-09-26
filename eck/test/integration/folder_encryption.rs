@@ -68,7 +68,7 @@ mod tests {
         assert!(std::path::Path::new(&archive_path).exists());
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
-        assert_eq!(version, 3);
+        assert_eq!(version, 4);
         let folder_meta: FolderMetadata = from_bytes(&meta_bytes).unwrap();
         assert_eq!(folder_meta.entries.len(), 1);
         assert_eq!(folder_meta.entries[0].relative_path, "hello.txt");
@@ -264,7 +264,7 @@ mod tests {
         assert_eq!(paths, vec!["a/b/c/deep.txt", "a/mid.txt", "root.txt"]);
     }
 
-    // --- Day-10/11 regression: Auto + Auto end-to-end roundtrip ---
+    // Day-10/11 regression: Auto + Auto end-to-end roundtrip 
 
     const PNG_BYTES: &[u8] = b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0DIHDR";
     const WAV_BYTES: &[u8] = b"RIFF\x00\x00\x00\x00WAVE";

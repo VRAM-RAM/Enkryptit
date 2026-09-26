@@ -665,6 +665,7 @@ Next things to do :
 - added `.github` for dependabot and **workflows**
 - Fixed and issue with the **success** border.
 - Added new tests
+- Updated tests to match new version (4)
 
 Test results : 
 ```bash
