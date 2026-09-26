@@ -4,7 +4,9 @@
 //! pin down the arrow/line/curve frame drawn when a `Snippet` is attached, and
 //! the graceful compact fallback when there is none.
 
-use eck::diagnostic::output::{diagnostic::render_error, snippet::Snippet};
+use eck::diagnostic::output::{
+    diagnostic::render_error, display::render_warning, snippet::Snippet,
+};
 use eck::errors::EnkryptitError;
 
 fn io_error() -> EnkryptitError {
@@ -66,7 +68,10 @@ fn render_error_draws_source_frame_with_snippet() {
     );
     assert!(plain.contains("╰──"), "curved pointer:\n{plain}");
     assert!(plain.contains("I/O"), "location as pointer label:\n{plain}");
-    assert!(plain.contains("help: Check that the path exists."), "help footer:\n{plain}");
+    assert!(
+        plain.contains("help: Check that the path exists."),
+        "help footer:\n{plain}"
+    );
 }
 
 #[test]
@@ -81,13 +86,45 @@ fn render_error_without_snippet_stays_compact() {
     let plain = strip_ansi(&rendered);
 
     assert!(plain.contains("✖ io error: gone"), "message:\n{plain}");
-    assert!(plain.contains("help: Check the path. (at I/O)"), "help fold:\n{plain}");
+    assert!(
+        plain.contains("help: Check the path. (at I/O)"),
+        "help fold:\n{plain}"
+    );
     assert!(!plain.contains("╭─["), "no frame without snippet:\n{plain}");
-    assert!(!plain.contains("╰──"), "no pointer without snippet:\n{plain}");
+    assert!(
+        !plain.contains("╰──"),
+        "no pointer without snippet:\n{plain}"
+    );
 }
 
 #[test]
 fn render_error_without_help_or_location_is_still_viable() {
     let rendered = render_error("boom", &io_error(), &None, &None, &None);
     assert!(strip_ansi(&rendered).contains("✖ boom"));
+}
+
+#[test]
+fn render_warning_draws_the_warning_glyph() {
+    let rendered = strip_ansi(&render_warning("low entropy keyfile"));
+
+    assert!(
+        rendered.contains("⚠ low entropy keyfile"),
+        "warning frame:\n{rendered}"
+    );
+    assert!(!rendered.contains("✖"), "not an error frame:\n{rendered}");
+}
+
+#[test]
+fn render_warning_keeps_the_message_word_for_word() {
+    let msg = "passphrase is shorter than 32 bytes";
+    let rendered = strip_ansi(&render_warning(msg));
+
+    assert!(rendered.contains(msg), "message preserved:\n{rendered}");
+}
+
+#[test]
+fn render_warning_with_empty_message_does_not_panic() {
+    let rendered = strip_ansi(&render_warning(""));
+
+    assert!(!rendered.is_empty(), "miette still draws the ⚠ bare frame");
 }

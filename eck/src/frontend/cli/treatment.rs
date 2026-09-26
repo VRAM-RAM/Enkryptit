@@ -4,7 +4,6 @@ use crate::diagnostic::output::snippet::Snippet;
 use crate::errors::EnkryptitError;
 use crate::parameters::params::load_params;
 use crate::treatment::object_treatment::treat_object;
-use crate::types::Interface;
 
 /// Helper for treating a path.
 /// First, we load the parameters, before converting the path from `&str` to `&Path`.
@@ -16,7 +15,8 @@ pub fn treat_object_with_path(
     cli_password: Option<String>,
 ) -> Result<EnkryptitOutput, EnkryptitError> {
     let parameters = load_params()?;
-    let mut context = EnkryptitContext::new(Interface::Cli, cli_password, parameters.compression, parameters.parallelism);
+    let mut context =
+        EnkryptitContext::new(cli_password, parameters.compression, parameters.parallelism);
     Ok(treat_object(&parameters, path_str, &mut context)
         .with_snippet(Snippet::cli_invocation("eck", path_str)))
 }
@@ -29,7 +29,8 @@ pub fn treat_objects_with_multiple_paths(
     // We load the parameters
     let parameters = load_params()?;
     // Create the global context
-    let mut context = EnkryptitContext::new(Interface::Cli, cli_password, parameters.compression, parameters.parallelism);
+    let mut context =
+        EnkryptitContext::new(cli_password, parameters.compression, parameters.parallelism);
     // And iterate to treat every path
     for path in paths {
         treat_object(&parameters, path, &mut context)

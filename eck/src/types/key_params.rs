@@ -1,10 +1,10 @@
-use serde::{Deserialize, Serialize};
 use crate::types::key_type::KeyType;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-/// Key Parameters, used **before** encryption / decryption, that describes user's preference to *Enkryptit!*'s backend, and stored in 
+/// Key Parameters, used **before** encryption / decryption, that describes user's preference to *Enkryptit!*'s backend, and stored in
 /// the parameters.
-/// 
+///
 /// Contains :
 /// - PassWord
 /// - File

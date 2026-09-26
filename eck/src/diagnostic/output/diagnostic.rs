@@ -1,13 +1,13 @@
-use std::fmt;
-use crate::errors::EnkryptitError;
-use crate::diagnostic::output::Snippet;
 use crate::diagnostic::DOC_URL;
+use crate::diagnostic::output::Snippet;
+use crate::errors::EnkryptitError;
 use miette::{
     Diagnostic, GraphicalReportHandler, GraphicalTheme, LabeledSpan, NamedSource, Severity,
     SourceCode, SourceSpan, ThemeStyles,
 };
+use std::fmt;
 
-/// Diagnostic used to render [`EnkryptitOutput`] errors through miette.
+/// Diagnostic used to render [`EnkryptitOutput`](crate::diagnostic::EnkryptitOutput) errors through miette.
 ///
 /// Unlike `MietteDiagnostic`, it implements `source_code()` + `labels()`, so
 /// miette can draw the full code frame (`╭─[…]`, `│`, `·`, `─┬─`, `╰──`)

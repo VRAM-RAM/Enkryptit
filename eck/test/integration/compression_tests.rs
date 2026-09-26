@@ -9,7 +9,7 @@
 //! to disk.
 
 use eck::context::EnkryptitContext;
-use eck::types::{CompressionType, Interface};
+use eck::types::CompressionType;
 
 #[cfg(test)]
 mod tests {
@@ -29,7 +29,11 @@ mod tests {
     fn auto(dir: &TempDir, name: &str, bytes: &[u8]) -> CompressionType {
         let path = dir.path().join(name);
         std::fs::write(&path, bytes).unwrap();
-        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Auto, eck::types::ParallelismType::Auto);
+        let ctx = EnkryptitContext::new(
+            None,
+            CompressionType::Auto,
+            eck::types::ParallelismType::Auto,
+        );
         ctx.resolve_compression(path.to_str().unwrap())
             .expect("auto inference must succeed")
     }
@@ -42,7 +46,11 @@ mod tests {
         let mut f = std::fs::File::create(&path).unwrap();
         f.write_all(head).unwrap();
         f.set_len(len).unwrap();
-        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Auto, eck::types::ParallelismType::Auto);
+        let ctx = EnkryptitContext::new(
+            None,
+            CompressionType::Auto,
+            eck::types::ParallelismType::Auto,
+        );
         ctx.resolve_compression(path.to_str().unwrap())
             .expect("auto inference must succeed")
     }
@@ -83,39 +91,54 @@ mod tests {
     }
 
     // --- Size-based ramp for the Compressible hint (raw WAV) ---
-    const LOW: u64 = 50 << 20;          // 50 MiB
-    const MID_INF: u64 = 250 << 20;     // 250 MiB
-    const MID_SUP: u64 = 1 << 30;       // 1 GiB
-    const SUP: u64 = 5 << 30;           // 5 GiB
+    const LOW: u64 = 50 << 20; // 50 MiB
+    const MID_INF: u64 = 250 << 20; // 250 MiB
+    const MID_SUP: u64 = 1 << 30; // 1 GiB
+    const SUP: u64 = 5 << 30; // 5 GiB
 
     #[test]
     fn compressible_just_below_low_boundary_uses_lz4() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(auto_sparse(&dir, "w1.wav", WAV, LOW - 1), CompressionType::Lz4);
+        assert_eq!(
+            auto_sparse(&dir, "w1.wav", WAV, LOW - 1),
+            CompressionType::Lz4
+        );
     }
 
     #[test]
     fn compressible_above_low_boundary_uses_zstd() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(auto_sparse(&dir, "w2.wav", WAV, LOW + 1), CompressionType::Zstd);
+        assert_eq!(
+            auto_sparse(&dir, "w2.wav", WAV, LOW + 1),
+            CompressionType::Zstd
+        );
     }
 
     #[test]
     fn compressible_above_mid_inferior_uses_xz() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(auto_sparse(&dir, "w3.wav", WAV, MID_INF + 1), CompressionType::Xz);
+        assert_eq!(
+            auto_sparse(&dir, "w3.wav", WAV, MID_INF + 1),
+            CompressionType::Xz
+        );
     }
 
     #[test]
     fn compressible_above_mid_superior_uses_zstd() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(auto_sparse(&dir, "w4.wav", WAV, MID_SUP + 1), CompressionType::Zstd);
+        assert_eq!(
+            auto_sparse(&dir, "w4.wav", WAV, MID_SUP + 1),
+            CompressionType::Zstd
+        );
     }
 
     #[test]
     fn compressible_above_superior_uses_lz4() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(auto_sparse(&dir, "w5.wav", WAV, SUP + 1), CompressionType::Lz4);
+        assert_eq!(
+            auto_sparse(&dir, "w5.wav", WAV, SUP + 1),
+            CompressionType::Lz4
+        );
     }
 
     /// HighlyCompressible size ramp (< 50 MiB Zstd, then Xz, then Zstd)
@@ -123,22 +146,31 @@ mod tests {
     #[test]
     fn highly_compressible_mid_range_uses_xz() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(auto_sparse(&dir, "d.xml", XML, LOW + 1), CompressionType::Xz);
+        assert_eq!(
+            auto_sparse(&dir, "d.xml", XML, LOW + 1),
+            CompressionType::Xz
+        );
     }
 
     #[test]
     fn highly_compressible_very_large_uses_zstd() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(auto_sparse(&dir, "d2.xml", XML, SUP + 1), CompressionType::Zstd);
+        assert_eq!(
+            auto_sparse(&dir, "d2.xml", XML, SUP + 1),
+            CompressionType::Zstd
+        );
     }
 
     /// Non-Auto resolution bypasses inference entirely
 
     #[test]
     fn explicit_compression_short_circuits_inference() {
-        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::Xz, eck::types::ParallelismType::Auto);
+        let ctx =
+            EnkryptitContext::new(None, CompressionType::Xz, eck::types::ParallelismType::Auto);
         // Path never touched: non-Auto must not hit the filesystem.
-        let resolved = ctx.resolve_compression("/nonexistent/does/not/exist").unwrap();
+        let resolved = ctx
+            .resolve_compression("/nonexistent/does/not/exist")
+            .unwrap();
         assert_eq!(resolved, CompressionType::Xz);
     }
 }

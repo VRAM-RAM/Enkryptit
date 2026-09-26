@@ -82,9 +82,9 @@ pub fn encrypted_path_for(original: &Path) -> PathBuf {
 pub fn generate_random_content(size: usize) -> Vec<u8> {
     let mut content = vec![0u8; size];
 
-    for i in 0..size {
-        // Simple deterministic pseudo-random generation for reproducibility
-        content[i] = ((i * 2654435781) % 256) as u8;
+    // Simple deterministic pseudo-random generation for reproducibility
+    for (i, byte) in content.iter_mut().enumerate() {
+        *byte = ((i * 2654435781) % 256) as u8;
     }
 
     content

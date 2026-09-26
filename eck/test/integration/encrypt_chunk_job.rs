@@ -61,25 +61,15 @@ fn assert_roundtrip(
     let tmp_file = NamedTempFile::new().unwrap();
     fs::write(tmp_file.path(), content).unwrap();
 
-    let enc_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression, enc_parallelism);
+    let enc_ctx = &mut EnkryptitContext::new(None, compression, enc_parallelism);
 
-    let archive_path = encrypt_file(
-        tmp_file.path().to_str().unwrap(),
-        &KEY_FROM_FILE,
-        enc_ctx,
-    )
-    .expect("multithread encryption must succeed");
+    let archive_path = encrypt_file(tmp_file.path().to_str().unwrap(), &KEY_FROM_FILE, enc_ctx)
+        .expect("multithread encryption must succeed");
 
     let (meta, payload_offset) = read_file_archive_meta(&archive_path);
 
-    let dec_ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, compression, dec_parallelism);
-    decrypt_file(
-        &archive_path,
-        &meta,
-        payload_offset,
-        dec_ctx,
-    )
-    .expect("decryption must succeed");
+    let dec_ctx = &mut EnkryptitContext::new(None, compression, dec_parallelism);
+    decrypt_file(&archive_path, &meta, payload_offset, dec_ctx).expect("decryption must succeed");
 
     let restored = fs::read(tmp_file.path()).unwrap();
     assert_eq!(restored, content, "roundtrip must restore original bytes");
@@ -251,12 +241,12 @@ mod tests {
 
     #[test]
     fn encrypt_multithread_nonexistent_file_errors() {
-        let ctx = &mut EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp, ParallelismType::MultiThread(4));
-        let result = encrypt_file(
-            "/this/path/does/not/exist.txt",
-            &KEY_FROM_FILE,
-            ctx,
+        let ctx = &mut EnkryptitContext::new(
+            None,
+            CompressionType::NoComp,
+            ParallelismType::MultiThread(4),
         );
+        let result = encrypt_file("/this/path/does/not/exist.txt", &KEY_FROM_FILE, ctx);
         assert!(result.is_err());
     }
 }

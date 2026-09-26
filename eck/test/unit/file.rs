@@ -18,7 +18,7 @@ mod tests {
     #[test]
     fn read_file_reports_len() {
         let tmp = NamedTempFile::new().unwrap();
-        fs::write(tmp.path(), vec![0xAB; 10 * MIB as usize]).unwrap();
+        fs::write(tmp.path(), vec![0xAB; 10 * MIB]).unwrap();
 
         let file = read_file(tmp.path()).unwrap();
         assert_eq!(file.len, 10 * MIB as u64);
@@ -28,7 +28,7 @@ mod tests {
     fn read_file_estimates_steps_by_chunk_size() {
         let tmp = NamedTempFile::new().unwrap();
         // Two and a half chunks worth of content -> integer division.
-        fs::write(tmp.path(), vec![0u8; 2 * MIB as usize]).unwrap();
+        fs::write(tmp.path(), vec![0u8; 2 * MIB]).unwrap();
 
         let file = read_file(tmp.path()).unwrap();
         assert_eq!(file.estimated_steps, (2 * MIB as u64) / CHUNK_SIZE as u64);

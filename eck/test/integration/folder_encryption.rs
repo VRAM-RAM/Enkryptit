@@ -62,13 +62,9 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("hello.txt"), b"Hello from single file!").unwrap();
 
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
-        let archive_path = encrypt_folder(
-            folder.to_str().unwrap(),
-            &mut context,
-            &KeyType::FromFile,
-        )
-        .unwrap();
+        let mut context = EnkryptitContext::new(None, params.compression, params.parallelism);
+        let archive_path =
+            encrypt_folder(folder.to_str().unwrap(), &mut context, &KeyType::FromFile).unwrap();
         assert!(std::path::Path::new(&archive_path).exists());
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
@@ -102,14 +98,10 @@ mod tests {
         fs::write(folder.join("file1.txt"), b"Content of file 1").unwrap();
         fs::write(folder.join("subdir/file2.txt"), b"Content of file 2").unwrap();
         fs::write(folder.join("subdir/file3.txt"), b"Third file content here").unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
+        let mut context = EnkryptitContext::new(None, params.compression, params.parallelism);
 
-        let archive_path = encrypt_folder(
-            folder.to_str().unwrap(),
-            &mut context,
-            &KeyType::FromFile,
-        )
-        .unwrap();
+        let archive_path =
+            encrypt_folder(folder.to_str().unwrap(), &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
         let folder_meta: FolderMetadata = from_bytes(&meta_bytes).unwrap();
@@ -154,13 +146,9 @@ mod tests {
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("a.txt"), b"Zstd compressed content").unwrap();
         fs::write(folder.join("b.bin"), vec![0xAB; 1024 * 100]).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
-        let archive_path = encrypt_folder(
-            folder.to_str().unwrap(),
-            &mut context,
-            &KeyType::FromFile,
-        )
-        .unwrap();
+        let mut context = EnkryptitContext::new(None, params.compression, params.parallelism);
+        let archive_path =
+            encrypt_folder(folder.to_str().unwrap(), &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
 
@@ -193,13 +181,9 @@ mod tests {
         let folder = tmp.path().join("lz4folder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("data.bin"), vec![0x42; 50_000]).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
-        let archive_path = encrypt_folder(
-            folder.to_str().unwrap(),
-            &mut context,
-            &KeyType::FromFile,
-        )
-        .unwrap();
+        let mut context = EnkryptitContext::new(None, params.compression, params.parallelism);
+        let archive_path =
+            encrypt_folder(folder.to_str().unwrap(), &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
 
@@ -227,14 +211,10 @@ mod tests {
         let folder = tmp.path().join("xzfolder");
         fs::create_dir(&folder).unwrap();
         fs::write(folder.join("readme.txt"), b"XZ compression test content").unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, params.compression, params.parallelism);
+        let mut context = EnkryptitContext::new(None, params.compression, params.parallelism);
 
-        let archive_path = encrypt_folder(
-            folder.to_str().unwrap(),
-            &mut context,
-            &KeyType::FromFile,
-        )
-        .unwrap();
+        let archive_path =
+            encrypt_folder(folder.to_str().unwrap(), &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
 
@@ -252,13 +232,13 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let folder = tmp.path().join("empty");
         fs::create_dir(&folder).unwrap();
-        let mut context = EnkryptitContext::new(eck::types::Interface::Cli, None, CompressionType::NoComp, eck::types::ParallelismType::Auto);
-
-        let result = encrypt_folder(
-            folder.to_str().unwrap(),
-            &mut context,
-            &KeyType::FromFile,
+        let mut context = EnkryptitContext::new(
+            None,
+            CompressionType::NoComp,
+            eck::types::ParallelismType::Auto,
         );
+
+        let result = encrypt_folder(folder.to_str().unwrap(), &mut context, &KeyType::FromFile);
         assert!(result.is_err());
     }
 
@@ -270,7 +250,11 @@ mod tests {
         fs::write(folder.join("root.txt"), b"r").unwrap();
         fs::write(folder.join("a/mid.txt"), b"m").unwrap();
         fs::write(folder.join("a/b/c/deep.txt"), b"d").unwrap();
-        let context = &EnkryptitContext { interface: eck::types::Interface::Cli, password: None, compression_type: CompressionType::Auto, parallelism: eck::types::ParallelismType::Auto };
+        let context = &EnkryptitContext {
+            password: None,
+            compression_type: CompressionType::Auto,
+            parallelism: eck::types::ParallelismType::Auto,
+        };
 
         let entries = collect_folder_entries(folder.to_str().unwrap(), context).unwrap();
         assert_eq!(entries.len(), 3);
@@ -302,21 +286,19 @@ mod tests {
         let large_path = folder.join("large_sparse.bin");
         // All-zero sparse file with no detectable magic: inference = Unknown,
         // 55 MiB -> Lz4 compression + MultiThread parallelism.
-        fs::File::create(&large_path).unwrap().set_len(large_size).unwrap();
+        fs::File::create(&large_path)
+            .unwrap()
+            .set_len(large_size)
+            .unwrap();
 
         let mut context = EnkryptitContext::new(
-            eck::types::Interface::Cli,
             None,
             CompressionType::Auto,
             eck::types::ParallelismType::Auto,
         );
 
-        let archive_path = encrypt_folder(
-            folder.to_str().unwrap(),
-            &mut context,
-            &KeyType::FromFile,
-        )
-        .unwrap();
+        let archive_path =
+            encrypt_folder(folder.to_str().unwrap(), &mut context, &KeyType::FromFile).unwrap();
 
         let (version, meta_bytes) = read_archive_meta(&archive_path);
         let folder_meta: FolderMetadata = from_bytes(&meta_bytes).unwrap();
@@ -345,9 +327,7 @@ mod tests {
                 entry.relative_path
             );
             let full = folder.join(&entry.relative_path);
-            let expected = context
-                .resolve_compression(full.to_str().unwrap())
-                .unwrap();
+            let expected = context.resolve_compression(full.to_str().unwrap()).unwrap();
             assert_eq!(
                 entry.compression, expected,
                 "stored compression must match inference for {}",
@@ -357,7 +337,10 @@ mod tests {
             min_offset = min_offset.min(entry.offset);
         }
         // Data starts right after the fixed-size header region (1 + 64).
-        assert_eq!(min_offset, 65, "first data entry must start after the header");
+        assert_eq!(
+            min_offset, 65,
+            "first data entry must start after the header"
+        );
 
         fs::remove_dir_all(&folder).unwrap();
         let dest = decrypt_folder(&archive_path, &meta_bytes, 0, version, &mut context).unwrap();

@@ -13,7 +13,7 @@ use std::path::Path;
 #[allow(dead_code)]
 /// ParsedFile enum. The result of a file parsing. If the file is encrypted with **Enkryptit!**, we return :
 /// - Enkryptit { metadata, version, payload_offset, a boolean that indicates if it is a file or a folder }
-/// \
+///
 /// Else, we return :
 /// - Plain
 pub enum ParsedFile {
@@ -57,7 +57,7 @@ pub fn treat_object(
 
         Ok(ParsedFile::Plain) => encrypt_file_case(path, context, &keytype),
 
-        Err(e) => e, 
+        Err(e) => *e,
     }
 }
 
@@ -70,12 +70,12 @@ pub fn treat_object(
 /// - Compare the Magic number
 /// - Reads the metadata (two different ways : at the beginning of the file if the version is 1, at the end if the version is 2)
 /// - Returns the ParsedFile result
-pub fn read_file(path: &str) -> Result<ParsedFile, EnkryptitOutput> {
+pub fn read_file(path: &str) -> Result<ParsedFile, Box<EnkryptitOutput>> {
     let file = match File::open(path) {
         Ok(f) => f,
         Err(e) => {
             let err: EnkryptitError = e.into();
-            return Err(err.into())
+            return Err(Box::new(err.into()));
         }
     };
 
@@ -83,7 +83,7 @@ pub fn read_file(path: &str) -> Result<ParsedFile, EnkryptitOutput> {
         Ok(m) => m.len(),
         Err(e) => {
             let err: EnkryptitError = e.into();
-            return Err(err.into())
+            return Err(Box::new(err.into()));
         }
     };
 
@@ -121,34 +121,49 @@ pub fn read_file(path: &str) -> Result<ParsedFile, EnkryptitOutput> {
     if archive_header.is_folder_archive && archive_header.version >= 2 {
         // v2 folder archive: metadata is at the end of the file
         if file_len < meta_len as u64 {
-            return Err(
-                EnkryptitOutput::error("Error while reading & parsing the file.", EnkryptitError::CorruptedFile)
-                    .with_help("File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.")
-                    .with_location("object_treatment.rs::read_file()")
-            );
+            return Err(Box::new(
+                EnkryptitOutput::error(
+                    "Error while reading & parsing the file.",
+                    EnkryptitError::CorruptedFile,
+                )
+                .with_help(
+                    "File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.",
+                )
+                .with_location("object_treatment.rs::read_file()"),
+            ));
         }
         let meta_start = file_len - meta_len as u64;
 
         if let Err(e) = reader.seek(SeekFrom::Start(meta_start)) {
             let err: EnkryptitError = e.into();
-            return Err(err.into())
+            return Err(Box::new(err.into()));
         }
 
         if reader.read_exact(&mut meta).is_err() {
-            return Err(
-                EnkryptitOutput::error("Error while reading & parsing the file.", EnkryptitError::CorruptedFile)
-                    .with_help("File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.")
-                    .with_location("object_treatment.rs::read_file()")
-            );
+            return Err(Box::new(
+                EnkryptitOutput::error(
+                    "Error while reading & parsing the file.",
+                    EnkryptitError::CorruptedFile,
+                )
+                .with_help(
+                    "File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.",
+                )
+                .with_location("object_treatment.rs::read_file()"),
+            ));
         }
     } else {
         // v1 or single-file: metadata is right after header
         if reader.read_exact(&mut meta).is_err() {
-            return Err(
-                EnkryptitOutput::error("Error while reading & parsing the file.", EnkryptitError::CorruptedFile)
-                    .with_help("File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.")
-                    .with_location("object_treatment.rs::read_file()")
-            );
+            return Err(Box::new(
+                EnkryptitOutput::error(
+                    "Error while reading & parsing the file.",
+                    EnkryptitError::CorruptedFile,
+                )
+                .with_help(
+                    "File may be corrupted. For more informations, please refeer to the doc. To try to fix it, wait for `eck recover <path>`.",
+                )
+                .with_location("object_treatment.rs::read_file()"),
+            ));
         }
     }
 

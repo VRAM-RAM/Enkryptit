@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ParallelismType {
@@ -15,7 +15,7 @@ impl ParallelismType {
         match self {
             Self::Auto => "Automatic".to_string(),
             Self::MultiThread(n) => format!("MultiThreading with {} threads", n),
-            Self::Single => "SingleThread".to_string()
+            Self::Single => "SingleThread".to_string(),
         }
     }
 }

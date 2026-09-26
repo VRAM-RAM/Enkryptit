@@ -9,8 +9,8 @@ use eck::types::CompressionType;
 fn generate_random_content(size: usize) -> Vec<u8> {
     let mut content = vec![0u8; size];
 
-    for i in 0..size {
-        content[i] = ((i * 2654435781) % 256) as u8;
+    for (i, byte) in content.iter_mut().enumerate() {
+        *byte = ((i * 2654435781) % 256) as u8;
     }
 
     content

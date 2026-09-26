@@ -1,6 +1,6 @@
-use std::fmt::Display;
-use serde::{Deserialize, Serialize};
 use hex::ToHex;
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// KeyType enum. Contains :
@@ -24,9 +24,14 @@ impl KeyType {
         match self {
             Self::FromFile => "from file".to_string(),
             Self::FromOS => "from os keyring".to_string(),
-            Self::None => "no keytype used (should not happen if the file is encrypted)".to_string(),
+            Self::None => {
+                "no keytype used (should not happen if the file is encrypted)".to_string()
+            }
             Self::Password => "password".to_string(),
-            Self::Pwd256(salt) => format!("hashed password, with the following salt : {}", salt.encode_hex::<String>()),
+            Self::Pwd256(salt) => format!(
+                "hashed password, with the following salt : {}",
+                salt.encode_hex::<String>()
+            ),
         }
     }
 }

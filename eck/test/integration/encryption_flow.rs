@@ -205,7 +205,10 @@ mod tests {
 
         // Failure is reported as a miette diagnostic on stdout (exit code stays 0 by design)
         let stdout = stdout_of(&wrong);
-        assert!(stdout.contains("crypto::encryption_decryption_failed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("crypto::encryption_decryption_failed"),
+            "stdout: {stdout}"
+        );
 
         // The archive must be left untouched and no plaintext restored
         assert!(encrypted_path.exists());

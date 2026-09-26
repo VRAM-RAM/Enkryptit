@@ -1,6 +1,9 @@
-use std::{path::{PathBuf, StripPrefixError}, sync::mpsc::RecvError};
+use std::{
+    path::{PathBuf, StripPrefixError},
+    sync::mpsc::RecvError,
+};
 
-use fmodeparser::{FullPermissionError};
+use fmodeparser::FullPermissionError;
 use thiserror::Error;
 
 use crate::diagnostic::EnkryptitOutput;
@@ -202,14 +205,19 @@ impl EnkryptitError {
     /// A short hint about where in the code the error happened.
     pub fn location(&self) -> Option<String> {
         match self {
-            Self::Argon2Error | Self::KeyDerivationError(_) | Self::HexError(_) | Self::MemoryLockError => Some("key derivation".to_string()),
+            Self::Argon2Error
+            | Self::KeyDerivationError(_)
+            | Self::HexError(_)
+            | Self::MemoryLockError => Some("key derivation".to_string()),
             Self::EncryptionError(_) => Some("encryption/decryption".to_string()),
             Self::InvalidKeyType(_, _) | Self::InvalidKeyLength => Some("key setup".to_string()),
             Self::KeyringError(_) => Some("OS keyring".to_string()),
             Self::KeyNotFoundInFile => Some("key file lookup".to_string()),
             Self::KeyNotFoundInOs => Some("OS keyring lookup".to_string()),
             Self::CorruptedFile => Some("archive parsing".to_string()),
-            Self::DirectoryIsFolder | Self::StripPrefixError(_) => Some("folder treatment".to_string()),
+            Self::DirectoryIsFolder | Self::StripPrefixError(_) => {
+                Some("folder treatment".to_string())
+            }
             Self::FailedToReadMetadata(_) => Some("metadata reading".to_string()),
             Self::FileIsASymLink => Some("path check".to_string()),
             Self::IoError(_) => Some("I/O".to_string()),
@@ -226,7 +234,9 @@ impl EnkryptitError {
             Self::InvalidWorkerCount => Some("parallelism setup".to_string()),
             Self::TuiError(_) => Some("TUI".to_string()),
             Self::UnknownAction(_) => Some("command dispatch".to_string()),
-            Self::PathIsIncorrect(_) | Self::SpecificFileError(_) | Self::FileError => Some("file lookup".to_string()),
+            Self::PathIsIncorrect(_) | Self::SpecificFileError(_) | Self::FileError => {
+                Some("file lookup".to_string())
+            }
             _ => None,
         }
     }
@@ -244,7 +254,6 @@ impl EnkryptitError {
         )
     }
 }
-
 
 impl From<EnkryptitError> for EnkryptitOutput {
     fn from(error: EnkryptitError) -> EnkryptitOutput {

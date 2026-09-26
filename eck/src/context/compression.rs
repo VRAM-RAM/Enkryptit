@@ -1,45 +1,41 @@
-use infer::Type;
-use crate::types::CompressionType;
-use std::{fs::File};
+use crate::context::{
+    LOW_BOUNDARY, MID_INFERIOR_BOUNDARY, MID_SUPERIOR_BOUNDARY, SUPERIOR_BOUNDARY,
+};
 use crate::errors::EnkryptitError;
+use crate::types::CompressionType;
+use infer::Type;
 use infer::get_from_path;
-use crate::context::{LOW_BOUNDARY, MID_INFERIOR_BOUNDARY, MID_SUPERIOR_BOUNDARY, SUPERIOR_BOUNDARY};
+use std::fs::File;
 
 /// Given the **path** of a file, it infers the [`CompressionType`] to use.
 /// Its flow is :
-/// - Opens the file, gets its **size** and compute a [`CompressionHint`] using [`CompressionHint::compute()`].
+/// - Opens the file, gets its **size** and compute a `CompressionHint` using `CompressionHint::compute()`.
 /// - **Matches** successively the *hint* and the *size* of the file and returns the corresponding [`CompressionType`]
 pub fn infer_compression(path: &str) -> Result<CompressionType, EnkryptitError> {
     let file = File::open(path)?;
     let len = file.metadata()?.len();
     let hint = CompressionHint::compute(get_from_path(path)?);
-    
+
     Ok(match hint {
         CompressionHint::AlreadyCompressed => CompressionType::NoComp,
-        CompressionHint::Compressible => {
-            match len {
-                0..LOW_BOUNDARY => CompressionType::Lz4,
-                LOW_BOUNDARY..MID_INFERIOR_BOUNDARY => CompressionType::Zstd,
-                MID_INFERIOR_BOUNDARY..MID_SUPERIOR_BOUNDARY => CompressionType::Xz,
-                MID_SUPERIOR_BOUNDARY..SUPERIOR_BOUNDARY => CompressionType::Zstd,
-                _ => CompressionType::Lz4,
-            }
-        }
-        CompressionHint::HighlyCompressible => {
-            match len {
-                0..LOW_BOUNDARY => CompressionType::Zstd,
-                LOW_BOUNDARY..SUPERIOR_BOUNDARY => CompressionType::Xz,
-                _ => CompressionType::Zstd,
-            }   
-        }
+        CompressionHint::Compressible => match len {
+            0..LOW_BOUNDARY => CompressionType::Lz4,
+            LOW_BOUNDARY..MID_INFERIOR_BOUNDARY => CompressionType::Zstd,
+            MID_INFERIOR_BOUNDARY..MID_SUPERIOR_BOUNDARY => CompressionType::Xz,
+            MID_SUPERIOR_BOUNDARY..SUPERIOR_BOUNDARY => CompressionType::Zstd,
+            _ => CompressionType::Lz4,
+        },
+        CompressionHint::HighlyCompressible => match len {
+            0..LOW_BOUNDARY => CompressionType::Zstd,
+            LOW_BOUNDARY..SUPERIOR_BOUNDARY => CompressionType::Xz,
+            _ => CompressionType::Zstd,
+        },
 
-        CompressionHint::Unknown => {
-            match len {
-                0..LOW_BOUNDARY => CompressionType::NoComp,
-                LOW_BOUNDARY..SUPERIOR_BOUNDARY => CompressionType::Lz4,
-                _ => CompressionType::NoComp,
-            }
-        }
+        CompressionHint::Unknown => match len {
+            0..LOW_BOUNDARY => CompressionType::NoComp,
+            LOW_BOUNDARY..SUPERIOR_BOUNDARY => CompressionType::Lz4,
+            _ => CompressionType::NoComp,
+        },
     })
 }
 
@@ -102,7 +98,7 @@ impl CompressionHint {
                     | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     | "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                    
+
                     // Executables & binaries (largely incompressible, random).
                     | "application/wasm"
                     | "application/x-llvm"

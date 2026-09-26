@@ -34,9 +34,7 @@ pub fn encrypt_folder(
     }
 
     // Step 2: Build FolderMetadata (offsets will be filled after encryption)
-    let mut folder_meta = FolderMetadata::new(
-        enkryptit_key.key_type_as_ref().clone(),
-    );
+    let mut folder_meta = FolderMetadata::new(enkryptit_key.key_type_as_ref().clone());
 
     for entry in &entries {
         folder_meta.entries.push(entry.clone());
@@ -72,7 +70,14 @@ pub fn encrypt_folder(
     pb.finish();
 
     // Step 4: Encrypt each file, tracking offsets
-    encrypt_folder_single(folder_path, enkryptit_key, &mut entries, data_start, context, &archive_path)?;
+    encrypt_folder_single(
+        folder_path,
+        enkryptit_key,
+        &mut entries,
+        data_start,
+        context,
+        &archive_path,
+    )?;
 
     let pb = GradientProgressBar::new_spinner("Finishing folder treatment...");
 
@@ -116,19 +121,27 @@ pub fn decrypt_folder(
     version: u8,
     context: &mut EnkryptitContext,
 ) -> Result<String, EnkryptitError> {
-
     // First, we deserialize the metadata
     let metadatas: FolderMetadata = from_bytes(meta_bytes)?;
     let entries = metadatas.entries;
 
     // Then, we resolve the key & keytype and create a new EnkryptitKey
-    let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, archive_path)?;
+    let enkryptit_key =
+        EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, archive_path)?;
 
     // Step 3: Create destination directory structure
     let dest_folder = archive_path.strip_suffix(".encky").unwrap_or(archive_path);
     std::fs::create_dir_all(dest_folder)?;
     // Step 4: Decrypt each file independently - continue on failure!
-    decrypt_folder_single(archive_path, dest_folder, &entries, enkryptit_key, payload_offset, version, context)?;
+    decrypt_folder_single(
+        archive_path,
+        dest_folder,
+        &entries,
+        enkryptit_key,
+        payload_offset,
+        version,
+        context,
+    )?;
 
     Ok(dest_folder.to_string())
 }

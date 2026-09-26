@@ -1,20 +1,22 @@
 use crate::encryption::chunk_job::result::ChunkResult;
-use crate::encryption::chunk_job::{decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk};
+use crate::encryption::chunk_job::{
+    decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk,
+};
 use crate::encryption::encryption_primitives::generate_nonce;
-use crate::encryption::file::{read_file};
+use crate::encryption::file::read_file;
+use crate::encryption::shared_cipher;
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, MetaDatas};
 use crate::parallelism::executable::EnkryptitExecutable;
 use crate::parallelism::pool::EnkryptitPool;
 use crate::types::{CHUNK_SIZE, CompressionType};
+use gradient_bar::GradientProgressBar;
 use std::fs::File;
-use std::io::{Read};
+use std::io::Read;
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
 use std::sync::Arc;
-use gradient_bar::GradientProgressBar;
-use crate::encryption::shared_cipher;
 
 /// Public function that `encrypts` a file, using a pool of workers. `num_threads` determines the number of workers.
 /// The function first initialize the pool of workers. Then, when processing, it submits a jobs to the pool of workers.
@@ -91,7 +93,14 @@ pub fn encrypt_multithread_file(
         }
 
         // We create the job and submit it
-        submit_encrypt_chunk(&pool, step, buffer[..bytes_read].to_vec(), arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
+        submit_encrypt_chunk(
+            &pool,
+            step,
+            buffer[..bytes_read].to_vec(),
+            arc_nonce.clone(),
+            arc_compression.clone(),
+            cipher.clone(),
+        )?;
 
         // We increment
         submitted += 1;
@@ -134,7 +143,7 @@ pub fn decrypt_multithread_file(
     let mut file = read_file(path)?;
 
     let plain_path = path.strip_suffix(".encky").unwrap_or(path);
-    
+
     // Create a placeholder for the new file
     let new_file = std::fs::File::create(plain_path)?;
     let mut writer = BufWriter::new(new_file);
@@ -203,7 +212,14 @@ pub fn decrypt_multithread_file(
             submitted = 0;
         }
 
-        submit_decrypt_chunk(&pool, step, payload, arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
+        submit_decrypt_chunk(
+            &pool,
+            step,
+            payload,
+            arc_nonce.clone(),
+            arc_compression.clone(),
+            cipher.clone(),
+        )?;
 
         // We increment
         submitted += 1;
@@ -255,9 +271,9 @@ pub fn write_batch_plain(
     writer: &mut BufWriter<File>,
 ) -> Result<u64, EnkryptitError> {
     results.sort_by_key(|r| r.index);
-    
+
     let mut written = 0u64;
-    
+
     for chunk_result in results.iter() {
         writer.write_all(&chunk_result.data)?;
         written += chunk_result.data.len() as u64;

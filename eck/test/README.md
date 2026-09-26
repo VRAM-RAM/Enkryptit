@@ -65,4 +65,4 @@ Always hold the guard for the whole test, and always run the binary via
 
 ## Known Issues
 
-None — the suite is expected to be fully green (89 passed, 1 ignored).
+None — the suite is expected to be fully green.

@@ -1,12 +1,21 @@
 use crate::{
-    diagnostic::{logging::EnkryptitLogger, output::snippet::Snippet, EnkryptitOutput}, frontend::{
-        cli::{inspection::inspect_one_or_more_objects, params_helpers::{show_params, update_params}, treatment::treat_objects_with_multiple_paths}, treat_output::treat_output, tui::{input::RealTuiInput, launch_ui},
-    }, types::Version,
+    diagnostic::{EnkryptitOutput, logging::EnkryptitLogger, output::snippet::Snippet},
+    frontend::{
+        cli::{
+            inspection::inspect_one_or_more_objects,
+            params_helpers::{show_params, update_params},
+            treatment::treat_objects_with_multiple_paths,
+        },
+        tui::{input::RealTuiInput, launch_ui},
+    },
+    types::Version,
 };
 use clap::{Parser, Subcommand};
 mod compression;
 mod context;
 mod conversions;
+mod diagnostic;
+mod directory;
 mod encryption;
 mod errors;
 mod frontend;
@@ -16,8 +25,6 @@ mod parallelism;
 mod parameters;
 mod treatment;
 mod types;
-mod diagnostic;
-mod directory;
 
 use crate::frontend::cli::treatment::treat_object_with_path;
 
@@ -25,9 +32,9 @@ use crate::frontend::cli::treatment::treat_object_with_path;
 /// Enkryptit versions are separated between :
 /// - Nightly versions
 /// - Stable versions
-/// \
+///
 /// This constant is only for `Nightly` version.
-/// \
+///
 /// So, for example, if you download **Enkryptit!** v0.1.4, it is the 4th nightly version of 1st stable version.
 pub const VERSION: Version = 3;
 
@@ -100,7 +107,9 @@ fn main() {
     let cli: Cli = Cli::parse();
 
     if let Err(e) = EnkryptitLogger::init() {
-        eprintln!("Error while launching the logger... so we can't cleanly log this error : {}", e);
+        EnkryptitOutput::error("Error while initializing the logger.", e)
+            .with_location("main.rs::main()")
+            .display();
     }
 
     match cli.command {
@@ -142,15 +151,19 @@ fn main() {
             match path.len() {
                 0 => launch_ui(&RealTuiInput),
                 1 => match treat_object_with_path(&path[0], cli.password) {
-                    Ok(output) => treat_output(output),
+                    Ok(output) => output.display(),
                     Err(e) => {
-                        let err: EnkryptitOutput = e.into();
-                        treat_output(err.with_snippet(Snippet::cli_invocation("eck", &path[0])));
+                        e.into_output()
+                            .with_snippet(Snippet::cli_invocation("eck", &path[0]))
+                            .display();
                     }
                 },
                 _ => match treat_objects_with_multiple_paths(&path, cli.password) {
                     Ok(()) => (),
-                    Err(e) => eprintln!("[ERROR] {}", e),
+                    Err(e) => e
+                        .into_output()
+                        .with_snippet(Snippet::cli_invocation("eck", &path[0]))
+                        .display(),
                 },
             }
         }

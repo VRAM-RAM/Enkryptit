@@ -1,4 +1,3 @@
-
 /// Context used to draw a miette source frame around an error.
 ///
 /// Points at the offending token inside a synthetic *source* line so that

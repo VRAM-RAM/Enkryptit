@@ -16,7 +16,7 @@ pub fn show_params() {
             println!();
         }
         Err(e) => {
-            eprintln!("[ERROR] {}", e);
+            e.into_output().display();
             std::process::exit(1);
         }
     }
@@ -33,9 +33,9 @@ fn parse_parallelism(value: &str) -> Result<ParallelismType, String> {
     }
 
     if lower == "auto" || lower == "automatic" {
-        return  Ok(ParallelismType::Auto);
+        return Ok(ParallelismType::Auto);
     }
-    
+
     // Support "multi:<n>" and "multi <n>" forms, and plain "multi".
     let (base, count_str) = if let Some(rest) = lower.strip_prefix("multi:") {
         ("multi", Some(rest))
@@ -85,7 +85,8 @@ pub fn update_params(
                     "none" | "no" | "4" => params.compression = CompressionType::NoComp,
                     "auto" | "a" | "5" => params.compression = CompressionType::Auto,
                     other => {
-                        EnkryptitOutput::warning(format!("Unknown compression: {}", other)).display();
+                        EnkryptitOutput::warning(format!("Unknown compression: {}", other))
+                            .display();
                         std::process::exit(1);
                     }
                 }
@@ -114,7 +115,7 @@ pub fn update_params(
             }
 
             match save_params(&params) {
-                Ok(_) => println!("\n Params were changed ! \n"),
+                Ok(_) => EnkryptitOutput::success("Parameters were changed !").display(),
                 Err(e) => {
                     EnkryptitOutput::error("Failed to save parameters.", e)
                         .with_location("cli::params_helpers::update_params()")

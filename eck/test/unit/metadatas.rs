@@ -3,7 +3,7 @@
 //! Test Postcard-based metadata storage and retrieval (encryption parameters, compression type)
 
 use eck::VERSION;
-use eck::metadatas::{ArchiveHeader, MAGIC, FileEntry, FolderMetadata, MetaDatas};
+use eck::metadatas::{ArchiveHeader, FileEntry, FolderMetadata, MAGIC, MetaDatas};
 use eck::types::{CompressionType, KeyType};
 use postcard;
 use rand::{RngCore, rngs::OsRng};

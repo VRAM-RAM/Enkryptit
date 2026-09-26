@@ -1,23 +1,22 @@
 pub mod argument;
 pub mod style;
 
-use comfy_table::{Table};
-use comfy_table::{
-    presets::UTF8_FULL_CONDENSED,
-    Cell, ContentArrangement,
-};
+use comfy_table::Table;
+use comfy_table::{Cell, ContentArrangement, presets::UTF8_FULL_CONDENSED};
 
 use crate::diagnostic::report::argument::ReportArgument;
 
 pub struct Report {
     title: ReportArgument,
-    fields: Vec<(ReportArgument, ReportArgument)>
+    fields: Vec<(ReportArgument, ReportArgument)>,
 }
-
 
 impl Report {
     pub fn new(title: ReportArgument) -> Self {
-        Self { title, fields: vec![] }
+        Self {
+            title,
+            fields: vec![],
+        }
     }
 
     pub fn field(mut self, name: ReportArgument, value: ReportArgument) -> Self {
@@ -44,7 +43,6 @@ impl Report {
                 Cell::new(&label.value)
                     .fg(label.style.color())
                     .add_attribute(label.style.attribute()),
-
                 Cell::new(&value.value)
                     .fg(value.style.color())
                     .add_attribute(value.style.attribute()),

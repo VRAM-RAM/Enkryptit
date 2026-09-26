@@ -8,6 +8,7 @@
 
 > [!WARNING]
 > This project is currently a work in progress. It is **not audited** for production security.
+> Os' keyring usage is unstable for now.
 
 ## Table of contents
 
@@ -17,6 +18,7 @@
   * [TUI](#tui)
   * [Examples](#examples)
 * [Why Enkryptit! ?](#why-enkryptit-)
+* [Documentation](#documentation)
 * [Development](#development)
 * [License](#license)
 
@@ -24,7 +26,7 @@
 
 ### Prerequisites
 
-* **Rust:** `1.75+` is recommended.
+* **Rust:** `1.85+` is recommended.
 * A working native credential store (e.g. `libsecret` on Linux, native Keychain on macOS).
 
 ### Build and Launch
@@ -172,6 +174,16 @@ eck inspect /home/user/my_secret.txt
 * **Extensively tested** — 199+ tests cover cryptography, key handling, tamper detection, folder encryption, multithreading, CLI behavior, and TUI flows.
 
 **In short:** Enkryptit combines **strong authenticated encryption, flexible key management, efficient large-file processing, automatic compression and parallelism, and a usable CLI/TUI** in one native Rust application.
+
+## Documentation
+
+The full documentation lives in the [`doc/`](./doc/) folder:
+
+* **User guide** — bilingual English & French:
+  * [Installation](./doc/user-guide/en/installation.md) · [Command line](./doc/user-guide/en/cli.md) · [Terminal UI](./doc/user-guide/en/tui.md)
+  * [Errors & output](./doc/user-guide/en/errors.md) · [`.encky` format](./doc/user-guide/en/format.md)
+  * Français : [installation](./doc/user-guide/fr/installation.md), [ligne de commande](./doc/user-guide/fr/cli.md), [interface](./doc/user-guide/fr/tui.md), [erreurs](./doc/user-guide/fr/errors.md), [format](./doc/user-guide/fr/format.md)
+* **Developer guide** (English): [start here](./doc/dev/README.md) — architecture, modules, testing, fuzzing, security.
 
 ## Development
 

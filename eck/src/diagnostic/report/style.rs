@@ -1,6 +1,4 @@
-use comfy_table::{
-    Attribute, Color,
-};
+use comfy_table::{Attribute, Color};
 
 #[allow(dead_code)]
 pub enum EnkryptitStyle {
@@ -23,7 +21,6 @@ impl EnkryptitStyle {
             Self::Value => Color::White,
             Self::Warning => Color::Red,
             Self::Error => Color::DarkRed,
-
         }
     }
 
@@ -33,7 +30,7 @@ impl EnkryptitStyle {
             Self::Label => Attribute::Bold,
             Self::Warning => Attribute::Bold,
             Self::Error => Attribute::Italic,
-            _ => Attribute::NoUnderline
+            _ => Attribute::NoUnderline,
         }
     }
 }

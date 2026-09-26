@@ -1,6 +1,6 @@
-use std::{fs::{metadata},  path::Path};
+use std::{fs::metadata, path::Path};
 
-use crate::{context::parallelism::infer_parallelism};
+use crate::context::parallelism::infer_parallelism;
 use postcard::from_bytes;
 
 use crate::{metadatas::MetaDatas, treatment::inspect::InspectionReport};
@@ -19,8 +19,8 @@ pub fn inspect_encrypted_file(path: &str, meta: &[u8], version: u8) -> Inspectio
             compression = Some(m.compression);
             keytype = Some(m.key_type);
             nonce = Some(m.nonce);
-        },
-        Err(e) => tracing::warn!("{}", e)
+        }
+        Err(e) => tracing::warn!("{}", e),
     };
 
     match metadata(path) {
@@ -30,13 +30,22 @@ pub fn inspect_encrypted_file(path: &str, meta: &[u8], version: u8) -> Inspectio
                 Ok(p) => parallelism = Some(p),
                 Err(e) => tracing::warn!("{}", e),
             }
-        },
-        Err(e) => tracing::warn!("{}", e)
+        }
+        Err(e) => tracing::warn!("{}", e),
     };
 
     let name = pathstd.file_name().map(|p| p.to_string_lossy().to_string());
 
     let directory = pathstd.parent().map(|p| p.to_string_lossy().to_string());
 
-    InspectionReport::EncryptedFile { name, directory, size, version, compression_type: compression, predicted_parallelism_type: parallelism, keytype, nonce }
+    InspectionReport::EncryptedFile {
+        name,
+        directory,
+        size,
+        version,
+        compression_type: compression,
+        predicted_parallelism_type: parallelism,
+        keytype,
+        nonce,
+    }
 }

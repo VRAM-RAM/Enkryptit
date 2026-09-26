@@ -1,8 +1,6 @@
 use std::{fs::File, io::BufReader, path::PathBuf};
 
-
 use crate::{errors::EnkryptitError, types::CHUNK_SIZE};
-
 
 /// A simple structure that contains the `BufReader` of a file, and its len.
 pub struct EnkryptitFile {
@@ -20,7 +18,6 @@ pub fn read_file(path: impl Into<PathBuf>) -> Result<EnkryptitFile, EnkryptitErr
     Ok(EnkryptitFile {
         reader: BufReader::new(file),
         len,
-        estimated_steps: len / CHUNK_SIZE as u64
+        estimated_steps: len / CHUNK_SIZE as u64,
     })
 }
-

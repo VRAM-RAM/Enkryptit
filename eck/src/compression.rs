@@ -1,6 +1,6 @@
 use crate::errors::EnkryptitError;
 use crate::types::CHUNK_SIZE;
-use crate::types::CompressionType::{self, Lz4, NoComp, Xz, Zstd, Auto};
+use crate::types::CompressionType::{self, Auto, Lz4, NoComp, Xz, Zstd};
 use lz4_flex::block::{compress_into as lz4compress, decompress_into as lz4decompress};
 use std::io::Read;
 use xz2::read::{XzDecoder, XzEncoder};
@@ -11,7 +11,7 @@ use zstd::bulk::decompress_to_buffer as zstddecompress;
 /// \
 /// Implements the `compress` method :
 ///
-/// ```text
+/// ```rust
 /// fn compress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError>;
 /// ```
 /// \
@@ -33,7 +33,7 @@ pub trait EnkryptitCompress {
 /// \
 /// Implements the `decompress` method :
 ///
-/// ```text
+/// ```rust
 /// fn decompress(&self, output: &mut Vec<u8>, compression: CompressionType) -> Result<(), EnkryptitError>;
 /// ```
 pub trait EnkryptitDecompress {
@@ -61,7 +61,9 @@ impl EnkryptitCompress for [u8] {
         compression: CompressionType,
     ) -> Result<(), EnkryptitError> {
         match compression {
-            Auto => unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."),
+            Auto => unreachable!(
+                "`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."
+            ),
             Zstd => compress_with_zstd(self, output),
             Lz4 => compress_with_lz4(self, output),
             Xz => compress_with_xz(self, output),
@@ -91,7 +93,9 @@ impl EnkryptitDecompress for [u8] {
         compression: CompressionType,
     ) -> Result<(), EnkryptitError> {
         match compression {
-            Auto =>  unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."),
+            Auto => unreachable!(
+                "`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."
+            ),
             Zstd => decompress_with_zstd(self, output),
             Lz4 => decompress_with_lz4(self, output),
             Xz => decompress_with_xz(self, output),

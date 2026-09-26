@@ -25,7 +25,7 @@ impl CompressionType {
             Self::Lz4 => "Lz4 (fastest)".to_string(),
             Self::Xz => "Xz (slowest but most efficient)".to_string(),
             Self::NoComp => "No compression".to_string(),
-            Self::Zstd => "Zstd (Balanced)".to_string()
+            Self::Zstd => "Zstd (Balanced)".to_string(),
         }
     }
 }

@@ -28,8 +28,8 @@ pub fn launch_params(input: &impl TuiInput) -> Result<(), EnkryptitError> {
             Ok(choice) if choice == "Show current parameters" => show_current_params()?,
             Ok(choice) if choice == "Back to main menu" => break,
             Err(_) => {
-                EnkryptitOutput::info("Selection cancelled").display();
-                continue;
+                // EnkryptitOutput::info("Selection cancelled").display(); replaced by :
+                tracing::info!("Selection cancelled");
             }
             _ => continue,
         }
@@ -98,7 +98,11 @@ fn change_key_type(input: &impl TuiInput) -> Result<(), EnkryptitError> {
 fn change_parallelism(input: &impl TuiInput) -> Result<(), EnkryptitError> {
     let old_params = load_params()?;
 
-    let choices = vec!["Auto (automatically choosed by Enkryptit!)", "Single", "MultiThread"];
+    let choices = vec![
+        "Auto (automatically choosed by Enkryptit!)",
+        "Single",
+        "MultiThread",
+    ];
 
     let choice = input.select("Select parallelism type:", &choices)?;
 

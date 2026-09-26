@@ -1,12 +1,11 @@
-use crate::compression::{EnkryptitDecompress};
+use crate::compression::EnkryptitDecompress;
+use crate::encryption::chunk_job::result::ChunkResult;
 use crate::encryption::encryption_primitives::{decrypt_chunk, derive_nonce};
 use crate::parallelism::executable::EnkryptitExecutable;
 use crate::types::CHUNK_SIZE;
 use crate::types::CompressionType;
 use chacha20poly1305::XChaCha20Poly1305;
 use std::sync::Arc;
-use crate::encryption::chunk_job::result::ChunkResult;
-
 
 pub struct DecryptChunkJob {
     pub index: u64,

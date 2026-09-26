@@ -5,9 +5,9 @@ use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, MetaDatas};
 use crate::types::CompressionType;
+use gradient_bar::GradientProgressBar;
 use std::io::{BufWriter, Write};
 use std::io::{Seek, SeekFrom};
-use gradient_bar::GradientProgressBar;
 use zeroize::Zeroize;
 
 /// Public function that encrypts a file (it also resolves the key and keytype) - single thread
@@ -98,7 +98,7 @@ pub fn decrypt_file_single(
         enkryptit_key.key_as_ref(),
         compression,
         master_nonce,
-        Some(progress_bar)
+        Some(progress_bar),
     )?;
 
     writer.flush()?;

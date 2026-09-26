@@ -1,7 +1,13 @@
 [package]
 name = "eck"
 version = "0.0.3"
+description = "A fast, simple file & folder encryption manager, written in Rust" 
+keywords = ["cli", "encryption", "cryptography"]
 edition = "2024"
+license = "CECILL-B OR Apache-2.0"
+repository = "https://github.com/VRAM-RAM/Enkryptit"
+authors = ["Olruix (VRAM-RAM)"]
+rust-version = "1.85"
 
 [dependencies]
 argon2 = "0.5.3"
@@ -29,10 +35,13 @@ rpassword = "7.5.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.150"
 sysinfo = "0.39.6"
+terminal_size = "0.4"
 thiserror = "2.0.18"
 tracing = "0.1.44"
 tracing-appender = "0.2.5"
 tracing-subscriber = { version = "0.3.23", features = ["fmt", "env-filter"]}
+unicode-segmentation = "1"
+unicode-width = "0.2"
 walkdir = "2.5.0"
 xz2 = "0.1.7"
 zeroize = "1.8.2"
@@ -43,6 +52,7 @@ tempfile = "3"
 assert_cmd = "2"
 predicates = "3"
 ctor = "0.2"
+unicode-width = "0.2"
 
 [[test]]
 name = "eck_tests"

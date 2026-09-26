@@ -1,4 +1,4 @@
-use crate::directory::{project_dir_path};
+use crate::directory::project_dir_path;
 use crate::errors::EnkryptitError;
 use crate::types::{
     CompressionType::{self},
@@ -89,7 +89,11 @@ pub fn load_params() -> Result<EnkryptitParams, EnkryptitError> {
     match serde_json::from_str(&content) {
         Ok(params) => Ok(params),
         Err(e) => {
-            tracing::warn!("Config file {} is corrupted ({}), falling back to default parameters.", path.display(), e);
+            tracing::warn!(
+                "Config file {} is corrupted ({}), falling back to default parameters.",
+                path.display(),
+                e
+            );
             let backup_path = path.with_extension("json.bak");
             let _ = std::fs::rename(&path, &backup_path);
 

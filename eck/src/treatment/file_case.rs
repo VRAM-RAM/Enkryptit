@@ -1,6 +1,6 @@
 use crate::context::EnkryptitContext;
-use crate::encryption::file_encryption::{decrypt_file, encrypt_file};
 use crate::diagnostic::EnkryptitOutput;
+use crate::encryption::file_encryption::{decrypt_file, encrypt_file};
 use crate::types::KeyType::{self};
 
 /// Public helper for encrypting a file (Converts Ok<>/EnkryptitError to Output)

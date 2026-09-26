@@ -10,14 +10,14 @@ use eck::context::{
     EnkryptitContext, LOW_BOUNDARY, MID_INFERIOR_BOUNDARY, MID_SUPERIOR_BOUNDARY, SUPERIOR_BOUNDARY,
 };
 use eck::encryption::chunk_job::{
-    decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, result::ChunkResult,
-    submit_decrypt_chunk, submit_encrypt_chunk,
+    decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, result::ChunkResult, submit_decrypt_chunk,
+    submit_encrypt_chunk,
 };
 use eck::errors::EnkryptitError;
 use eck::parallelism::EnkryptitJob;
 use eck::parallelism::executable::EnkryptitExecutable;
 use eck::parallelism::pool::EnkryptitPool;
-use eck::types::{CHUNK_SIZE, CompressionType, Interface, ParallelismType};
+use eck::types::{CHUNK_SIZE, CompressionType, ParallelismType};
 use tempfile::TempDir;
 
 /// A trivial executable that returns its index, so we can check that results
@@ -223,7 +223,7 @@ mod tests {
     }
 
     fn auto_context() -> EnkryptitContext {
-        EnkryptitContext::new(Interface::Cli, None, CompressionType::NoComp, ParallelismType::Auto)
+        EnkryptitContext::new(None, CompressionType::NoComp, ParallelismType::Auto)
     }
 
     #[test]
@@ -251,7 +251,8 @@ mod tests {
             ParallelismType::MultiThread(8.min(cpus()))
         );
         assert_eq!(
-            ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY - 1).unwrap(),
+            ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY - 1)
+                .unwrap(),
             ParallelismType::MultiThread(8.min(cpus()))
         );
     }
@@ -260,11 +261,13 @@ mod tests {
     fn auto_parallelism_mid_inferior_zone_is_multithread_12() {
         let ctx = auto_context();
         assert_eq!(
-            ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY).unwrap(),
+            ctx.resolve_parallelism_with_size(MID_INFERIOR_BOUNDARY)
+                .unwrap(),
             ParallelismType::MultiThread(12.min(cpus()))
         );
         assert_eq!(
-            ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY - 1).unwrap(),
+            ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY - 1)
+                .unwrap(),
             ParallelismType::MultiThread(12.min(cpus()))
         );
     }
@@ -273,11 +276,13 @@ mod tests {
     fn auto_parallelism_mid_superior_zone_is_multithread_16() {
         let ctx = auto_context();
         assert_eq!(
-            ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY).unwrap(),
+            ctx.resolve_parallelism_with_size(MID_SUPERIOR_BOUNDARY)
+                .unwrap(),
             ParallelismType::MultiThread(16.min(cpus()))
         );
         assert_eq!(
-            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY - 1).unwrap(),
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY - 1)
+                .unwrap(),
             ParallelismType::MultiThread(16.min(cpus()))
         );
     }
@@ -286,11 +291,13 @@ mod tests {
     fn auto_parallelism_superior_zone_uses_every_core() {
         let ctx = auto_context();
         assert_eq!(
-            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY).unwrap(),
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY)
+                .unwrap(),
             ParallelismType::MultiThread(cpus())
         );
         assert_eq!(
-            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY * 2).unwrap(),
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY * 2)
+                .unwrap(),
             ParallelismType::MultiThread(cpus())
         );
     }
@@ -298,7 +305,6 @@ mod tests {
     #[test]
     fn explicit_parallelism_bypasses_size_inference() {
         let ctx = EnkryptitContext::new(
-            Interface::Cli,
             None,
             CompressionType::NoComp,
             ParallelismType::MultiThread(3),
@@ -309,9 +315,10 @@ mod tests {
             ParallelismType::MultiThread(3)
         );
 
-        let ctx = EnkryptitContext::new(Interface::Cli, None, CompressionType::NoComp, ParallelismType::Single);
+        let ctx = EnkryptitContext::new(None, CompressionType::NoComp, ParallelismType::Single);
         assert_eq!(
-            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY * 999).unwrap(),
+            ctx.resolve_parallelism_with_size(SUPERIOR_BOUNDARY * 999)
+                .unwrap(),
             ParallelismType::Single
         );
     }

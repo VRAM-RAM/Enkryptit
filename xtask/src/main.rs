@@ -11,7 +11,6 @@ fn main() {
                 run_cargo(&["build", "--release"]);
             } else {
                 run_cargo(&["build"]);
-
             }
         }
 
@@ -47,8 +46,8 @@ fn main() {
         }
 
         "doc" | "rustdoc" | "rsdoc" => {
-            run_cargo(&["doc", "--open" , "--document-private-items"]);
-        } 
+            run_cargo(&["doc", "--open", "--document-private-items"]);
+        }
         _ => {
             eprintln!("Unknown task: {task}");
             print_help();
@@ -95,4 +94,3 @@ pub fn run_cargo_in(dir: &str, args: &[&str]) {
         std::process::exit(status.code().unwrap_or(1));
     }
 }
-

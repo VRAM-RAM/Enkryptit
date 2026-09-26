@@ -1,9 +1,9 @@
 //! # Enkryptit!
 //! \
-//! **Enkryptit!** is a Rust-written cli-tool / interactive manager for file and folder encryption. 
+//! **Enkryptit!** is a Rust-written cli-tool / interactive manager for file and folder encryption.
 //!
 //! > This project is currently a work in progress. It is **not audited** for production security.
-//! 
+//!
 //! ## Code Layout
 //! ```txt
 //! src/
@@ -78,15 +78,16 @@
 //! * **Apache License, Version 2.0**
 //!
 //! Choose the one that best fits your needs.
-//! 
+//!
 //! ## Contact
-//! 
+//!
 //!* **Developer:** Olruix ([VRAM-RAM](https://github.com/VRAM-RAM))
-
 
 pub mod compression;
 pub mod context;
 pub mod conversions;
+pub mod diagnostic;
+pub mod directory;
 pub mod encryption;
 pub mod errors;
 pub mod frontend;
@@ -96,8 +97,6 @@ pub mod parallelism;
 pub mod parameters;
 pub mod treatment;
 pub mod types;
-pub mod diagnostic;
-pub mod directory;
 
 use crate::types::Version;
 
@@ -105,8 +104,8 @@ use crate::types::Version;
 /// Enkryptit versions are separated between :
 /// - Nightly versions
 /// - Stable versions
-/// \
+///
 /// This constant is only for `Nightly` version.
-/// \
+///
 /// So, for example, if you download **Enkryptit!** v0.1.4, it is the 4th nightly version of 1st stable version.
 pub const VERSION: Version = 3;

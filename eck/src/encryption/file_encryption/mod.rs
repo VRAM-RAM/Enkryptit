@@ -19,11 +19,12 @@ pub fn encrypt_file(
     context: &mut EnkryptitContext,
 ) -> Result<String, EnkryptitError> {
     // Creates the enkryptit key (and resolves keytype & key)
-    let enkryptit_key: EnkryptitKey = EnkryptitKey::resolve(Mode::Encrypting, keytype, context, path)?;
+    let enkryptit_key: EnkryptitKey =
+        EnkryptitKey::resolve(Mode::Encrypting, keytype, context, path)?;
 
     // We resolve the compression type
     let compression = context.resolve_compression(path)?;
-    
+
     // We resolve the parallelism type
     let parallelism = context.resolve_parallelism(path)?;
 
@@ -33,7 +34,9 @@ pub fn encrypt_file(
         ParallelismType::MultiThread(threads) => {
             encrypt_multithread_file(path, compression, enkryptit_key, threads)
         }
-        ParallelismType::Auto => unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue.")
+        ParallelismType::Auto => unreachable!(
+            "`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."
+        ),
     }
 }
 
@@ -52,7 +55,8 @@ pub fn decrypt_file(
     let master_nonce = metadatas.nonce;
 
     // We resolve the key
-    let enkryptit_key = EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
+    let enkryptit_key =
+        EnkryptitKey::resolve(Mode::Decrypting, &metadatas.key_type, context, path)?;
 
     let parallelism = context.resolve_parallelism(path)?;
 
@@ -72,6 +76,8 @@ pub fn decrypt_file(
             compression_type,
             threads,
         ),
-        ParallelismType::Auto => unreachable!("`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue.")
+        ParallelismType::Auto => unreachable!(
+            "`Auto` should never be reached here, and always infered before reaching this function. There is an error in the code. If you are reading this as an user, please open an Issue."
+        ),
     }
 }

@@ -1,7 +1,6 @@
 use crate::types::{CompressionType, KeyType, ParallelismType, Version};
 mod display;
 
-
 pub enum InspectionReport {
     PlaintextFile {
         name: Option<String>,
@@ -38,6 +37,6 @@ pub enum InspectionReport {
         size: Option<u64>,
         version: Version,
         entries_number: Option<u64>,
-        keytype: Option<KeyType>
-    }
+        keytype: Option<KeyType>,
+    },
 }

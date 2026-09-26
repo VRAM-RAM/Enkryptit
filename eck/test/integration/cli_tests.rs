@@ -35,6 +35,7 @@ mod tests {
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         let _ = child.kill();
+        let _ = child.wait();
     }
 
     #[test]
@@ -52,6 +53,7 @@ mod tests {
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         let _ = child.kill();
+        let _ = child.wait();
     }
 
     #[test]
@@ -93,7 +95,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         // The change must be persisted to the isolated config file
         let saved = fs::read_to_string(guard.path()).unwrap();
@@ -121,7 +126,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         // The change must be persisted to the isolated config file
         let saved = fs::read_to_string(guard.path()).unwrap();
@@ -149,7 +157,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed"),
+            "stdout: {stdout}"
+        );
 
         // The change must be persisted to the isolated config file
         let saved = fs::read_to_string(guard.path()).unwrap();
@@ -177,7 +188,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         let saved = fs::read_to_string(guard.path()).unwrap();
         assert!(saved.contains("\"Auto\""), "config: {saved}");
@@ -205,7 +219,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         let saved = fs::read_to_string(guard.path()).unwrap();
         assert!(saved.contains("\"Os\""), "config: {saved}");
@@ -231,7 +248,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         let saved = fs::read_to_string(guard.path()).unwrap();
         assert!(saved.contains("\"File\""), "config: {saved}");
@@ -257,7 +277,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         let saved = fs::read_to_string(guard.path()).unwrap();
         assert!(saved.contains("\"PassWord\""), "config: {saved}");
@@ -283,7 +306,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         let saved = fs::read_to_string(guard.path()).unwrap();
         assert!(saved.contains("\"PassWord\""), "config: {saved}");
@@ -552,7 +578,10 @@ mod tests {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Params were changed"), "stdout: {stdout}");
+        assert!(
+            stdout.contains("Parameters were changed !"),
+            "stdout: {stdout}"
+        );
 
         let saved = fs::read_to_string(guard.path()).unwrap();
         assert!(saved.contains("\"Auto\""), "config: {saved}");
@@ -645,9 +674,18 @@ mod tests {
 
         assert!(output.status.success(), "inspect must exit cleanly");
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains(missing), "path must appear in source line: {stdout}");
-        assert!(stdout.contains("╰──"), "curved pointer must appear: {stdout}");
-        assert!(stdout.contains("help:"), "help footer must appear: {stdout}");
+        assert!(
+            stdout.contains(missing),
+            "path must appear in source line: {stdout}"
+        );
+        assert!(
+            stdout.contains("╰──"),
+            "curved pointer must appear: {stdout}"
+        );
+        assert!(
+            stdout.contains("help:"),
+            "help footer must appear: {stdout}"
+        );
     }
 
     #[test]
@@ -660,8 +698,17 @@ mod tests {
 
         assert!(output.status.success(), "missing path must not hard-fail");
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains(missing), "path must appear in source line: {stdout}");
-        assert!(stdout.contains("╰──"), "curved pointer must appear: {stdout}");
-        assert!(stdout.contains("help:"), "help footer must appear: {stdout}");
+        assert!(
+            stdout.contains(missing),
+            "path must appear in source line: {stdout}"
+        );
+        assert!(
+            stdout.contains("╰──"),
+            "curved pointer must appear: {stdout}"
+        );
+        assert!(
+            stdout.contains("help:"),
+            "help footer must appear: {stdout}"
+        );
     }
 }

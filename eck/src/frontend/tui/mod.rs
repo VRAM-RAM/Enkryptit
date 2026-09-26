@@ -8,9 +8,7 @@ pub mod treatment;
 use self::action::EnkryptitTuiAction;
 use self::input::TuiInput;
 use crate::VERSION;
-use crate::diagnostic::EnkryptitOutput;
 use colored::*;
-
 
 /// Show Params macro helper
 #[allow(unused)] // It is not unused, but... Rust Analyser thinks that
@@ -28,12 +26,7 @@ pub fn launch_ui(input: &impl TuiInput) {
     println!("   Fast & Simple File Encryption Manager v0.0.{}", VERSION);
 
     loop {
-        let choices = vec![
-            "Browse",
-            "Parameters",
-            "Help",
-            "Exit",
-        ];
+        let choices = vec!["Browse", "Parameters", "Help", "Exit"];
 
         match input.select("What do you want to do?", &choices) {
             Ok(choice) if choice == "Exit" => {
@@ -42,15 +35,16 @@ pub fn launch_ui(input: &impl TuiInput) {
             }
 
             Ok(value) => {
-                if let Some(action) = EnkryptitTuiAction::from_string(&value) 
-                    && let Err(e) = action.execute(input) {
-                        e.into_output().display();
+                if let Some(action) = EnkryptitTuiAction::from_string(&value)
+                    && let Err(e) = action.execute(input)
+                {
+                    e.into_output().display();
                 }
             }
 
             Err(_) => {
-                EnkryptitOutput::info("Selection cancelled").display();
-                continue;
+                // EnkryptitOutput::info("Selection cancelled").display(); replaced by :
+                tracing::info!("Selection cancelled");
             }
         }
     }

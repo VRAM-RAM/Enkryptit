@@ -1,13 +1,16 @@
-use crate::context::EnkryptitContext;
 use crate::encryption::encryption_primitives::generate_nonce;
 use crate::encryption::folder_encryption::entry::collect_entry::collect_entry;
 use crate::errors::EnkryptitError;
 use crate::metadatas::FileEntry;
-use std::path::{PathBuf};
+use crate::{context::EnkryptitContext, diagnostic::EnkryptitOutput};
+use std::path::PathBuf;
 use walkdir::WalkDir;
 
 /// Collect all files from directory tree using walkdir (follow symlinks via follow_links on Unix)
-pub fn collect_folder_entries(folder_path: &str, context: &EnkryptitContext) -> Result<Vec<FileEntry>, EnkryptitError> {
+pub fn collect_folder_entries(
+    folder_path: &str,
+    context: &EnkryptitContext,
+) -> Result<Vec<FileEntry>, EnkryptitError> {
     let mut entries = Vec::new();
 
     for entry in WalkDir::new(folder_path).follow_links(true) {
@@ -15,10 +18,16 @@ pub fn collect_folder_entries(folder_path: &str, context: &EnkryptitContext) -> 
             Ok(dir_entry) => {
                 let (relative_path, permissions) = match collect_entry(&dir_entry, folder_path) {
                     Ok((rp, perm)) => (rp, perm),
-                    Err(_) => {
+                    Err(e) => {
+                        tracing::warn!(
+                            "An error occurred when collecting an entry. Here's the detailed error : {}",
+                            e
+                        );
+                        EnkryptitOutput::warning(
+                            "An error occurred when collecting an entry. We skip it.",
+                        )
+                        .display();
                         continue;
-                        // TODO ! Add a logging system ! (For advanced users who wants to see WHY and WHERE exactly the file entry collection failed)
-                        // Also add a failure message that just indicated that we're skipping a file (for non-advanced users)
                     }
                 };
 
@@ -26,19 +35,29 @@ pub fn collect_folder_entries(folder_path: &str, context: &EnkryptitContext) -> 
                 let full_path_str = match full_path.to_str() {
                     Some(path) => path,
                     None => {
+                        tracing::warn!(
+                            "An error occurred when converting full path (PathBuf) to &str."
+                        );
+                        EnkryptitOutput::warning(
+                            "An error occurred when treating an entry. We skip it.",
+                        )
+                        .display();
                         continue;
-                        // TODO ! Add a logging system ! (For advanced users who wants to see WHY and WHERE exactly the file entry collection failed)
-                        // Also add a failure message that just indicated that we're skipping a file (for non-advanced users)
-
                     }
                 };
 
                 let compression = match context.resolve_compression(full_path_str) {
                     Ok(compression) => compression,
-                    Err(_) => {
+                    Err(e) => {
+                        tracing::warn!(
+                            "An error occurred when infering the compression type of an entry. Here's the detailed error : {}",
+                            e
+                        );
+                        EnkryptitOutput::warning(
+                            "An error occurred when treating an entry. We skip it.",
+                        )
+                        .display();
                         continue;
-                        // TODO ! Add a logging system ! (For advanced users who wants to see WHY and WHERE exactly the file entry collection failed)
-                        // Also add a failure message that just indicated that we're skipping a file (for non-advanced users)
                     }
                 };
 
@@ -46,17 +65,20 @@ pub fn collect_folder_entries(folder_path: &str, context: &EnkryptitContext) -> 
                     relative_path,
                     offset: 0, // Set during encryption
                     permissions,
-                    compression, // Set during encryption too
+                    compression,                  // Set during encryption too
                     file_nonce: generate_nonce(), // Unique per FILE -> one master nonce per file
                 });
             }
-            
-            Err(_) => {
-                // TODO ! Add a logging system ! (For advanced users who wants to see WHY and WHERE exactly the file entry collection failed)
-                // Also add a failure message that just indicated that we're skipping a file (for non-advanced users)
-                continue;
-            }, // Skip inaccessible files during collection
 
+            Err(e) => {
+                tracing::warn!(
+                    "An error occurred when infering the compression type of an entry. Here's the detailed error : {}",
+                    e
+                );
+                EnkryptitOutput::warning("An error occurred when treating an entry. We skip it.")
+                    .display();
+                continue;
+            } // Skip inaccessible files during collection
         }
     }
 

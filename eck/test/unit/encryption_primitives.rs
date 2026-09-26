@@ -43,7 +43,7 @@ mod tests {
         let cipher = XChaCha20Poly1305::new(&key.into());
         let master_nonce = generate_nonce();
 
-        let mut data = vec![b'T'; 64].to_vec();
+        let mut data = vec![b'T'; 64];
         let original_len = data.len();
 
         for step in 0..3 {
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(&nonce_0[..16], &master[..16]); // First part unchanged
 
         let mut expected_step = [0u8; 8];
-        0u64.to_le_bytes().copy_from_slice(&mut expected_step);
+        expected_step.copy_from_slice(&0u64.to_le_bytes());
         assert_eq!(&nonce_0[16..], &expected_step);
     }
 
@@ -440,7 +440,7 @@ mod tests {
     fn derive_nonce_with_zero_master() {
         let master = [0u8; 24]; // All zeros
 
-        for step in (0u64..=100u64).into_iter() {
+        for step in 0u64..=100u64 {
             let nonce = eck::encryption::encryption_primitives::derive_nonce(&master, step);
 
             assert_eq!(&nonce[..16], &master[..16]); // First part unchanged (bytes 0-15)
@@ -461,7 +461,7 @@ mod tests {
 
         // Encrypt/decrypt with same step multiple times - should work each time
         for _ in 0..5 {
-            let mut data = vec![b'R'; 64].to_vec();
+            let mut data = vec![b'R'; 64];
 
             eck::encryption::encryption_primitives::encrypt_chunk(
                 &mut data,

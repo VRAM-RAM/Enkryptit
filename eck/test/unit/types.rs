@@ -34,7 +34,10 @@ fn key_type_pwd256_displays_salt() {
 fn compression_type_display_and_string_conversion_match() {
     assert_eq!(CompressionType::Auto.to_string(), "Automatic");
     assert_eq!(CompressionType::Lz4.to_string(), "Lz4 (fastest)");
-    assert_eq!(CompressionType::Xz.to_string(), "Xz (slowest but most efficient)");
+    assert_eq!(
+        CompressionType::Xz.to_string(),
+        "Xz (slowest but most efficient)"
+    );
     assert_eq!(CompressionType::NoComp.to_string(), "No compression");
     assert_eq!(CompressionType::Zstd.to_string(), "Zstd (Balanced)");
     assert_eq!(String::from(CompressionType::Zstd), "Zstd (Balanced)");

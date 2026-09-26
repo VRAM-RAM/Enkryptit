@@ -9,4 +9,5 @@ pub mod file;
 pub mod folder_entries;
 pub mod metadatas;
 pub mod parallelism;
+pub mod text;
 pub mod types;

@@ -614,16 +614,18 @@ Next things to do :
 
 ---
 
-## DAY-17 Updated tests - beginned the website
+## DAY-17 Updated tests
 
 - Updated tests (replaced the `stderr` with `stdout` essentially)
 - Progressed on **RustDoc**
+- Modified `EnkryptitContext`. It doesn't need `Interface` anymore, so I deleted `Interface`.
 - Fixed warnings and made the code slightly better (calling `cargo clippy` for report)
 - Audited dependencies using `cargo audit` (see results in [/dev/audit.md](./dev/audit.md))
-- Suppressed `/doc` (will be replaced by the **website**)
 - Created `/dev` instead, that contains `audit.md` (the audit result)
 - Updated dependencies
 - Created fuzzy testing for compression and metadata.
+- Updated `Cargo.lock` for every binary
+- Added tests for warning and error displaying
 - Created `cargo xtask` and `eck`. Enkryptit! is now a workspace.
 - `cargo flamegraph` on an intense Enkryptit! usage (inspection + encryption of 13.5 GiB file with `Multithreading(48)` and `NoComp`). The **graph** is available at [`/dev/flamegraph-intense_usage-release.svg`](./dev/flamegraph-intense-usage-release.svg).
 - Updated **Inspection** reports, which are now much more compacts :
@@ -644,7 +646,7 @@ Next things to do :
 \
 Test results:
 ```bash
-test result: ok. 201 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.04s
+test result: ok. 204 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.49s
 ```
 \
 \
@@ -652,3 +654,19 @@ Next things to do :
 - Doc restructure (*mkdocs* maybe)
 - finish fuzzy testing
 - benchmarks
+
+--- 
+
+## DAY-18 Updated doc, cargo clippy, added audit.toml
+
+- Added `/doc` in french and english
+- Updated `README`
+- added `audit.toml`
+- added `.github` for dependabot and **workflows**
+- Fixed and issue with the **success** border.
+- Added new tests
+
+Test results : 
+```bash
+test result: ok. 213 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.95s
+```

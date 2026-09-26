@@ -46,9 +46,7 @@ impl<T: EnkryptitExecutable + Send + 'static> EnkryptitPool<T> {
     }
 
     pub fn recv(&self) -> Result<Result<T::Output, EnkryptitError>, EnkryptitError> {
-        self.receiver
-            .recv()
-            .map_err(EnkryptitError::ReceiveError)
+        self.receiver.recv().map_err(EnkryptitError::ReceiveError)
     }
 
     pub fn size(&self) -> usize {

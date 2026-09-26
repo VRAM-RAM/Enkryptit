@@ -1,10 +1,7 @@
-use crate::{
-    types::{CompressionType, KeyParams, ParallelismType},
-};
+use crate::types::{CompressionType, KeyParams, ParallelismType};
+pub mod inspection;
 pub mod params_helpers;
 pub mod treatment;
-pub mod inspection;
-
 
 #[macro_export]
 /// Macro that prints the help

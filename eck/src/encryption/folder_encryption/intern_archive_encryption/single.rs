@@ -1,3 +1,4 @@
+use crate::diagnostic::EnkryptitOutput;
 use crate::encryption::encryption_flow::{decrypt_stream, encrypt_stream};
 use crate::errors::EnkryptitError;
 use crate::types::CompressionType;
@@ -18,7 +19,11 @@ pub fn encrypt_single_file_into_archive(
     let full_file_path = Path::new(folder_path).join(relative_path);
 
     if !PathBuf::from(&full_file_path).exists() {
-        return Ok(0); // File no longer exists - skip silently
+        tracing::warn!("Failed to encrypt an entry : path not found");
+
+        EnkryptitOutput::warning("Failed to found an entry. Skipping.").display();
+
+        return Ok(0);
     }
 
     let file = File::open(full_file_path)?;
@@ -42,7 +47,7 @@ pub fn encrypt_single_file_into_archive(
 
 #[allow(clippy::too_many_arguments)]
 /// Decrypt a single file from the archive stream using its unique nonce  
-/// 
+///
 /// The arguments are intentionally kept separate because each represents
 /// an independent part of the archive/decryption operation.
 pub fn decrypt_single_file_from_archive(
@@ -79,7 +84,7 @@ pub fn decrypt_single_file_from_archive(
             cipher_key,
             compression,
             file_nonce,
-            None
+            None,
         )
     }
 }

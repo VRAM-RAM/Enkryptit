@@ -1,31 +1,31 @@
 use crate::context::EnkryptitContext;
-use crate::diagnostic::EnkryptitOutput;
 use crate::errors::EnkryptitError;
 use crate::frontend::tui::input::TuiInput;
 use crate::parameters::params::load_params;
 use crate::treatment::inspect::inspect_object;
 use crate::treatment::object_treatment::treat_object;
-use crate::types::Interface;
 use colored::Colorize;
 
 /// Launch the treatment UI
-pub fn launch_treatment(input: &impl TuiInput, objects: Vec<String>, password: Option<String>) -> Result<(), EnkryptitError> {
+pub fn launch_treatment(
+    input: &impl TuiInput,
+    objects: Vec<String>,
+    password: Option<String>,
+) -> Result<(), EnkryptitError> {
     println!("\n{}", "Browser Panel".cyan().bold());
 
     loop {
-        let choices = vec![
-            "Encrypt/Decrypt",
-            "Inspect",
-            "Go Back",
-        ];
+        let choices = vec!["Encrypt/Decrypt", "Inspect", "Go Back"];
 
         match input.select("What do you want to do?", &choices) {
-            Ok(choice) if choice == "Encrypt/Decrypt" => treat_objects_encryption(&objects, &password)?,
+            Ok(choice) if choice == "Encrypt/Decrypt" => {
+                treat_objects_encryption(&objects, &password)?
+            }
             Ok(choice) if choice == "Inspect" => treat_objects_inspection(&objects),
             Ok(choice) if choice == "Go Back" => break,
             Err(_) => {
-                EnkryptitOutput::info("Selection cancelled").display();
-                continue;
+                // EnkryptitOutput::info("Selection cancelled").display(); replaced by :
+                tracing::info!("Selection cancelled");
             }
             _ => continue,
         }
@@ -34,14 +34,21 @@ pub fn launch_treatment(input: &impl TuiInput, objects: Vec<String>, password: O
     Ok(())
 }
 
-/// Treatment loop over a list of chosen object paths. 
+/// Treatment loop over a list of chosen object paths.
 /// \
-/// It loads the parameters calling [`load_params`], creates the [`EnkryptitContext`], and then iterate over all the `objects`, 
-/// calling [`treat_object`], and displaying the [`EnkryptitOutput`]s.
-pub fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>) -> Result<(), EnkryptitError> {
+/// It loads the parameters calling [`load_params`], creates the [`EnkryptitContext`], and then iterate over all the `objects`,
+/// calling [`treat_object`], and displaying the [`EnkryptitOutput`](crate::diagnostic::EnkryptitOutput)s.
+pub fn treat_objects_encryption(
+    objects: &Vec<String>,
+    password: &Option<String>,
+) -> Result<(), EnkryptitError> {
     let parameters = load_params()?;
 
-    let mut context = EnkryptitContext::new(Interface::Tui, password.clone(), parameters.compression, parameters.parallelism);
+    let mut context = EnkryptitContext::new(
+        password.clone(),
+        parameters.compression,
+        parameters.parallelism,
+    );
 
     for path_str in objects {
         treat_object(&parameters, path_str, &mut context).display();
@@ -49,10 +56,9 @@ pub fn treat_objects_encryption(objects: &Vec<String>, password: &Option<String>
     Ok(())
 }
 
-/// Iterates over the objects, inspect each of one calling [`inspect_object`] and displays the [`EnkryptitOutput`]s.
+/// Iterates over the objects, inspect each of one calling [`inspect_object`] and displays the [`EnkryptitOutput`](crate::diagnostic::EnkryptitOutput)s.
 pub fn treat_objects_inspection(objects: &Vec<String>) {
     for path_str in objects {
         inspect_object(path_str).display();
     }
 }
-

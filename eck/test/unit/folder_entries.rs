@@ -8,7 +8,7 @@ use eck::context::EnkryptitContext;
 use eck::encryption::folder_encryption::entry::collect_entries_from_folder::collect_folder_entries;
 use eck::encryption::folder_encryption::entry::collect_entry::collect_entry;
 use eck::errors::EnkryptitError;
-use eck::types::{CompressionType, Interface, ParallelismType};
+use eck::types::{CompressionType, ParallelismType};
 use std::fs;
 use tempfile::TempDir;
 use walkdir::WalkDir;
@@ -109,7 +109,7 @@ mod tests {
         fs::write(format!("{root}/sound.wav"), WAV).unwrap();
         fs::write(format!("{root}/img.png"), PNG).unwrap();
 
-        let context = EnkryptitContext::new(Interface::Cli, None, CompressionType::Auto, ParallelismType::Auto);
+        let context = EnkryptitContext::new(None, CompressionType::Auto, ParallelismType::Auto);
 
         let entries = collect_folder_entries(&root, &context).unwrap();
         assert_eq!(entries.len(), 3);
@@ -127,7 +127,11 @@ mod tests {
             );
             let full = std::path::Path::new(&root).join(&entry.relative_path);
             let expected = context.resolve_compression(full.to_str().unwrap()).unwrap();
-            assert_eq!(entry.compression, expected, "entry: {}", entry.relative_path);
+            assert_eq!(
+                entry.compression, expected,
+                "entry: {}",
+                entry.relative_path
+            );
 
             assert_eq!(entry.offset, 0, "offset is set during encryption");
             assert_eq!(entry.file_nonce.len(), 24, "one master nonce per entry");
@@ -139,13 +143,20 @@ mod tests {
         // XML -> Zstd, WAV -> Lz4, PNG -> NoComp under the documented inference.
         let mut set: Vec<CompressionType> = compressions;
         set.sort_by_key(|c| format!("{c:?}"));
-        assert_eq!(set, vec![CompressionType::Lz4, CompressionType::NoComp, CompressionType::Zstd]);
+        assert_eq!(
+            set,
+            vec![
+                CompressionType::Lz4,
+                CompressionType::NoComp,
+                CompressionType::Zstd
+            ]
+        );
     }
 
     #[test]
     fn collect_folder_entries_empty_folder_is_empty() {
         let (_tmp, root) = root_dir();
-        let context = EnkryptitContext::new(Interface::Cli, None, CompressionType::Zstd, ParallelismType::Single);
+        let context = EnkryptitContext::new(None, CompressionType::Zstd, ParallelismType::Single);
         assert!(collect_folder_entries(&root, &context).unwrap().is_empty());
     }
 
@@ -155,7 +166,7 @@ mod tests {
         fs::create_dir_all(format!("{}/a/b", root)).unwrap();
         fs::write(format!("{root}/a/b/c.txt"), b"x").unwrap();
 
-        let context = EnkryptitContext::new(Interface::Cli, None, CompressionType::Xz, ParallelismType::Single);
+        let context = EnkryptitContext::new(None, CompressionType::Xz, ParallelismType::Single);
         let entries = collect_folder_entries(&root, &context).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].relative_path, "a/b/c.txt");

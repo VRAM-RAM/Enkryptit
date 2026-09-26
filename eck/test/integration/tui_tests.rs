@@ -59,9 +59,9 @@ mod tests {
     #[test]
     fn show_help_action_succeeds() {
         let action = EnkryptitTuiAction::ShowHelp;
-        let mut input = MockTuiInput::new();
+        let input = MockTuiInput::new();
 
-        assert!(action.execute(&mut input).is_ok());
+        assert!(action.execute(&input).is_ok());
         // ShowHelp is purely a print; it must not consume any interactive input.
         assert_eq!(input.pending_selects(), 0);
         assert_eq!(input.pending_texts(), 0);
@@ -71,9 +71,9 @@ mod tests {
     fn launch_params_action_routes_to_params_menu() {
         // LaunchParams enters its own loop, so queue a "Back to main menu" to exit.
         let action = EnkryptitTuiAction::LaunchParams;
-        let mut input = MockTuiInput::new().with_select("Back to main menu");
+        let input = MockTuiInput::new().with_select("Back to main menu");
 
-        assert!(action.execute(&mut input).is_ok());
+        assert!(action.execute(&input).is_ok());
         assert_eq!(
             input.pending_selects(),
             0,
@@ -85,9 +85,9 @@ mod tests {
     fn browse_action_routes_to_browser_menu() {
         // Browse enters its own loop, so queue a "Back to main menu" to exit.
         let action = EnkryptitTuiAction::Browse;
-        let mut input = MockTuiInput::new().with_select("Back to main menu");
+        let input = MockTuiInput::new().with_select("Back to main menu");
 
-        assert!(action.execute(&mut input).is_ok());
+        assert!(action.execute(&input).is_ok());
         assert_eq!(
             input.pending_selects(),
             0,

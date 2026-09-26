@@ -1,23 +1,26 @@
-use crate::encryption::chunk_job::{encrypt::EncryptChunkJob, decrypt::DecryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk};
+use crate::diagnostic::EnkryptitOutput;
+use crate::encryption::chunk_job::{
+    decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk,
+};
 use crate::encryption::file::read_file;
+use crate::encryption::file_encryption::multithread::receive_results;
+use crate::encryption::file_encryption::multithread::write_batch;
+use crate::encryption::file_encryption::multithread::write_batch_plain;
 use crate::errors::EnkryptitError;
 use crate::parallelism::pool::EnkryptitPool;
+use crate::types::CHUNK_SIZE;
 use crate::types::CompressionType;
+use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
 use std::fs::File;
+use std::io::Write;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use crate::types::CHUNK_SIZE;
-use crate::encryption::file_encryption::multithread::receive_results;
-use crate::encryption::file_encryption::multithread::write_batch;
-use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
-use std::io::Write;
-use crate::encryption::file_encryption::multithread::write_batch_plain;
 
 #[allow(clippy::too_many_arguments)]
 /// Encrypt a single file into the archive stream with unique nonce per file, using multithreading
-/// 
+///
 /// The arguments are intentionally kept separate because each represents
 /// an independent part of the archive/encryption operation.
 pub fn encrypt_multithreading_file_into_archive(
@@ -33,12 +36,15 @@ pub fn encrypt_multithreading_file_into_archive(
     let full_file_path = Path::new(folder_path).join(relative_path);
 
     if !PathBuf::from(&full_file_path).exists() {
-        return Ok(0); // File no longer exists - skip silently
-        // TODO! Add a smooth skipping + logging system !!!!!!!
+        tracing::warn!("Failed to encrypt an entry : path not found");
+
+        EnkryptitOutput::warning("Failed to found an entry. Skipping.").display();
+
+        return Ok(0);
     }
 
     let mut file = read_file(full_file_path)?;
-    
+
     // We prepare the shared cipher for Multithreading
     let cipher = Arc::new(XChaCha20Poly1305::new(cipher_key.into()));
 
@@ -72,7 +78,14 @@ pub fn encrypt_multithreading_file_into_archive(
             submitted = 0;
         }
 
-        submit_encrypt_chunk(pool, step, buffer[..bytes_read].to_vec(), arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
+        submit_encrypt_chunk(
+            pool,
+            step,
+            buffer[..bytes_read].to_vec(),
+            arc_nonce.clone(),
+            arc_compression.clone(),
+            cipher.clone(),
+        )?;
 
         submitted += 1;
         step += 1;
@@ -93,7 +106,7 @@ pub fn encrypt_multithreading_file_into_archive(
 
 #[allow(clippy::too_many_arguments)]
 /// Decrypt a single file from the archive stream using its unique nonce  
-/// 
+///
 /// The arguments are intentionally kept separate because each represents
 /// an independent part of the archive/decryption operation.
 pub fn decrypt_multithreading_file_from_archive(
@@ -106,7 +119,7 @@ pub fn decrypt_multithreading_file_from_archive(
     cipher_key: &[u8; 32],
     offset: u64,
     pool: &EnkryptitPool<DecryptChunkJob>,
-    num_threads: u8
+    num_threads: u8,
 ) -> Result<u64, EnkryptitError> {
     let archive = File::open(Path::new(archive_path))?;
     let mut reader = BufReader::new(archive);
@@ -190,7 +203,14 @@ pub fn decrypt_multithreading_file_from_archive(
         }
 
         // We create the job
-        submit_decrypt_chunk(pool, step, payload, arc_nonce.clone(), arc_compression.clone(), cipher.clone())?;
+        submit_decrypt_chunk(
+            pool,
+            step,
+            payload,
+            arc_nonce.clone(),
+            arc_compression.clone(),
+            cipher.clone(),
+        )?;
 
         // We increment
         submitted += 1;
