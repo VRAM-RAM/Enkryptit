@@ -4,12 +4,7 @@ This is the binary directory of **Enkryptit!**, that contains `eck`.
 
 > This project is currently a work in progress. It is **not audited** for production security.
 
-
-<div align="center">
-  <img src="../assets/eck.gif" alt="Enkryptit! gif as example" width="65%">
-</div>
-
-> You can find all the informations on [the repo](github.com/VRAM-RAM/Enkryptit/).
+> You can find all the informations on [github.com/VRAM-RAM/Enkryptit/](github.com/VRAM-RAM/Enkryptit/).
 
 ## Commands
 

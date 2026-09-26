@@ -34,7 +34,14 @@
 * **Rust:** `1.85+` is recommended.
 * A working native credential store (e.g. `libsecret` on Linux, native Keychain on macOS).
 
-### Build and Launch
+### Using **cargo**
+
+If you have `cargo` installed on your system, run :
+```bash
+cargo install eck
+```
+
+### Building and Launching using the source code
 
 ```bash
 # Clone the repository

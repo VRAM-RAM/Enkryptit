@@ -36,7 +36,7 @@ use crate::frontend::cli::treatment::treat_object_with_path;
 /// This constant is only for `Nightly` version.
 ///
 /// So, for example, if you download **Enkryptit!** v0.1.4, it is the 4th nightly version of 1st stable version.
-pub const VERSION: Version = 3;
+pub const VERSION: Version = 4;
 
 #[derive(Parser)]
 #[command(name = "eck")]

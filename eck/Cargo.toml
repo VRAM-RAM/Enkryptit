@@ -1,6 +1,6 @@
 [package]
 name = "eck"
-version = "0.0.3"
+version = "0.0.4"
 description = "A fast, simple file & folder encryption manager, written in Rust" 
 keywords = ["cli", "encryption", "cryptography"]
 edition = "2024"
