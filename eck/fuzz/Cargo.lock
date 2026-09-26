@@ -805,7 +805,7 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 
 [[package]]
 name = "eck"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "argon2",
  "chacha20poly1305",
@@ -832,10 +832,13 @@ dependencies = [
  "serde",
  "serde_json",
  "sysinfo",
+ "terminal_size",
  "thiserror",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
+ "unicode-segmentation",
+ "unicode-width 0.2.2",
  "walkdir",
  "xz2",
  "zeroize",
@@ -1830,9 +1833,9 @@ checksum = "13c45bb4a6ae1280ec0803b1ef9d3455eb50f01efbbe1447ab020f1d54fba9d8"
 
 [[package]]
 name = "oxiarc-core"
-version = "0.3.6"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "119a925483e4917b645fd77acef86859164e166faa4cce3353c1d7cecfd3665a"
+checksum = "7105e98c1e12eb2d8a4e003419455b13747f5b31d02740f451f5413491d1cf84"
 dependencies = [
  "thiserror",
 ]
