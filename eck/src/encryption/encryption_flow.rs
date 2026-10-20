@@ -19,8 +19,10 @@ pub fn encrypt_stream<R: Read, W: Write>(
 ) -> Result<u64, EnkryptitError> {
     // Steps counter
     let mut step: u64 = 0;
+
     // Buffer
     let mut buffer = vec![0u8; CHUNK_SIZE];
+
     // Bytes written
     let mut bytes_written: u64 = 0;
 
@@ -33,16 +35,11 @@ pub fn encrypt_stream<R: Read, W: Write>(
     let cipher = XChaCha20Poly1305::new(key.into());
 
     // Output (for in-place compression)
-    let mut output = vec![0u8; CHUNK_SIZE];
+    let mut output = Vec::with_capacity(CHUNK_SIZE);
 
     while n > 0 {
-        let mut next_buffer = vec![0u8; CHUNK_SIZE];
-        let next_n = reader.read(&mut next_buffer)?;
-
-        let data = buffer[..n].to_vec();
-
         // We compress, in-place, the data
-        data.compress(&mut output, compression)?;
+        buffer[..n].compress(&mut output, compression)?;
 
         // We encrypt the chunk
         encrypt_chunk(&mut output, &master_nonce, &cipher, step)?;
@@ -63,8 +60,7 @@ pub fn encrypt_stream<R: Read, W: Write>(
             pb.update(total_processed);
         }
 
-        buffer = next_buffer;
-        n = next_n;
+        n = reader.read(&mut buffer)?;
         step += 1;
     }
 

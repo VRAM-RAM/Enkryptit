@@ -18,19 +18,24 @@ pub struct DecryptChunkJob {
 impl EnkryptitExecutable for DecryptChunkJob {
     type Output = ChunkResult;
 
+
     fn execute(self) -> Result<Self::Output, crate::errors::EnkryptitError> {
         let nonce = derive_nonce(&self.master_nonce, self.index);
 
-        let mut ndata = self.data;
-        let mut output = vec![0u8; CHUNK_SIZE];
+        if *self.compression == CompressionType::NoComp {
+            let mut data = self.data;                    
+            decrypt_chunk(&mut data, &self.cipher, &nonce, self.index)?;
+            return Ok(ChunkResult { index: self.index, data });
+        }
 
-        decrypt_chunk(&mut ndata, &self.cipher, &nonce, self.index)?;
+        let mut ndata = self.data;
+        
+        let mut output= Vec::with_capacity(CHUNK_SIZE);
+
+        decrypt_chunk(&mut ndata, &self.cipher, &nonce,self.index)?;
 
         ndata.decompress(&mut output, *self.compression)?;
 
-        Ok(ChunkResult {
-            index: self.index,
-            data: output,
-        })
+        Ok(ChunkResult { index: self.index, data: output })
     }
 }

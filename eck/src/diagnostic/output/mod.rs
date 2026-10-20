@@ -96,4 +96,9 @@ impl EnkryptitOutput {
         }
         self
     }
+
+    /// Returns `true` if the given [`EnkryptitOutput`] is an Error. Used by the **cli** to manage exit codes.
+    pub fn is_error(&self) -> bool {
+        matches!(self.kind, EnkryptitOutputKind::Error { .. })
+    }
 }

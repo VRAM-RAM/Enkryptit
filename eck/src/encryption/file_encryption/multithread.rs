@@ -1,14 +1,13 @@
-use crate::encryption::chunk_job::result::ChunkResult;
 use crate::encryption::chunk_job::{
     decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk,
 };
+use std::collections::BTreeMap;
 use crate::encryption::encryption_primitives::generate_nonce;
 use crate::encryption::file::read_file;
 use crate::encryption::shared_cipher;
 use crate::errors::EnkryptitError;
 use crate::key::EnkryptitKey;
 use crate::metadatas::{ArchiveHeader, MetaDatas};
-use crate::parallelism::executable::EnkryptitExecutable;
 use crate::parallelism::pool::EnkryptitPool;
 use crate::types::{CHUNK_SIZE, CompressionType};
 use gradient_bar::GradientProgressBar;
@@ -70,9 +69,16 @@ pub fn encrypt_multithread_file(
 
     // We read the file in chunks, and submit jobs to the pool
     let mut buffer = vec![0u8; CHUNK_SIZE];
+
     let mut step: u64 = 0;
-    let mut results = Vec::with_capacity(num_threads as usize);
-    let mut submitted = 0u8;
+
+    // The pending results, out-of-order completed chunks
+    let mut pending: BTreeMap<u64, Vec<u8>> = BTreeMap::new();
+    
+    // number of chunks written (and index of the next chunk to write)
+    let mut next_to_write: u64 = 0;
+
+    let max_in_flight: u64 = 2 * num_threads as u64;
 
     let pb = GradientProgressBar::with_total_steps(file.estimated_steps, "Encrypting...");
 
@@ -83,13 +89,10 @@ pub fn encrypt_multithread_file(
             break;
         }
 
-        // If we submitted as many jobs as we have workers, we receive and write the results.
-        if submitted >= num_threads {
-            receive_results(&mut results, &pool, num_threads)?;
-
-            write_batch(&mut results, &mut writer)?;
-
-            submitted = 0;
+        while step - next_to_write >= max_in_flight {
+            let r = pool.recv()??;
+            pending.insert(r.index, r.data);
+            flush_ready(&mut pending, &mut next_to_write, &mut writer, true)?;
         }
 
         // We create the job and submit it
@@ -103,15 +106,15 @@ pub fn encrypt_multithread_file(
         )?;
 
         // We increment
-        submitted += 1;
         step += 1;
         pb.update(step);
     }
 
-    // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
-    if submitted > 0 {
-        receive_results(&mut results, &pool, submitted)?;
-        write_batch(&mut results, &mut writer)?;
+    // last drain
+    while next_to_write < step {
+        let r = pool.recv()??;
+        pending.insert(r.index, r.data);
+        flush_ready(&mut pending, &mut next_to_write, &mut writer, true)?;
     }
 
     // We write the ending 'magic'
@@ -144,6 +147,11 @@ pub fn decrypt_multithread_file(
 
     let plain_path = path.strip_suffix(".encky").unwrap_or(path);
 
+    // If the plain path is the same path as the encrypted path, we abort and return an error
+    if plain_path == path {
+        return Err(EnkryptitError::InvalidEncryptedFileName)
+    }
+    
     // Create a placeholder for the new file
     let new_file = std::fs::File::create(plain_path)?;
     let mut writer = BufWriter::new(new_file);
@@ -159,8 +167,14 @@ pub fn decrypt_multithread_file(
 
     // We read the file in chunks, and submit jobs to the pool
     let mut step: u64 = 0;
-    let mut results = Vec::with_capacity(num_threads as usize);
-    let mut submitted = 0u8;
+    
+    // The pending results, out-of-order completed chunks
+    let mut pending: BTreeMap<u64, Vec<u8>> = BTreeMap::new();
+    
+    // number of chunks written (and index of the next chunk to write)
+    let mut next_to_write: u64 = 0;
+
+    let max_in_flight: u64 = 2 * num_threads as u64;
 
     let pb = GradientProgressBar::with_total_bytes(file.estimated_steps, "Decrypting...");
 
@@ -204,12 +218,10 @@ pub fn decrypt_multithread_file(
         file.reader.read_exact(&mut payload)?;
 
         // If we submitted as jobs as we have workers, we receive and write the results.
-        if submitted >= num_threads {
-            receive_results(&mut results, &pool, num_threads)?;
-
-            write_batch_plain(&mut results, &mut writer)?;
-
-            submitted = 0;
+        while step - next_to_write >= max_in_flight {
+            let r = pool.recv()??;
+            pending.insert(r.index, r.data);
+            flush_ready(&mut pending, &mut next_to_write, &mut writer, false)?;
         }
 
         submit_decrypt_chunk(
@@ -222,15 +234,15 @@ pub fn decrypt_multithread_file(
         )?;
 
         // We increment
-        submitted += 1;
         step += 1;
         pb.update(step);
     }
 
-    // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
-    if submitted > 0 {
-        receive_results(&mut results, &pool, submitted)?;
-        write_batch_plain(&mut results, &mut writer)?;
+    // last drain
+    while next_to_write < step {
+        let r = pool.recv()??;
+        pending.insert(r.index, r.data);
+        flush_ready(&mut pending, &mut next_to_write, &mut writer, false)?;
     }
 
     pb.finish();
@@ -240,59 +252,28 @@ pub fn decrypt_multithread_file(
     Ok(plain_path.to_string())
 }
 
-/// Helper function to sort and write a batch of chunks, and then clear the `results` vector. Used when encrypting only.
-pub fn write_batch(
-    results: &mut Vec<ChunkResult>,
+
+/// Helper that writes the pending results of the encryption/decryption
+/// \
+/// When encrypting, `with_len_prefix` is `true`, and, when decrypting, it is `false`.
+/// \
+/// Returns the number of bytes written.
+pub fn flush_ready(
+    pending: &mut BTreeMap<u64, Vec<u8>>,
+    next_to_write: &mut u64,
     writer: &mut BufWriter<File>,
+    with_len_prefix: bool,
 ) -> Result<u64, EnkryptitError> {
-    results.sort_by_key(|r| r.index);
+    let mut written: u64 = 0;
+    while let Some(data) = pending.remove(next_to_write) {
+        if with_len_prefix {
+            writer.write_all(&(data.len() as u32).to_le_bytes())?;
+            written += 4;
+        }
 
-    let mut written = 0u64;
-    for chunk_result in results.iter() {
-        let data = &chunk_result.data;
-
-        let len = (data.len() as u32).to_le_bytes();
-        writer.write_all(&len)?;
-        written += 4; // Len of the len buffer
-
-        writer.write_all(data)?;
+        writer.write_all(&data)?;
         written += data.len() as u64;
+        *next_to_write += 1;
     }
-
-    results.clear();
-
     Ok(written)
-}
-
-/// Helper function to sort and write a batch of decrypted chunks (the plaintext),
-/// without any length prefix, and then clear the `results` vector. Used when decrypting only.
-pub fn write_batch_plain(
-    results: &mut Vec<ChunkResult>,
-    writer: &mut BufWriter<File>,
-) -> Result<u64, EnkryptitError> {
-    results.sort_by_key(|r| r.index);
-
-    let mut written = 0u64;
-
-    for chunk_result in results.iter() {
-        writer.write_all(&chunk_result.data)?;
-        written += chunk_result.data.len() as u64;
-    }
-
-    results.clear();
-
-    Ok(written)
-}
-
-pub fn receive_results<T: EnkryptitExecutable + Send + 'static>(
-    results: &mut Vec<T::Output>,
-    pool: &EnkryptitPool<T>,
-    num_threads: u8,
-) -> Result<(), EnkryptitError> {
-    for _ in 0..num_threads {
-        let result = pool.recv()??;
-        results.push(result);
-    }
-
-    Ok(())
 }

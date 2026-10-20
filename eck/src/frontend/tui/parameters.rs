@@ -27,9 +27,10 @@ pub fn launch_params(input: &impl TuiInput) -> Result<(), EnkryptitError> {
             Ok(choice) if choice == "Change parallelism type" => change_parallelism(input)?,
             Ok(choice) if choice == "Show current parameters" => show_current_params()?,
             Ok(choice) if choice == "Back to main menu" => break,
-            Err(_) => {
-                // EnkryptitOutput::info("Selection cancelled").display(); replaced by :
-                tracing::info!("Selection cancelled");
+            Err(e) => {
+                if e.treat_inquire_error() {
+                    break;
+                }
             }
             _ => continue,
         }

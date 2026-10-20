@@ -671,3 +671,32 @@ Test results :
 ```bash
 test result: ok. 213 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.95s
 ```
+
+---
+
+## DAY 19 - Fixed bugs & issues
+
+- Modified `main.rs` : the logger guard is now handled by `main()`
+- Modified the *InspectionReport*s : there was an error (two inspection reports were printed when inspecting a folder)
+- In `encryption/file_encryption/multithread.rs` or `single.rs`, when **decrypting** added a check : if the encrypted path is the same as the plain path, we abort. For example, if the file was renamed `secret.encky` -> `secret.bin`, the decryption fails. In the future, the original extension will be stored in the metadata
+- Modified `main.rs` so that now, if program returns an `error`, it exits with code `1`. (and updated tests too)
+- Fixed an issue in folder en/decryption : added `safe_join()` for safely joining the folder path and the archive path.
+- Fixed the frontend **TUI** : now, `Ctrl + C` kills the process, and `Esc` exits the current scope.
+- Modified `execute()` implementation in **multithreading** encryption / decryption (`chunk_job`). Now, if the *compression* is `NoComp`, we don't allocate any `output` empty vec.
+- Removed `next_buffer`, `next_n` and `to_vec()` in **encryption_flow::encrypt_stream**, so now it is more memory-efficient
+- Modified the multithreading core, so that it should be slightly more efficient : 
+    - removed `write_batch()`, `write_batch_plain()` and `receive_results()`
+    - created `flush_ready()`
+    - modified the loop
+
+Test results :
+```bash
+test result: ok. 213 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.48s
+```
+\
+\
+Next things to do :
+- Fix the remaining [issues](https://github.com/VRAM-RAM/Enkryptit/issues)
+- Add tests that cover the fixed issues
+- Update the docs
+

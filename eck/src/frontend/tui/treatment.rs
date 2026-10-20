@@ -23,9 +23,10 @@ pub fn launch_treatment(
             }
             Ok(choice) if choice == "Inspect" => treat_objects_inspection(&objects),
             Ok(choice) if choice == "Go Back" => break,
-            Err(_) => {
-                // EnkryptitOutput::info("Selection cancelled").display(); replaced by :
-                tracing::info!("Selection cancelled");
+            Err(e) => {
+                if e.treat_inquire_error() {
+                    break;
+                }
             }
             _ => continue,
         }
@@ -53,6 +54,7 @@ pub fn treat_objects_encryption(
     for path_str in objects {
         treat_object(&parameters, path_str, &mut context).display();
     }
+    
     Ok(())
 }
 

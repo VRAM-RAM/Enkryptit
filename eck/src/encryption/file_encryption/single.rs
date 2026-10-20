@@ -83,8 +83,16 @@ pub fn decrypt_file_single(
     let mut file = read_file(path)?;
 
     let plain_path = path.strip_suffix(".encky").unwrap_or(path);
+
+    // If the plain path is the same path as the encrypted path, we abort and return an error
+    if plain_path == path {
+        return Err(EnkryptitError::InvalidEncryptedFileName)
+    }
+
     // Create a placeholder for the new file
     let new_file = std::fs::File::create(plain_path)?;
+
+    
     let mut writer = BufWriter::new(new_file);
 
     file.reader.seek(SeekFrom::Start(payload_offset))?;

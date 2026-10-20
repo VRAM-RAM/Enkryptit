@@ -35,14 +35,14 @@ impl TuiInput for RealTuiInput {
     fn select(&self, message: &str, choices: &[&str]) -> Result<String, EnkryptitError> {
         match Select::new(message, choices.to_vec()).prompt() {
             Ok(value) => Ok(value.to_string()),
-            Err(_) => Err(EnkryptitError::CommandNotFound),
+            Err(e) => Err(EnkryptitError::InquireError(e)),
         }
     }
 
     fn text(&self, message: &str, help_message: &str) -> Result<String, EnkryptitError> {
         match Text::new(message).with_help_message(help_message).prompt() {
             Ok(value) => Ok(value),
-            Err(_) => Err(EnkryptitError::CommandNotFound),
+            Err(e) => Err(EnkryptitError::InquireError(e)),
         }
     }
 
@@ -61,7 +61,7 @@ impl TuiInput for RealTuiInput {
 
         match counter.prompt() {
             Ok(value) => Ok(value),
-            Err(_) => Err(EnkryptitError::CommandNotFound),
+            Err(e) => Err(EnkryptitError::InquireError(e)),
         }
     }
 

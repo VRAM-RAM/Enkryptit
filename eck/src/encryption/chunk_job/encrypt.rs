@@ -21,15 +21,20 @@ impl EnkryptitExecutable for EncryptChunkJob {
     fn execute(self) -> Result<Self::Output, crate::errors::EnkryptitError> {
         let nonce = derive_nonce(&self.master_nonce, self.index);
 
-        let mut output = vec![0u8; CHUNK_SIZE];
+        // If the treatment does not require compression, we dont allocate an `output` vector, 
+        // and directly encrypt
+        if *self.compression == CompressionType::NoComp {
+            let mut data = self.data;                    
+            encrypt_chunk(&mut data, &nonce, &self.cipher, self.index)?;
+            return Ok(ChunkResult { index: self.index, data });
+        }
+
+        let mut output = Vec::with_capacity(CHUNK_SIZE);  
 
         self.data.compress(&mut output, *self.compression)?;
 
         encrypt_chunk(&mut output, &nonce, &self.cipher, self.index)?;
 
-        Ok(ChunkResult {
-            index: self.index,
-            data: output,
-        })
+        Ok(ChunkResult { index: self.index, data: output })
     }
 }

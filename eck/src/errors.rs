@@ -1,9 +1,9 @@
 use std::{
-    path::{PathBuf, StripPrefixError},
-    sync::mpsc::RecvError,
+    path::{PathBuf, StripPrefixError}, sync::mpsc::RecvError,
 };
 
 use fmodeparser::FullPermissionError;
+use inquire::InquireError;
 use thiserror::Error;
 
 use crate::diagnostic::EnkryptitOutput;
@@ -99,6 +99,9 @@ pub enum EnkryptitError {
     #[error("unable to lock memory")]
     MemoryLockError,
 
+    #[error("Invalid encrypted file name")]
+    InvalidEncryptedFileName,
+
     #[error("home directory not found")]
     HomeNotFound,
 
@@ -122,6 +125,14 @@ pub enum EnkryptitError {
 
     #[error("Corrupted File")]
     CorruptedFile,
+
+    #[error("Output is not a TTY")]
+    NotATTY,
+
+    // Inquire-related errors
+    #[error("Inquire error")]
+    InquireError(#[from] inquire::InquireError),
+
 }
 
 impl EnkryptitError {
@@ -159,8 +170,11 @@ impl EnkryptitError {
             Self::FileError => "io::file_not_found".to_string(),
             Self::FileIsASymLink => "io::file_is_a_symlink".to_string(),
             Self::FilePermissionsParsingError(_) => "io::permissions_reading_failed".to_string(),
+            Self::InvalidEncryptedFileName => "io::file_name_is_invalid".to_string(),
 
             // Miscellaneous errors
+            Self::InquireError(_) => "misc::inquire_error".to_string(),
+            Self::NotATTY => "misc::output_not_tty".to_string(),
             Self::InspectionError => "misc::inspection_failed".to_string(),
             Self::HexError(_) => "misc::hex_decoding_failed".to_string(),
             Self::ConfigError => "misc::config_directory_error".to_string(),
@@ -218,6 +232,7 @@ impl EnkryptitError {
             Self::DirectoryIsFolder | Self::StripPrefixError(_) => {
                 Some("folder treatment".to_string())
             }
+            Self::InquireError(_) => Some("TUI frontend, and command selection".to_string()),
             Self::FailedToReadMetadata(_) => Some("metadata reading".to_string()),
             Self::FileIsASymLink => Some("path check".to_string()),
             Self::IoError(_) => Some("I/O".to_string()),
@@ -252,6 +267,28 @@ impl EnkryptitError {
             },
             msg,
         )
+    }
+
+    /// Treats and consume an [`EnkryptitError`]. If the error is an [`InquireError`], it treats it, displays the error (using an [`EnkryptitOutput`]), and `exits` the process
+    /// \
+    /// Anyway, if the error is [`InquireError::OperationCanceled`], the error is not displayed (because it's not an error, the user wants to exit the process), and just exit.
+    /// \
+    /// Also, if the error is [`InquireError::OperationInterrupted`], the error is not displayed, and it returns `true`.
+    pub fn treat_inquire_error(self) -> bool {
+        match &self {
+            Self::InquireError(inquire_error) => {
+                match inquire_error {
+                    InquireError::Custom(_) | InquireError::IO(_) | InquireError::InvalidConfiguration(_) | InquireError::NotTTY => {self.into_output().display(); std::process::exit(1)},
+                    InquireError::OperationCanceled => {
+                        return true;
+                    }
+                    InquireError::OperationInterrupted => {
+                        std::process::exit(1)
+                    }
+                }
+            },
+            _ => false,
+        }
     }
 }
 

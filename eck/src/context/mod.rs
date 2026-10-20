@@ -33,6 +33,7 @@ pub struct EnkryptitContext {
     /// - It's size
     /// - The number of files it contains
     pub parallelism: ParallelismType,
+
 }
 
 impl EnkryptitContext {

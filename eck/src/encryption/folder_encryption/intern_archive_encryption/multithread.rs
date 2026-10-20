@@ -1,16 +1,16 @@
 use crate::diagnostic::EnkryptitOutput;
+use crate::directory::safe_join;
 use crate::encryption::chunk_job::{
     decrypt::DecryptChunkJob, encrypt::EncryptChunkJob, submit_decrypt_chunk, submit_encrypt_chunk,
 };
 use crate::encryption::file::read_file;
-use crate::encryption::file_encryption::multithread::receive_results;
-use crate::encryption::file_encryption::multithread::write_batch;
-use crate::encryption::file_encryption::multithread::write_batch_plain;
+use crate::encryption::file_encryption::multithread::flush_ready;
 use crate::errors::EnkryptitError;
 use crate::parallelism::pool::EnkryptitPool;
 use crate::types::CHUNK_SIZE;
 use crate::types::CompressionType;
 use chacha20poly1305::{KeyInit, XChaCha20Poly1305};
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Write;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom};
@@ -33,7 +33,7 @@ pub fn encrypt_multithreading_file_into_archive(
     pool: &EnkryptitPool<EncryptChunkJob>,
     num_threads: u8,
 ) -> Result<u64, EnkryptitError> {
-    let full_file_path = Path::new(folder_path).join(relative_path);
+    let full_file_path = safe_join(folder_path, relative_path)?;
 
     if !PathBuf::from(&full_file_path).exists() {
         tracing::warn!("Failed to encrypt an entry : path not found");
@@ -59,8 +59,12 @@ pub fn encrypt_multithreading_file_into_archive(
     // We read the file in chunks, and submit jobs to the pool
     let mut buffer = vec![0u8; CHUNK_SIZE];
     let mut step: u64 = 0;
-    let mut results = Vec::with_capacity(num_threads as usize);
-    let mut submitted = 0u8;
+    
+    let mut pending: BTreeMap<u64, Vec<u8>> = BTreeMap::new();
+
+    let mut next_to_write: u64 = 0;
+
+    let max_in_flight = 2 * num_threads as u64;
 
     loop {
         let bytes_read = file.reader.read(&mut buffer)?;
@@ -69,13 +73,10 @@ pub fn encrypt_multithreading_file_into_archive(
             break;
         }
 
-        // If we submitted as many jobs as we have workers, we receive and write the results.
-        if submitted >= num_threads {
-            receive_results(&mut results, pool, num_threads)?;
-
-            bytes_written += write_batch(&mut results, &mut archive)?;
-
-            submitted = 0;
+        while step - next_to_write >= max_in_flight {
+            let r = pool.recv()??;
+            pending.insert(r.index, r.data);
+            bytes_written += flush_ready(&mut pending, &mut next_to_write, &mut archive, true)?;
         }
 
         submit_encrypt_chunk(
@@ -87,14 +88,13 @@ pub fn encrypt_multithreading_file_into_archive(
             cipher.clone(),
         )?;
 
-        submitted += 1;
         step += 1;
     }
 
-    // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
-    if submitted > 0 {
-        receive_results(&mut results, pool, submitted)?;
-        bytes_written += write_batch(&mut results, &mut archive)?;
+    while next_to_write < step {
+        let r = pool.recv()??;
+        pending.insert(r.index, r.data);
+        bytes_written += flush_ready(&mut pending, &mut next_to_write, &mut archive, true)?;
     }
 
     // We write the ending 'magic'
@@ -124,7 +124,8 @@ pub fn decrypt_multithreading_file_from_archive(
     let archive = File::open(Path::new(archive_path))?;
     let mut reader = BufReader::new(archive);
     reader.seek(SeekFrom::Start(offset))?;
-    let full_file_path = Path::new(folder_path).join(relative_path);
+
+    let full_file_path = safe_join(folder_path, relative_path)?;
 
     if let Some(parent) = full_file_path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -145,8 +146,12 @@ pub fn decrypt_multithreading_file_from_archive(
 
     // We read the file in chunks, and submit jobs to the pool
     let mut step: u64 = 0;
-    let mut results = Vec::with_capacity(num_threads as usize);
-    let mut submitted = 0u8;
+    
+    let mut pending: BTreeMap<u64, Vec<u8>> = BTreeMap::new();
+
+    let mut next_to_write: u64 = 0;
+
+    let max_in_flight = 2 * num_threads as u64;
 
     // Bytes written
     let mut bytes_written: u64 = 0;
@@ -193,13 +198,10 @@ pub fn decrypt_multithreading_file_from_archive(
 
         reader.read_exact(&mut payload)?;
 
-        // If we submitted as jobs as we have workers, we receive and write the results.
-        if submitted >= num_threads {
-            receive_results(&mut results, pool, num_threads)?;
-
-            bytes_written += write_batch_plain(&mut results, &mut writer)?;
-
-            submitted = 0;
+        while step - next_to_write >= max_in_flight {
+            let r = pool.recv()??;
+            pending.insert(r.index, r.data);
+            bytes_written += flush_ready(&mut pending, &mut next_to_write, &mut writer, false)?;
         }
 
         // We create the job
@@ -213,14 +215,13 @@ pub fn decrypt_multithreading_file_from_archive(
         )?;
 
         // We increment
-        submitted += 1;
         step += 1;
     }
 
-    // At the end of the loop{}, if we have still pending jobs, we receive and treat their output.
-    if submitted > 0 {
-        receive_results(&mut results, pool, submitted)?;
-        bytes_written += write_batch_plain(&mut results, &mut writer)?;
+    while next_to_write < step {
+        let r = pool.recv()??;
+        pending.insert(r.index, r.data);
+        flush_ready(&mut pending, &mut next_to_write, &mut writer, false)?;
     }
 
     writer.flush()?;

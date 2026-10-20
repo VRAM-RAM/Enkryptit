@@ -36,8 +36,7 @@ password (+salt) -> argon2id -> 32-byte key
 
 * AEAD (XChaCha20-Poly1305) authenticates every chunk; tampering fails decryption with an
   auth error rather than silently corrupting data.
-* `ENK1END` marker detects truncated single-file streams; folder archives validate their
-  trailing `FolderMetadata`.
+* `ENK1END` marker detects truncated single-file streams
 * Magic + version gate every parse; unknown versions error instead of guessing.
 
 ## Known caveats

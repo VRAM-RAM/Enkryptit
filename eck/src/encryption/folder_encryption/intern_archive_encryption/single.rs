@@ -1,4 +1,5 @@
 use crate::diagnostic::EnkryptitOutput;
+use crate::directory::safe_join;
 use crate::encryption::encryption_flow::{decrypt_stream, encrypt_stream};
 use crate::errors::EnkryptitError;
 use crate::types::CompressionType;
@@ -16,7 +17,7 @@ pub fn encrypt_single_file_into_archive(
     cipher_key: &[u8; 32],
     archive_path: &str,
 ) -> Result<u64, EnkryptitError> {
-    let full_file_path = Path::new(folder_path).join(relative_path);
+    let full_file_path = safe_join(folder_path, relative_path)?;
 
     if !PathBuf::from(&full_file_path).exists() {
         tracing::warn!("Failed to encrypt an entry : path not found");
@@ -63,7 +64,8 @@ pub fn decrypt_single_file_from_archive(
     let archive = File::open(Path::new(archive_path))?;
     let mut reader = BufReader::new(archive);
     reader.seek(SeekFrom::Start(offset))?;
-    let full_file_path = Path::new(folder_path).join(relative_path);
+
+    let full_file_path = safe_join(folder_path, relative_path)?;
 
     if let Some(parent) = full_file_path.parent() {
         std::fs::create_dir_all(parent)?;

@@ -106,11 +106,14 @@ enum Commands {
 fn main() {
     let cli: Cli = Cli::parse();
 
-    if let Err(e) = EnkryptitLogger::init() {
+    let logger = EnkryptitLogger::init();
+
+    if let Err(e) = logger {
         EnkryptitOutput::error("Error while initializing the logger.", e)
-            .with_location("main.rs::main()")
-            .display();
+                .with_location("main.rs::main()")
+                .display();
     }
+
 
     match cli.command {
         Some(Commands::Ui) => {
@@ -151,19 +154,29 @@ fn main() {
             match path.len() {
                 0 => launch_ui(&RealTuiInput),
                 1 => match treat_object_with_path(&path[0], cli.password) {
-                    Ok(output) => output.display(),
+                    Ok(output) => {
+                        let is_error = output.is_error();
+                        output.display();
+                        if is_error { std::process::exit(1) }
+                    },
                     Err(e) => {
                         e.into_output()
                             .with_snippet(Snippet::cli_invocation("eck", &path[0]))
                             .display();
+                        std::process::exit(1)
                     }
                 },
                 _ => match treat_objects_with_multiple_paths(&path, cli.password) {
-                    Ok(()) => (),
-                    Err(e) => e
+                    Ok(is_error) => {
+                        if is_error { std::process::exit(1) }
+                    },
+                    Err(e) => { e
                         .into_output()
                         .with_snippet(Snippet::cli_invocation("eck", &path[0]))
-                        .display(),
+                        .display();
+
+                        std::process::exit(1)
+                    }   
                 },
             }
         }

@@ -23,10 +23,10 @@ pub fn launch_browser(input: &impl TuiInput) -> Result<(), EnkryptitError> {
                 browse_files_then_folders(input, None)?
             }
             Ok(choice) if choice == "Back to main menu" => break,
-            Err(_) => {
-                // EnkryptitOutput::info("Selection cancelled").display(); replaced by :
-                tracing::info!("Selection cancelled");
-                continue;
+            Err(e) => {
+                if e.treat_inquire_error() {
+                    break;
+                }
             }
             _ => continue,
         }

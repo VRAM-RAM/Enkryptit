@@ -696,7 +696,7 @@ mod tests {
             .output()
             .expect("Failed to execute eck <path>");
 
-        assert!(output.status.success(), "missing path must not hard-fail");
+        assert!(!output.status.success(), "missing path should hard-fail");
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(
             stdout.contains(missing),

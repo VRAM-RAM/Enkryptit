@@ -16,7 +16,7 @@ use std::path::Path;
 pub fn inspect_object(path: &str) -> EnkryptitOutput {
     if Path::new(path).is_dir() {
         match inspect_plain_folder(path).display() {
-            Ok(()) => (),
+            Ok(()) => return EnkryptitOutput::phantom(),
             Err(e) => return e.into(),
         }
     }

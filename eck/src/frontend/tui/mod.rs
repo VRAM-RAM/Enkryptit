@@ -42,9 +42,10 @@ pub fn launch_ui(input: &impl TuiInput) {
                 }
             }
 
-            Err(_) => {
-                // EnkryptitOutput::info("Selection cancelled").display(); replaced by :
-                tracing::info!("Selection cancelled");
+            Err(e) => {
+                if e.treat_inquire_error() {
+                    break;
+                }
             }
         }
     }

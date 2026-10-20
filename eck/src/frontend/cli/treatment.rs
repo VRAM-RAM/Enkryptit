@@ -25,17 +25,27 @@ pub fn treat_object_with_path(
 pub fn treat_objects_with_multiple_paths(
     paths: &Vec<String>,
     cli_password: Option<String>,
-) -> Result<(), EnkryptitError> {
+) -> Result<bool, EnkryptitError> {
     // We load the parameters
     let parameters = load_params()?;
+
+    // Weither an operation failed or not
+    let mut is_error = false;
+
     // Create the global context
-    let mut context =
-        EnkryptitContext::new(cli_password, parameters.compression, parameters.parallelism);
+    let mut context = EnkryptitContext::new(cli_password, parameters.compression, parameters.parallelism);
+    
     // And iterate to treat every path
     for path in paths {
-        treat_object(&parameters, path, &mut context)
-            .with_snippet(Snippet::cli_invocation("eck", path))
-            .display();
+        let output = treat_object(&parameters, path, &mut context).with_snippet(Snippet::cli_invocation("eck", path));
+        
+        // If an output is an error, we update
+        if output.is_error() {
+            is_error = true;
+        }
+
+        output.display();
     }
-    Ok(())
+
+    Ok(is_error)
 }
