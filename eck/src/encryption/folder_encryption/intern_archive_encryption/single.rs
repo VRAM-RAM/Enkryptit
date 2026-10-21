@@ -20,9 +20,9 @@ pub fn encrypt_single_file_into_archive(
     let full_file_path = safe_join(folder_path, relative_path)?;
 
     if !PathBuf::from(&full_file_path).exists() {
-        tracing::warn!("Failed to encrypt an entry : path not found");
+        tracing::warn!("Failed to encrypt an entry : path not found ({})", full_file_path.display());
 
-        EnkryptitOutput::warning("Failed to found an entry. Skipping.").display();
+        EnkryptitOutput::warning(format!("Failed to found an entry : {}. Skipping.", full_file_path.display())).display();
 
         return Ok(0);
     }

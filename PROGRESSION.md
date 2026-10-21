@@ -688,7 +688,8 @@ test result: ok. 213 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fi
     - removed `write_batch()`, `write_batch_plain()` and `receive_results()`
     - created `flush_ready()`
     - modified the loop
-
+- Bumped cli's version to `0.0.4` (it was wrong)
+- Suppressed some useless `macros`
 Test results :
 ```bash
 test result: ok. 213 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 14.48s

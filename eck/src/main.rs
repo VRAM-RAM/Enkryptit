@@ -41,7 +41,7 @@ pub const VERSION: Version = 4;
 #[derive(Parser)]
 #[command(name = "eck")]
 #[command(author = "Olruix")]
-#[command(version = "0.0.3")]
+#[command(version = "0.0.4")]
 #[command(about = "Fast & Secure File Encryption Manager")]
 /// The `Cli` structure for **Enkryptit!** cli-tool
 /// \
@@ -65,11 +65,17 @@ struct Cli {
 
 #[derive(Subcommand)]
 /// All the commands available :
+/// \
 /// Ui --> open the UI
+/// \
 /// Inspect --> Inspect one / many files
+/// \
 /// Params / Parameters
+/// \
 /// |-> no arg : show current parameters
+/// \
 /// |-> compression + <ALGO> : change compression algorithm
+/// \
 /// |-> key type + <KEY_TYPE> : change key type
 enum Commands {
     Ui,
